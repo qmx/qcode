@@ -218,6 +218,46 @@ Keep [README.md](mdc:README.md) focused on:
 
 ## Task Completion Tracking
 
+### ✅ CRITICAL: Code Validation Before Completion
+**ALWAYS** validate code quality before marking any task as complete:
+
+#### 1. TypeScript Compilation Check
+```bash
+npm run tc
+```
+- Must pass with **zero errors**
+- Fix any type errors before proceeding
+- Remove unused imports and variables
+
+#### 2. Code Formatting Check
+```bash
+npm run format:check
+```
+- Must pass with **zero formatting issues**
+- If issues found, run: `npm run format`
+- Verify formatting is consistent with project standards
+
+#### 3. Linting Validation
+```bash
+npm run lint
+```
+- Must pass with **zero warnings or errors**
+- Fix all linting issues before completion
+- Follow ESLint configuration in [.eslintrc.json](mdc:.eslintrc.json)
+
+#### 4. Validation Workflow
+Before marking **ANY** task as complete in [tasklist.md](mdc:tasklist.md):
+
+1. ✅ **Compile**: `npm run tc` passes
+2. ✅ **Format**: `npm run format:check` passes  
+3. ✅ **Lint**: `npm run lint` passes
+4. ✅ **Test**: Run relevant tests if available
+5. ✅ **Update**: Mark task as `[x]` in [tasklist.md](mdc:tasklist.md)
+
+**BONUS**: Use `npm run validate` to run all validation steps at once!
+
+**NO EXCEPTIONS** - Code that doesn't compile or format correctly is not complete.
+
 ### ✅ CRITICAL: Update Task List
 **ALWAYS** check off completed tasks in [tasklist.md](mdc:tasklist.md) when work is finished:
 
@@ -232,8 +272,9 @@ Keep [README.md](mdc:README.md) focused on:
 ### Task Completion Workflow
 1. **Before starting**: Identify which tasks you're working on
 2. **During development**: Reference the task list to ensure completeness  
-3. **After finishing**: Update [tasklist.md](mdc:tasklist.md) to mark tasks as `[x]` completed
-4. **Before moving on**: Verify all sub-tasks are also checked off
+3. **Code Validation**: Follow the 4-step validation process above
+4. **After validation passes**: Update [tasklist.md](mdc:tasklist.md) to mark tasks as `[x]` completed
+5. **Before moving on**: Verify all sub-tasks are also checked off
 
 ### Example Task Update
 When completing "1.2 Core Type Definitions":
