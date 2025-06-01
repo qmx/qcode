@@ -1,0 +1,105 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# QCode Project Architecture & Implementation Guide
+
+## Project Overview
+QCode is a **terminal-based AI coding assistant** that provides a local alternative to Claude Coder by using Ollama instead of remote APIs. It's built with TypeScript and follows a security-first, hybrid architecture approach.
+
+**Key Differentiators:**
+- 🏠 **Local LLMs** - Uses Ollama for zero API costs and privacy
+- 🔧 **Direct Internal Tools** - Fast, native TypeScript tools
+- 🔗 **MCP Client Integration** - Connects to external MCP tools
+- 🔒 **Security First** - Workspace-contained operations
+- ⚡ **Professional UX** - Claude Coder-level terminal experience
+
+## Core Architecture
+
+### Project Structure
+The codebase follows a modular architecture as defined in [implementation-plan.md](mdc:implementation-plan.md):
+
+```
+src/
+├── core/           # Core engine and orchestration
+├── tools/          # Internal tools (files, git, search, etc.)
+├── mcp/            # MCP client integration
+├── config/         # Configuration management
+├── security/       # Security validation and enforcement
+├── types.ts        # Core TypeScript interfaces
+└── cli.ts          # CLI interface
+```
+
+### Implementation Phases
+Follow the 4-week implementation schedule in [tasklist.md](mdc:tasklist.md):
+
+1. **Phase 1 (Week 1)**: Core Foundation + Security
+2. **Phase 2 (Week 2)**: MCP Integration  
+3. **Phase 3 (Week 3)**: Enhanced Tools + Context
+4. **Phase 4 (Week 4)**: Professional Experience
+
+## Key Architectural Principles
+
+### 1. Security-First Design
+- **Workspace Boundaries**: All operations confined to workspace root
+- **Path Validation**: Prevent traversal attacks via [src/security/workspace.ts](mdc:src/security/workspace.ts)
+- **Command Injection Prevention**: Whitelist approach in [src/security/commands.ts](mdc:src/security/commands.ts)
+- **Input Sanitization**: Zod schemas for all tool inputs
+
+### 2. Namespaced Tool System
+Tools are organized with namespaces to prevent conflicts:
+- `internal.*` - Built-in TypeScript tools (files, git, search)
+- `{server}.*` - MCP server tools (e.g., `browser.navigate`, `filesystem.read`)
+
+**Tool Registry**: [src/core/registry.ts](mdc:src/core/registry.ts) manages all tool registration and execution.
+
+### 3. Hybrid Tool Architecture
+- **Internal Tools**: Fast, direct TypeScript implementations
+- **MCP Tools**: External tools via stdin/stdout or HTTP
+- **Unified Interface**: All tools implement the same `NamespacedTool` interface
+
+## Core Components
+
+### Configuration System
+Hierarchical configuration loading in [src/config/manager.ts](mdc:src/config/manager.ts):
+1. Built-in defaults ([src/config/defaults.ts](mdc:src/config/defaults.ts))
+2. Global config (`~/.qcode/config.json`)
+3. Project config (`.qcode/config.json`)
+4. Environment variables
+5. CLI arguments
+
+### Ollama Client
+[src/core/client.ts](mdc:src/core/client.ts) handles:
+- HTTP communication with Ollama API
+- Function calling with JSON formatting
+- Streaming response handling
+- Model availability checking
+
+### Tool Registry
+[src/core/registry.ts](mdc:src/core/registry.ts) manages:
+- Tool registration with namespacing (`internal.*`, `{server}.*`)
+- Unified tool execution interface
+- MCP server integration
+
+## Security Guidelines
+
+### Path Security
+- Always validate paths through [src/security/workspace.ts](mdc:src/security/workspace.ts)
+- Enforce workspace boundaries with `is-path-inside`
+- Block forbidden patterns (`.env`, `.ssh`, etc.)
+
+### Command Security
+- Whitelist allowed commands in [src/security/commands.ts](mdc:src/security/commands.ts)
+- Prevent command injection via argument sanitization
+
+## MCP Integration
+
+### Transport Types
+1. **Stdio Transport** ([src/mcp/stdio.ts](mdc:src/mcp/stdio.ts)) - Process spawning and stdin/stdout communication
+2. **HTTP Transport** ([src/mcp/http.ts](mdc:src/mcp/http.ts)) - HTTP streaming protocol and connection pooling
+
+### MCP Discovery
+[src/mcp/discovery.ts](mcp:src/mcp/discovery.ts) handles automatic server discovery and tool registration.
+
+This guide provides the architectural foundation for QCode development.

@@ -1,0 +1,102 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# QCode Task Priorities & Implementation Order
+
+## Current Status
+Based on [tasklist.md](mdc:tasklist.md), we are currently in **Phase 1: Core Foundation + Security**.
+
+### ✅ Completed (Week 1)
+- **1.1 Project Setup & Dependencies** - All tasks complete
+  - TypeScript project initialized with [tsconfig.json](mdc:tsconfig.json)
+  - Dependencies installed and configured in [package.json](mdc:package.json) 
+  - Build scripts and linting working with [.eslintrc.json](mdc:.eslintrc.json)
+  - Directory structure established
+
+### 🔄 Next Priority Tasks (In Order)
+
+#### 1. Core Type Definitions (1.2) - HIGH PRIORITY
+**MUST BE DONE FIRST** - All other components depend on these types.
+
+Create [src/types.ts](mdc:src/types.ts) with:
+- `NamespacedTool` interface - Foundation for all tool implementations
+- `MCPServerInfo` interface - Required for MCP integration
+- `ValidationResult<T>` interface - Used throughout security layer
+- `ToolDefinition` interface - Ollama function calling format
+- `QCodeError` class - Centralized error handling
+- `Config` and related configuration types
+
+#### 2. Security Framework (1.3) - CRITICAL PATH
+**SECURITY FIRST** - No tools can be implemented without this foundation.
+
+**Order matters:**
+1. [src/security/workspace.ts](mdc:src/security/workspace.ts) - Path validation core
+2. [src/security/paths.ts](mdc:src/security/paths.ts) - Path utilities 
+3. [src/security/commands.ts](mdc:src/security/commands.ts) - Command validation
+
+#### 3. Configuration System (1.4) - ENABLES ALL FEATURES
+Required for Ollama client and all subsequent components.
+
+**Implementation order:**
+1. [src/config/defaults.ts](mdc:src/config/defaults.ts) - Base configuration
+2. [src/config/validation.ts](mdc:src/config/validation.ts) - Zod schemas
+3. [src/config/manager.ts](mcp:src/config/manager.ts) - Hierarchical loading
+
+#### 4. Core Engine Components (1.5-1.6)
+Can be developed in parallel after security is complete.
+
+**Parallel development:**
+- [src/core/client.ts](mdc:src/core/client.ts) - Ollama HTTP client
+- [src/core/registry.ts](mdc:src/core/registry.ts) - Tool registry with namespacing
+
+#### 5. First Internal Tool (1.7) - VALIDATION MILESTONE
+Proves the architecture works end-to-end.
+
+[src/tools/files.ts](mdc:src/tools/files.ts) - File operations tool
+- **Depends on**: Security framework, tool registry, types
+- **Validates**: Security integration, tool pattern, Zod schemas
+
+#### 6. Complete Phase 1 (1.8-1.10)
+Final Phase 1 components:
+
+- [src/core/engine.ts](mdc:src/core/engine.ts) - Query processing
+- Enhanced [src/cli.ts](mdc:src/cli.ts) - Full CLI interface  
+- Testing setup and basic tests
+
+## Critical Dependencies
+
+### Security Framework Dependencies
+```
+Types (1.2) → Security (1.3) → ALL OTHER COMPONENTS
+```
+**Nothing can be built without security foundation!**
+
+### Tool Implementation Dependencies
+```
+Types → Security → Registry → Tools
+```
+
+### Configuration Dependencies  
+```
+Types → Config (1.4) → Ollama Client (1.5) → Engine (1.9)
+```
+
+## Common Pitfalls to Avoid
+
+### 1. Skipping Security Validation
+❌ **DON'T**: Implement tools without security checks
+✅ **DO**: Always validate paths and commands first
+
+### 2. Hardcoding Configuration
+❌ **DON'T**: Use hardcoded URLs or settings
+✅ **DO**: Use the configuration system for all settings
+
+### 3. Tool Implementation Without Registry
+❌ **DON'T**: Create tools that bypass the registry
+✅ **DO**: Register all tools through the central registry
+
+### 4. Inconsistent Error Handling
+❌ **DON'T**: Use generic Error objects
+✅ **DO**: Use QCodeError with specific error codes

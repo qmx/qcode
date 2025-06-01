@@ -1,0 +1,253 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# QCode Development Standards & Conventions
+
+## TypeScript Coding Standards
+
+### File Organization
+- Use barrel exports in `index.ts` files for clean imports
+- Group related functionality in dedicated directories
+- Follow the established structure in [src/](mdc:src/)
+
+### Code Style
+Follow the ESLint configuration in [.eslintrc.json](mdc:.eslintrc.json):
+- Use underscore prefix for intentionally unused parameters (`_param`)
+- Prefer `const` over `let`, never use `var`
+- Use arrow functions where appropriate
+- Add `// eslint-disable-next-line no-console` for intentional console usage
+
+### Type Definitions
+All core types are defined in [src/types.ts](mdc:src/types.ts):
+
+```typescript
+// Tool interface pattern
+interface NamespacedTool {
+  name: string;
+  description: string;
+  schema: ZodSchema;
+  execute(args: any): Promise<any>;
+}
+
+// Error handling
+class QCodeError extends Error {
+  constructor(message: string, public code: string) {
+    super(message);
+  }
+}
+```
+
+## Security Implementation Standards
+
+### Path Validation Pattern
+Always use the security framework from [src/security/workspace.ts](mdc:src/security/workspace.ts):
+
+```typescript
+import { WorkspaceSecurity } from '../security/workspace.js';
+
+// Before any file operation
+const security = new WorkspaceSecurity(workspaceRoot);
+const safePath = await security.validatePath(userPath);
+```
+
+### Input Validation
+Use Zod schemas for all tool inputs:
+
+```typescript
+const schema = z.object({
+  path: z.string().min(1),
+  content: z.string().optional()
+});
+
+// Validate before processing
+const args = schema.parse(rawInput);
+```
+
+## Tool Development Pattern
+
+### Internal Tool Template
+Follow this pattern for all internal tools in [src/tools/](mdc:src/tools/):
+
+```typescript
+export class ExampleTool {
+  readonly name = 'example-tool';
+  readonly description = 'Tool description';
+  readonly schema = z.object({
+    // Define required/optional parameters
+  });
+
+  async execute(args: z.infer<typeof this.schema>): Promise<ToolResult> {
+    // 1. Security validation
+    // 2. Core logic
+    // 3. Error handling
+    // 4. Return structured result
+  }
+
+  toOllamaFormat(): ToolDefinition {
+    return {
+      type: 'function',
+      function: {
+        name: this.name,
+        description: this.description,
+        parameters: zodToJsonSchema(this.schema)
+      }
+    };
+  }
+}
+```
+
+### Tool Registration
+Register tools with namespacing in [src/core/registry.ts](mdc:src/core/registry.ts):
+
+```typescript
+// Internal tools use 'internal' namespace
+registry.registerTool('internal', new FilesTool());
+registry.registerTool('internal', new GitTool());
+
+// MCP tools use server name as namespace
+registry.registerMCPServer('browser', browserMCPClient);
+```
+
+## Testing Standards
+
+### Test File Organization
+- Place tests in `tests/` directory matching `src/` structure
+- Use `.test.ts` suffix for test files
+- Group related tests in describe blocks
+
+### Test Categories
+1. **Unit Tests**: Test individual components in isolation
+2. **Integration Tests**: Test component interactions
+3. **Security Tests**: Validate security boundaries
+4. **VCR Tests**: Record/replay Ollama API interactions
+
+### Security Test Pattern
+```typescript
+describe('Security Validation', () => {
+  test('prevents path traversal', async () => {
+    const security = new WorkspaceSecurity('/workspace');
+    await expect(security.validatePath('../../../etc/passwd'))
+      .rejects.toThrow('Path outside workspace');
+  });
+});
+```
+
+## Error Handling Standards
+
+### Error Classification
+Use specific error types with codes:
+
+```typescript
+// Security errors
+throw new QCodeError('Path outside workspace', 'SECURITY_PATH_TRAVERSAL');
+
+// Configuration errors  
+throw new QCodeError('Invalid config format', 'CONFIG_INVALID_FORMAT');
+
+// Tool execution errors
+throw new QCodeError('File not found', 'TOOL_FILE_NOT_FOUND');
+```
+
+### Recovery Suggestions
+Always provide actionable error messages:
+
+```typescript
+throw new QCodeError(
+  'Ollama server not responding. Try: ollama serve',
+  'OLLAMA_CONNECTION_FAILED'
+);
+```
+
+## Configuration Standards
+
+### Config File Format
+Follow the schema defined in [src/config/validation.ts](mdc:src/config/validation.ts):
+
+```json
+{
+  "ollama": {
+    "baseUrl": "http://localhost:11434",
+    "model": "codestral",
+    "timeout": 30000
+  },
+  "security": {
+    "allowedCommands": ["git", "npm", "node"],
+    "forbiddenPaths": [".env", ".ssh"]
+  },
+  "mcp": {
+    "servers": {
+      "browser": {
+        "command": "npx",
+        "args": ["@modelcontextprotocol/server-browser"]
+      }
+    }
+  }
+}
+```
+
+### Environment Variables
+- Prefix all environment variables with `QCODE_`
+- Override config values: `QCODE_OLLAMA_MODEL=llama3`
+- Boolean values: `QCODE_DEBUG=true`
+
+## Documentation Standards
+
+### JSDoc Comments
+Document all public APIs:
+
+```typescript
+/**
+ * Validates a file path against workspace boundaries
+ * @param path - The path to validate (relative or absolute)
+ * @returns Promise resolving to normalized, safe path
+ * @throws QCodeError if path is outside workspace
+ */
+async validatePath(path: string): Promise<string> {
+  // Implementation
+}
+```
+
+### README Updates
+Keep [README.md](mdc:README.md) focused on:
+- Quick start instructions
+- Basic usage examples
+- Current implementation status
+- Essential configuration
+
+## Task Completion Tracking
+
+### ✅ CRITICAL: Update Task List
+**ALWAYS** check off completed tasks in [tasklist.md](mdc:tasklist.md) when work is finished:
+
+```markdown
+# Change from:
+- [ ] Initialize TypeScript project with proper tsconfig.json
+
+# To:
+- [x] Initialize TypeScript project with proper tsconfig.json
+```
+
+### Task Completion Workflow
+1. **Before starting**: Identify which tasks you're working on
+2. **During development**: Reference the task list to ensure completeness  
+3. **After finishing**: Update [tasklist.md](mdc:tasklist.md) to mark tasks as `[x]` completed
+4. **Before moving on**: Verify all sub-tasks are also checked off
+
+### Example Task Update
+When completing "1.2 Core Type Definitions":
+```markdown
+### 1.2 Core Type Definitions
+- [x] Create `src/types.ts` with core interfaces:
+  - [x] `NamespacedTool` interface
+  - [x] `MCPServerInfo` interface  
+  - [x] `ValidationResult<T>` interface
+  - [x] `ToolDefinition` interface
+  - [x] `QCodeError` class
+  - [x] `Config` and related configuration types
+```
+
+This keeps the project status visible and helps track progress through the implementation phases.
+
+This standard should be followed throughout the development process to ensure code quality and architectural consistency.
