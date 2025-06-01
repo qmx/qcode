@@ -1,6 +1,7 @@
 # QCode Implementation Task List
 
 ## 📋 Overview
+
 This task list implements the QCode TypeScript-based AI coding assistant as outlined in the implementation plan. The project is organized into 4 weekly phases with clear deliverables.
 
 **Target**: Enterprise-grade QCode with zero API costs, full privacy control, and Claude Coder-level user experience.
@@ -8,10 +9,12 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 ---
 
 ## 🏗️ Phase 1: Core Foundation + Security (Week 1)
+
 **Goal**: Build secure foundation with Ollama + namespaced internal tools  
 **Deliverable**: `qcode "list files"` works with proper security
 
 ### 1.1 Project Setup & Dependencies
+
 - [x] Initialize TypeScript project with proper tsconfig.json
 - [x] Set up package.json with required dependencies:
   - [x] @types/node, typescript, commander, chalk
@@ -23,15 +26,17 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 - [x] Create initial directory structure as per architecture
 
 ### 1.2 Core Type Definitions
-- [ ] Create `src/types.ts` with core interfaces:
-  - [ ] `NamespacedTool` interface
-  - [ ] `MCPServerInfo` interface  
-  - [ ] `ValidationResult<T>` interface
-  - [ ] `ToolDefinition` interface
-  - [ ] `QCodeError` class
-  - [ ] `Config` and related configuration types
+
+- [x] Create `src/types.ts` with core interfaces:
+  - [x] `NamespacedTool` interface
+  - [x] `MCPServerInfo` interface
+  - [x] `ValidationResult<T>` interface
+  - [x] `ToolDefinition` interface
+  - [x] `QCodeError` class
+  - [x] `Config` and related configuration types
 
 ### 1.3 Security Framework
+
 - [ ] Implement `src/security/workspace.ts`:
   - [ ] `WorkspaceSecurity` class with path validation
   - [ ] Workspace boundary enforcement with `isPathInside`
@@ -47,6 +52,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Argument sanitization
 
 ### 1.4 Configuration System
+
 - [ ] Implement `src/config/defaults.ts`:
   - [ ] Default configuration object
   - [ ] Security default settings
@@ -60,6 +66,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Config file discovery and parsing
 
 ### 1.5 Ollama Client
+
 - [ ] Implement `src/core/client.ts`:
   - [ ] HTTP client for Ollama API
   - [ ] Function calling support with JSON formatting
@@ -69,6 +76,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Model availability checking
 
 ### 1.6 Tool Registry System
+
 - [ ] Implement `src/core/registry.ts`:
   - [ ] `ToolRegistry` class with namespacing
   - [ ] Internal tool registration with "internal" namespace
@@ -78,6 +86,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Tool definition formatting for Ollama
 
 ### 1.7 Internal File Operations Tool
+
 - [ ] Implement `src/tools/files.ts`:
   - [ ] `FilesTool` class with Zod schema validation
   - [ ] Read file operation (with line range support)
@@ -88,6 +97,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Error handling for file operations
 
 ### 1.8 Basic CLI Interface
+
 - [ ] Implement `src/cli.ts`:
   - [ ] Command-line argument parsing with Commander
   - [ ] One-shot command execution
@@ -96,6 +106,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Error handling and user feedback
 
 ### 1.9 Core Engine
+
 - [ ] Implement `src/core/engine.ts`:
   - [ ] Main query processing engine
   - [ ] Tool orchestration and execution
@@ -103,6 +114,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Error handling and recovery
 
 ### 1.10 Testing Setup
+
 - [ ] Set up Jest testing framework
 - [ ] Create test directory structure
 - [ ] Implement basic security tests
@@ -110,6 +122,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 - [ ] Basic tool execution tests
 
 **Phase 1 Acceptance Criteria**:
+
 - [ ] `qcode "list files in src/"` works securely
 - [ ] All file operations respect workspace boundaries
 - [ ] Configuration loads from multiple sources
@@ -119,10 +132,12 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 ---
 
 ## 🔗 Phase 2: MCP Integration (Week 2)
+
 **Goal**: Connect to external MCP tools via stdin/stdout and HTTP  
 **Deliverable**: External MCP tools work with namespaced execution
 
 ### 2.1 MCP Core Infrastructure
+
 - [ ] Implement `src/mcp/client.ts`:
   - [ ] Base MCP client interface
   - [ ] Common MCP protocol handling
@@ -130,6 +145,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Tool discovery and registration
 
 ### 2.2 MCP Stdio Transport
+
 - [ ] Implement `src/mcp/stdio.ts`:
   - [ ] `MCPStdioClient` class
   - [ ] Process spawning and management
@@ -139,6 +155,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Error handling for process failures
 
 ### 2.3 MCP HTTP Transport
+
 - [ ] Implement `src/mcp/http.ts`:
   - [ ] `MCPHttpClient` class
   - [ ] HTTP streaming protocol implementation
@@ -147,6 +164,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Timeout and retry logic
 
 ### 2.4 MCP Discovery System
+
 - [ ] Implement `src/mcp/discovery.ts`:
   - [ ] Automatic MCP server discovery
   - [ ] Tool enumeration and registration
@@ -154,6 +172,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Dynamic tool loading
 
 ### 2.5 Enhanced Tool Registry
+
 - [ ] Extend `src/core/registry.ts`:
   - [ ] MCP server registration integration
   - [ ] Tool namespace conflict resolution
@@ -162,6 +181,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Graceful server failure handling
 
 ### 2.6 Configuration for MCP
+
 - [ ] Extend configuration system:
   - [ ] MCP server configuration schema
   - [ ] Server connection parameters
@@ -169,6 +189,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Server-specific security policies
 
 ### 2.7 Enhanced CLI for MCP
+
 - [ ] Add MCP-specific CLI commands:
   - [ ] Server status display
   - [ ] Tool listing by namespace
@@ -176,6 +197,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Debug mode for MCP communication
 
 ### 2.8 MCP Testing
+
 - [ ] Create MCP test infrastructure:
   - [ ] Mock MCP servers for testing
   - [ ] Integration tests with real MCP servers
@@ -183,6 +205,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Tool execution tests across transports
 
 **Phase 2 Acceptance Criteria**:
+
 - [ ] Can connect to MCP servers via stdio and HTTP
 - [ ] External tools execute with proper namespacing
 - [ ] Graceful handling of MCP server failures
@@ -192,10 +215,12 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 ---
 
 ## 🛠️ Phase 3: Enhanced Tools + Context (Week 3)
+
 **Goal**: Advanced internal tools and project understanding  
 **Deliverable**: Can edit files intelligently and understand project structure
 
 ### 3.1 Advanced File Editing Tool
+
 - [ ] Implement `src/tools/edit.ts`:
   - [ ] `EditTool` class with diff support
   - [ ] Line-based editing operations
@@ -205,6 +230,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Conflict detection and resolution
 
 ### 3.2 Shell Execution Tool
+
 - [ ] Implement `src/tools/shell.ts`:
   - [ ] `ShellTool` class with security restrictions
   - [ ] Command whitelist enforcement
@@ -214,6 +240,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Timeout and process control
 
 ### 3.3 Git Integration Tool
+
 - [ ] Implement `src/tools/git.ts`:
   - [ ] `GitTool` class for repository operations
   - [ ] Status, diff, and log operations
@@ -223,6 +250,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Security validation for git operations
 
 ### 3.4 Advanced Search Tool
+
 - [ ] Implement `src/tools/search.ts`:
   - [ ] `SearchTool` class with multiple search types
   - [ ] Code search with syntax awareness
@@ -232,6 +260,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Performance optimization for large codebases
 
 ### 3.5 Project Context System
+
 - [ ] Implement `src/core/context.ts`:
   - [ ] `ProjectContext` class for project understanding
   - [ ] Codebase structure analysis
@@ -241,6 +270,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Context memory management
 
 ### 3.6 Project Analysis Tool
+
 - [ ] Implement `src/tools/project.ts`:
   - [ ] `ProjectTool` class for structure analysis
   - [ ] Package.json and dependency analysis
@@ -250,6 +280,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Documentation generation
 
 ### 3.7 Enhanced Engine
+
 - [ ] Extend `src/core/engine.ts`:
   - [ ] Context-aware query processing
   - [ ] Multi-step task planning
@@ -258,6 +289,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Smart tool selection based on context
 
 ### 3.8 Diff and Merge Utilities
+
 - [ ] Create diff utilities:
   - [ ] Three-way merge support
   - [ ] Conflict resolution strategies
@@ -265,6 +297,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Patch generation and application
 
 ### 3.9 Enhanced Testing
+
 - [ ] Add comprehensive tool tests:
   - [ ] Edit tool tests with real file scenarios
   - [ ] Git integration tests
@@ -273,6 +306,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Multi-tool workflow tests
 
 **Phase 3 Acceptance Criteria**:
+
 - [ ] Can intelligently edit files with diff preview
 - [ ] Understands project structure and dependencies
 - [ ] Git operations work securely and correctly
@@ -282,10 +316,12 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 ---
 
 ## 🎨 Phase 4: Professional Experience (Week 4)
+
 **Goal**: Production-ready CLI with interactive mode and polish  
 **Deliverable**: Enterprise-grade QCode ready for daily use
 
 ### 4.1 Interactive Chat Mode
+
 - [ ] Implement interactive CLI interface:
   - [ ] Readline-based chat interface
   - [ ] Command history and autocomplete
@@ -294,6 +330,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Context preservation across queries
 
 ### 4.2 Slash Command System
+
 - [ ] Implement Claude Coder-compatible slash commands:
   - [ ] `/init` - Project initialization
   - [ ] `/config` - Configuration management
@@ -303,6 +340,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] `/help` - Command documentation
 
 ### 4.3 Streaming UX Enhancement
+
 - [ ] Implement professional streaming interface:
   - [ ] Real-time progress indicators
   - [ ] Tool execution feedback
@@ -311,6 +349,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Token-by-token streaming for responses
 
 ### 4.4 Enhanced Error Handling
+
 - [ ] Implement comprehensive error system:
   - [ ] Contextual error messages
   - [ ] Recovery suggestions
@@ -319,6 +358,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Error reporting and logging
 
 ### 4.5 Configuration UI
+
 - [ ] Create configuration management interface:
   - [ ] Interactive config setup
   - [ ] Configuration validation and testing
@@ -327,6 +367,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Security settings management
 
 ### 4.6 Help and Documentation System
+
 - [ ] Implement comprehensive help system:
   - [ ] Built-in command documentation
   - [ ] Example query suggestions
@@ -335,6 +376,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Performance tips and best practices
 
 ### 4.7 Performance Optimization
+
 - [ ] Optimize performance across the system:
   - [ ] Response time optimization
   - [ ] Memory usage optimization
@@ -343,6 +385,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Background processing for non-blocking operations
 
 ### 4.8 Production Hardening
+
 - [ ] Implement production-ready features:
   - [ ] Comprehensive logging system
   - [ ] Health checks and monitoring
@@ -351,6 +394,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Rate limiting and throttling
 
 ### 4.9 VCR Testing System
+
 - [ ] Implement VCR-style testing:
   - [ ] Ollama API response recording
   - [ ] Deterministic test playback
@@ -359,6 +403,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Test coverage reporting
 
 ### 4.10 Final Integration and Polish
+
 - [ ] Complete system integration:
   - [ ] End-to-end workflow testing
   - [ ] Performance benchmarking
@@ -367,6 +412,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Release preparation
 
 **Phase 4 Acceptance Criteria**:
+
 - [ ] Interactive mode provides smooth chat experience
 - [ ] All slash commands work like Claude Coder
 - [ ] Error messages are helpful with recovery suggestions
@@ -378,18 +424,21 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 ## 🧪 Testing Strategy (Ongoing)
 
 ### Unit Tests
+
 - [ ] Security validation tests (path traversal, command injection)
 - [ ] Configuration loading and validation tests
 - [ ] Tool execution tests with mocked dependencies
 - [ ] Error handling and recovery tests
 
 ### Integration Tests
+
 - [ ] Ollama API integration with VCR recordings
 - [ ] MCP server integration tests
 - [ ] Multi-tool workflow tests
 - [ ] File system operation tests
 
 ### End-to-End Tests
+
 - [ ] Complete user workflow scenarios
 - [ ] Interactive mode testing
 - [ ] Performance and stress testing
@@ -400,12 +449,14 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 ## 📦 Deployment Preparation
 
 ### Build System
+
 - [ ] Production build configuration
 - [ ] Binary packaging (optional)
 - [ ] npm package preparation
 - [ ] Cross-platform compatibility testing
 
 ### Documentation
+
 - [ ] README.md with installation and usage
 - [ ] Configuration documentation
 - [ ] API documentation for tools
@@ -413,6 +464,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 - [ ] Security best practices
 
 ### Release Preparation
+
 - [ ] Version management setup
 - [ ] Release automation
 - [ ] Update mechanism (if needed)
@@ -423,13 +475,15 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 ## 🎯 Success Metrics Tracking
 
 ### Technical Requirements
+
 - [ ] Zero critical security vulnerabilities
-- [ ] >95% tool execution success rate
+- [ ] > 95% tool execution success rate
 - [ ] <2s response time for simple queries
-- [ ] >90% test coverage (unit + integration)
+- [ ] > 90% test coverage (unit + integration)
 - [ ] Graceful handling of MCP server failures
 
 ### User Experience Goals
+
 - [ ] Claude Coder-compatible commands and workflow
 - [ ] Real-time streaming with clear progress indicators
 - [ ] Helpful error messages with recovery suggestions
@@ -437,6 +491,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 - [ ] Professional terminal experience
 
 ### Performance Targets
+
 - [ ] Tool execution: <500ms for file operations
 - [ ] MCP calls: <2s timeout with retry logic
 - [ ] Context building: <1s for typical projects
@@ -447,17 +502,20 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 ## 🚀 Dependencies and Blockers
 
 ### External Dependencies
+
 - [ ] Ollama server availability and compatibility
 - [ ] MCP specification stability
 - [ ] Node.js and TypeScript ecosystem
 
 ### Internal Dependencies
+
 - [ ] Security framework must be completed before tools
 - [ ] Core registry required before MCP integration
 - [ ] Basic CLI needed before interactive mode
 - [ ] Configuration system required for all phases
 
 ### Risk Mitigation
+
 - [ ] Fallback strategies for MCP server failures
 - [ ] Offline mode for basic operations
 - [ ] Alternative model support beyond Ollama
@@ -467,4 +525,4 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 
 **Total Estimated Tasks**: ~120 tasks across 4 weeks
 **Critical Path**: Security → Core → MCP → Tools → UX
-**Key Milestones**: Week 1 (Basic functionality), Week 2 (MCP integration), Week 3 (Advanced tools), Week 4 (Production ready) 
+**Key Milestones**: Week 1 (Basic functionality), Week 2 (MCP integration), Week 3 (Advanced tools), Week 4 (Production ready)
