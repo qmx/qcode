@@ -41,4 +41,4 @@ qcode
 
 ## License
 
-MIT 
+MIT
