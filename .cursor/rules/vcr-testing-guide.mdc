@@ -1,0 +1,218 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# VCR Testing Guide for QCode
+
+## Overview
+
+VCR (Video Cassette Recorder) testing allows us to record real HTTP interactions with external services (like Ollama) and replay them deterministically in tests. This provides the benefits of integration testing with real APIs while maintaining test reliability and speed.
+
+## VCR Infrastructure
+
+Our VCR implementation uses `nock` for HTTP recording/replaying. See the complete example in [tests/integration/ollama-client.test.ts](mdc:tests/integration/ollama-client.test.ts).
+
+## Environment Variables
+
+- `NOCK_MODE=record` - Record new interactions with real APIs
+- `NOCK_MODE=replay` (default) - Replay recorded interactions
+
+## VCR Test Structure
+
+### 1. Test File Setup
+
+```typescript
+import nock from 'nock';
+import fs from 'fs/promises';
+import path from 'path';
+
+describe('Your VCR Test Suite', () => {
+  let recordingsPath: string;
+
+  beforeAll(async () => {
+    recordingsPath = path.join(__dirname, '../fixtures/recordings');
+    await fs.mkdir(recordingsPath, { recursive: true });
+  });
+
+  beforeEach(() => {
+    if (process.env.NOCK_MODE === 'record') {
+      // Allow real HTTP and record interactions
+      nock.restore();
+      nock.recorder.rec({
+        output_objects: true,
+        enable_reqheaders_recording: false, // More stable replays
+      });
+    } else {
+      // Block real HTTP requests in replay mode
+      nock.disableNetConnect();
+    }
+  });
+
+  afterEach(async () => {
+    if (process.env.NOCK_MODE === 'record') {
+      nock.recorder.clear();
+    } else {
+      nock.cleanAll();
+    }
+  });
+});
+```
+
+### 2. Individual Test Pattern
+
+Each VCR test follows this pattern:
+
+```typescript
+it('should handle some API interaction', async () => {
+  const testName = 'descriptive_test_name';
+
+  if (process.env.NOCK_MODE !== 'record') {
+    // REPLAY MODE: Load and apply recorded interactions
+    const recordingFile = path.join(recordingsPath, `${testName}.json`);
+    try {
+      const recordings = JSON.parse(await fs.readFile(recordingFile, 'utf-8'));
+      recordings.forEach((recording: any) => {
+        const scope = nock(recording.scope);
+        if (recording.method.toLowerCase() === 'get') {
+          scope.get(recording.path).reply(recording.status, recording.response);
+        } else if (recording.method.toLowerCase() === 'post') {
+          scope.post(recording.path).reply(recording.status, recording.response);
+        }
+      });
+    } catch (error) {
+      console.log('No recording found, skipping test in replay mode');
+      return;
+    }
+  }
+
+  // ACTUAL TEST: Make real API calls (record mode) or use mocked responses (replay mode)
+  const result = await yourAPICall();
+
+  // ASSERTIONS: Test the response
+  expect(result).toBeDefined();
+  expect(result.someProperty).toBe('expectedValue');
+
+  if (process.env.NOCK_MODE === 'record') {
+    // RECORD MODE: Save the HTTP interactions
+    const recordings = nock.recorder.play();
+    if (recordings.length > 0) {
+      const recordingFile = path.join(recordingsPath, `${testName}.json`);
+      await fs.writeFile(recordingFile, JSON.stringify(recordings, null, 2));
+      console.log(`Recorded ${recordings.length} HTTP interactions to ${recordingFile}`);
+    }
+    nock.recorder.clear();
+  }
+});
+```
+
+## Recording New VCR Tests
+
+### Step 1: Write the Test
+Write your test using the pattern above with a unique `testName`.
+
+### Step 2: Record Real Interactions
+```bash
+# Make sure Ollama is running
+ollama serve
+
+# Run tests in record mode to capture real API interactions
+NOCK_MODE=record npm test -- tests/your-test-file.test.ts
+```
+
+### Step 3: Verify Recordings
+Check that recordings were created in `tests/fixtures/recordings/`:
+- Each test should have its own `.json` file
+- Files should contain realistic HTTP request/response data
+- Review recordings to ensure no sensitive data is captured
+
+### Step 4: Test Replay Mode
+```bash
+# Run tests in replay mode (default) to ensure deterministic behavior
+npm test -- tests/your-test-file.test.ts
+```
+
+## Best Practices
+
+### 1. Naming Conventions
+- Use descriptive snake_case test names: `basic_chat_completion`, `function_calling_with_tools`
+- Test names become recording filenames, so make them clear
+
+### 2. Test Isolation
+- Each test should have its own recording file
+- Don't share recordings between different test scenarios
+- Use unique test names across the entire test suite
+
+### 3. Recording Management
+- Keep recordings in version control for deterministic CI/CD
+- Re-record when API contracts change
+- Review recordings before committing to avoid sensitive data
+
+### 4. Error Handling
+- Always handle missing recordings gracefully in replay mode
+- Use try/catch when loading recording files
+- Skip tests if recordings are missing rather than failing
+
+### 5. Data Validation
+- Record mode: Log important response data for debugging
+- Replay mode: Assert on realistic response structures
+- Test both success and error scenarios
+
+## File Organization
+
+```
+tests/
+├── fixtures/
+│   └── recordings/           # VCR recordings (JSON files)
+│       ├── basic_chat_completion.json
+│       ├── function_calling_with_tools.json
+│       └── model_availability_check.json
+├── integration/              # VCR integration tests
+│   ├── ollama-client.test.ts # Example VCR test file
+│   └── engine.test.ts        # Engine VCR tests
+└── unit/                     # Regular unit tests (no HTTP)
+```
+
+## Common Issues
+
+### Recording Doesn't Work
+- Ensure the external service (Ollama) is running
+- Check that `NOCK_MODE=record` is set
+- Verify recording directory permissions
+
+### Replay Fails
+- Ensure recordings exist for the test
+- Check that test names match recording filenames
+- Verify nock setup matches recording format
+
+### Flaky Tests
+- Disable request header recording: `enable_reqheaders_recording: false`
+- Use stable test data (avoid timestamps, random IDs)
+- Record in a consistent environment
+
+## Example: Engine VCR Tests
+
+For engine tests that need real Ollama interactions, use this pattern:
+
+```typescript
+// tests/core/engine-vcr.test.ts
+describe('QCodeEngine VCR Tests', () => {
+  // ... VCR setup ...
+
+  it('should process help query with real LLM', async () => {
+    const testName = 'engine_help_query';
+    
+    // ... VCR replay setup ...
+    
+    const engine = new QCodeEngine(realOllamaClient, toolRegistry, config);
+    const response = await engine.processQuery('help');
+    
+    expect(response.complete).toBe(true);
+    expect(response.response).toContain('QCode AI Coding Assistant');
+    
+    // ... VCR recording save ...
+  });
+});
+```
+
+This ensures our engine tests use real Ollama responses while remaining deterministic and fast in CI/CD.

@@ -1,0 +1,62 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Testing Preferences and Guidelines
+
+## VCR Testing Over Mocks
+
+**CRITICAL: The user has a strong preference for VCR testing over mocks, especially for external API interactions.**
+
+### Ollama Testing Rules
+
+- **NEVER mock Ollama client methods** - use VCR recording/replay instead
+- **Real HTTP interactions only** - record actual Ollama API calls with `nock`
+- **Deterministic testing** - use recorded fixtures for consistent test results
+- **No jest.spyOn() or mockResolvedValue()** for Ollama-related functionality
+
+### VCR Implementation Pattern
+
+```typescript
+// CORRECT - VCR with real HTTP recording
+if (process.env.NOCK_MODE !== 'record') {
+  const recordings = JSON.parse(await fs.readFile(recordingFile, 'utf-8'));
+  recordings.forEach((recording: any) => {
+    nock(recording.scope).get(recording.path).reply(recording.status, recording.response);
+  });
+}
+
+const result = await realOllamaClient.someMethod();
+
+if (process.env.NOCK_MODE === 'record') {
+  const recordings = nock.recorder.play();
+  await fs.writeFile(recordingFile, JSON.stringify(recordings, null, 2));
+}
+```
+
+```typescript
+// WRONG - Do not use mocks for Ollama
+const mockValidateConnection = jest.spyOn(ollamaClient, 'validateConnection');
+mockValidateConnection.mockResolvedValue(true); // ❌ NEVER DO THIS
+```
+
+### Existing VCR Coverage
+
+The following Ollama functionality is already covered by VCR tests in [tests/integration/ollama-client.test.ts](mdc:tests/integration/ollama-client.test.ts):
+
+- **Model availability check** - `model_availability_check.json`
+- **Basic chat completion** - `basic_chat_completion.json` 
+- **Function calling** - `function_calling_with_tools.json`
+
+### Test Redundancy Guidelines
+
+- **Avoid duplicating VCR tests** - if Ollama functionality is already tested with VCR, don't test it again
+- **Focus on unique behavior** - test the specific logic your component adds, not the underlying API calls
+- **Remove redundant tests** rather than convert them to mocks
+
+### When Mocks Are Acceptable
+
+- **Internal components only** - mock your own classes/functions, not external APIs
+- **Error simulation** - when you need to test specific error conditions that are hard to reproduce
+- **Unit test isolation** - when testing pure business logic without external dependencies

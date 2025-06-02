@@ -1,0 +1,84 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Development Approach and TDD Philosophy
+
+## End-to-End First Development
+
+**CRITICAL: Always implement small, complete slices that work end-to-end rather than building components in isolation.**
+
+### Core Principles
+
+1. **Working Functionality Over Complete Features**
+   - Implement one complete workflow that works from CLI to tools
+   - Prefer "shallow but complete" over "deep but isolated"
+   - Each increment should provide immediate user value
+
+2. **Small Slices with Real Integration**
+   - Build the minimum needed to make one complete user journey work
+   - Test the actual integration between components, not mocks
+   - Focus on the "happy path" first, then add edge cases
+
+### TDD with VCR Pattern
+
+Based on our testing preferences documented in [testing-preferences.mdc](mdc:.cursor/rules/testing-preferences.mdc):
+
+```typescript
+// CORRECT - End-to-end VCR test
+it('should handle complete user workflow', async () => {
+  // Test: qcode "show me package.json" 
+  // → LLM function calling 
+  // → real file read 
+  // → formatted response
+  
+  const response = await engine.processQuery('show me package.json');
+  expect(response.response).toContain('package.json content');
+});
+```
+
+### Implementation Strategy
+
+1. **Start with End Goal**: What should the user be able to do?
+2. **Work Backwards**: What components need to exist for that to work?
+3. **Implement Minimum Viable**: Build just enough to make it work
+4. **Test End-to-End**: Use VCR to test the complete workflow
+5. **Iterate and Improve**: Add more operations, better error handling, etc.
+
+### Example: File Operations Approach
+
+**❌ WRONG - Build complete file tool first:**
+```
+1. Implement all file operations (read, write, list, search)
+2. Test each operation in isolation
+3. Build engine separately
+4. Integrate at the end
+```
+
+**✅ CORRECT - End-to-end slices:**
+```
+1. Implement read operation + LLM function calling + CLI integration
+   → User can do: qcode "show me package.json"
+2. Add list operation to existing workflow
+   → User can do: qcode "list files in src/"
+3. Add write operation to existing workflow
+   → User can do: qcode "create a README with X content"
+```
+
+### Current Implementation Sequence
+
+Following this philosophy in our [task list](mdc:tasklist.md):
+
+1. **1.7.2** - Read operation (isolated, but complete)
+2. **1.8.2** - Read + LLM function calling (end-to-end MVP)
+3. **Next** - Add list operation to the same workflow
+4. **Later** - Add write, search operations incrementally
+
+### Benefits of This Approach
+
+- **Immediate Feedback**: See working functionality quickly
+- **Real Integration Testing**: Catch integration issues early
+- **User-Driven Development**: Each slice provides user value
+- **Risk Reduction**: Avoid big-bang integration problems
+- **Motivation**: Working software is more motivating than isolated components
