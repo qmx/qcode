@@ -5,7 +5,52 @@ alwaysApply: false
 ---
 # Commit Workflow Rules
 
-## NEVER commit without explicit user instruction
+## Git Commit Guidelines
+
+### CRITICAL: User Permission Required
+- **NEVER commit changes without explicit user instruction**
+- Wait for user to say "commit" or "commit the changes" before making any commits
+- User controls when and what gets committed
+
+### Atomic Commit Strategy
+- **Make separate commits for unrelated changes**
+- Each commit should represent ONE logical change
+- Split changes by:
+  - Different files with different purposes
+  - Different types of changes (implementation vs documentation vs tests)
+  - Different features or bug fixes
+
+### Examples of What Should Be Split:
+
+**❌ BAD - Grouped Commit:**
+```bash
+git commit -m "Update tasklist.md and implementation-plan.md to remove performance testing"
+```
+
+**✅ GOOD - Atomic Commits:**
+```bash
+git commit -m "Remove performance tests from file operations in tasklist.md"
+git commit -m "Remove Performance Targets section from implementation-plan.md"
+```
+
+### Commit Message Format
+- Use descriptive, specific commit messages
+- Start with verb (Add, Remove, Fix, Update, Implement)
+- Reference specific files or sections when appropriate
+- Explain the "what" and "why" concisely
+
+### Files to Consider for Split Commits
+- [tasklist.md](mdc:tasklist.md) - Task list updates
+- [implementation-plan.md](mdc:implementation-plan.md) - Architecture documentation  
+- `src/` files - Implementation code
+- `tests/` files - Test code
+- Configuration files - Package.json, tsconfig, etc.
+
+### Before Committing - Ask Yourself:
+1. Does this commit represent one logical change?
+2. Would I want to revert just this part independently?
+3. Does the commit message accurately describe ALL the changes?
+4. Are there unrelated files that should be in separate commits?
 
 **Absolute Rules:**
 - ❌ **DO NOT** run `git commit` unless the user explicitly says "commit" or "commit this"
