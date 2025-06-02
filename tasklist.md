@@ -150,6 +150,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 #### 1.7.6 Error Handling & Integration
 
 - [ ] Complete FilesTool integration:
+
   - [ ] Comprehensive error handling for all operations
   - [ ] Integration with `WorkspaceSecurity` validation
   - [ ] Tool registry integration and registration
@@ -158,6 +159,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Performance monitoring and optimization
 
 - [ ] **Test Fixtures for File Operations**:
+
   - [ ] Create `tests/fixtures/projects/ts-monorepo/`:
     - [ ] Multiple packages with tsconfig.json
     - [ ] Mix of small and large TypeScript files
@@ -197,6 +199,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 ### 1.8 Core Engine
 
 - [ ] Implement `src/core/engine.ts`:
+
   - [ ] Main query processing engine
   - [ ] Tool orchestration and execution
   - [ ] Response formatting and streaming
@@ -236,6 +239,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 ### 1.9 Basic CLI Interface (Real Implementation)
 
 - [x] **Hollow CLI Implementation** (Phase 1 Foundation):
+
   - [x] Command-line argument parsing with Commander
   - [x] Configuration loading and validation
   - [x] Output formatting with Chalk
@@ -244,6 +248,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [x] Version and help commands
 
 - [ ] **Real Engine Integration** (Remove Simulation):
+
   - [ ] Replace `simulateQueryProcessing()` with real engine calls
   - [ ] Integrate `QCodeEngine` class from section 1.8
   - [ ] Implement tool registry initialization in CLI
@@ -252,6 +257,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Implement real-time tool execution feedback
 
 - [ ] **Enhanced CLI Functionality**:
+
   - [ ] **Tool Registration and Discovery**:
     - [ ] Initialize internal tools (files) on startup
     - [ ] Display available tools in help/debug mode
@@ -273,6 +279,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
     - [ ] Handle tool failures with actionable suggestions
 
 - [ ] **CLI Integration Tests** (Post-Engine):
+
   - [ ] End-to-end query processing with file operations
   - [ ] Tool execution error handling and recovery
   - [ ] Configuration loading with various CLI options
@@ -315,12 +322,14 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 **Phase 1 Acceptance Criteria**:
 
 - [ ] **After 1.7 (File Operations Tool)**:
+
   - [ ] File operations work in isolation (unit tests pass)
   - [ ] Security validation prevents path traversal and unauthorized access
   - [ ] All file operations respect workspace boundaries
   - [ ] Test fixtures provide comprehensive coverage
 
 - [ ] **After 1.8 (Core Engine)**:
+
   - [ ] Engine can process queries and orchestrate tool execution
   - [ ] LLM integration works with function calling
   - [ ] VCR tests demonstrate reliable tool calling behavior
@@ -403,6 +412,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 ### 2.8 MCP Testing
 
 - [ ] Create MCP test infrastructure:
+
   - [ ] Mock MCP servers for testing
   - [ ] Integration tests with real MCP servers
   - [ ] Connection failure recovery tests
@@ -521,6 +531,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 ### 3.9 Enhanced Testing
 
 - [ ] Add comprehensive tool tests:
+
   - [ ] Edit tool tests with real file scenarios
   - [ ] Git integration tests
   - [ ] Search performance tests
@@ -645,6 +656,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 ### 4.10 Final Integration and Polish
 
 - [ ] Complete system integration:
+
   - [ ] End-to-end workflow testing
   - [ ] Performance benchmarking
   - [ ] Security audit and hardening
