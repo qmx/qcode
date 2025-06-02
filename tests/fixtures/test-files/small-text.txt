@@ -1,0 +1,6 @@
+Hello, World!
+This is a small test file.
+It has multiple lines.
+Line 4 with special characters: é, ñ, 中文
+Line 5: Testing Unicode support 🚀
+End of file. 

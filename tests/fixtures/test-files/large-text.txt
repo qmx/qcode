@@ -1,0 +1,25 @@
+Line 1: Start of large file
+Line 2: This file is designed for testing
+Line 3: line range reading functionality
+Line 4: and large file handling
+Line 5: Each line is numbered for easy
+Line 6: verification of line range operations
+Line 7: We need enough content to test
+Line 8: various scenarios effectively
+Line 9: Including UTF-8 characters: áéíóú
+Line 10: Special symbols: !@#$%^&*()
+Line 11: Numbers and punctuation: 123,456.789
+Line 12: More test content here
+Line 13: Testing line boundaries
+Line 14: Boundary testing is important
+Line 15: Middle section starts here
+Line 16: This is the middle content
+Line 17: More middle content
+Line 18: Still in the middle
+Line 19: Middle section continues
+Line 20: End of middle section
+Line 21: Final section begins
+Line 22: Almost at the end
+Line 23: Getting close to end
+Line 24: Very close now
+Line 25: This is the last line 
