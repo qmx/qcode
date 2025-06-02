@@ -1,0 +1,169 @@
+[
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, an AI coding assistant. You have access to file operation tools to help users with their coding tasks.\n\nAvailable tools:\n- internal:files: Perform file operations including read, write, list, and search files within the workspace\n\nWhen a user asks about files, use the appropriate tool to help them. Always use function calling when file operations are needed.\n\nFor file paths, assume they are relative to the current workspace unless otherwise specified.\n"
+        },
+        {
+          "role": "user",
+          "content": "show me a non-existent file that does not exist"
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0.1
+      },
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "internal:files",
+            "description": "Perform file operations including read, write, list, and search files within the workspace",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "operation": {
+                  "type": "string",
+                  "enum": [
+                    "read",
+                    "write",
+                    "list",
+                    "search"
+                  ],
+                  "description": "The type of file operation to perform"
+                },
+                "path": {
+                  "type": "string",
+                  "description": "File or directory path (relative to workspace root)"
+                },
+                "content": {
+                  "type": "string",
+                  "description": "Content to write (for write operation)"
+                },
+                "query": {
+                  "type": "string",
+                  "description": "Search query text or pattern (for search operation)"
+                },
+                "pattern": {
+                  "type": "string",
+                  "description": "Glob pattern to filter files (e.g., \"**/*.ts\")"
+                },
+                "startLine": {
+                  "type": "number",
+                  "description": "Starting line number for partial file read (1-indexed)"
+                },
+                "endLine": {
+                  "type": "number",
+                  "description": "Ending line number for partial file read (1-indexed, inclusive)"
+                },
+                "recursive": {
+                  "type": "boolean",
+                  "description": "Whether to search/list recursively in subdirectories",
+                  "default": false
+                },
+                "includeHidden": {
+                  "type": "boolean",
+                  "description": "Whether to include hidden files (starting with .)",
+                  "default": false
+                },
+                "includeMetadata": {
+                  "type": "boolean",
+                  "description": "Whether to include file metadata (size, dates, permissions)",
+                  "default": false
+                },
+                "useRegex": {
+                  "type": "boolean",
+                  "description": "Whether to treat search query as a regular expression",
+                  "default": false
+                },
+                "caseSensitive": {
+                  "type": "boolean",
+                  "description": "Whether search should be case sensitive",
+                  "default": false
+                },
+                "backup": {
+                  "type": "boolean",
+                  "description": "Whether to create backup before overwriting files",
+                  "default": true
+                },
+                "createDirs": {
+                  "type": "boolean",
+                  "description": "Whether to create parent directories if they don't exist",
+                  "default": true
+                },
+                "encoding": {
+                  "type": "string",
+                  "enum": [
+                    "utf8",
+                    "utf-8",
+                    "ascii",
+                    "base64",
+                    "hex"
+                  ],
+                  "description": "File encoding for read/write operations",
+                  "default": "utf8"
+                },
+                "maxResults": {
+                  "type": "number",
+                  "description": "Maximum number of search results to return",
+                  "default": 100
+                },
+                "includeContext": {
+                  "type": "boolean",
+                  "description": "Whether to include context lines around search matches",
+                  "default": true
+                }
+              },
+              "required": [
+                "operation"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-02T04:53:50.982362Z",
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "function": {
+              "name": "internal:files",
+              "arguments": {
+                "operation": "list",
+                "path": "non_existent_file.txt",
+                "recursive": "false"
+              }
+            }
+          }
+        ]
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 875914583,
+      "load_duration": 15356708,
+      "prompt_eval_count": 607,
+      "prompt_eval_duration": 105988708,
+      "eval_count": 34,
+      "eval_duration": 752809958
+    },
+    "rawHeaders": {
+      "content-length": "432",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Mon, 02 Jun 2025 04:53:50 GMT"
+    },
+    "responseIsBinary": false
+  }
+]
