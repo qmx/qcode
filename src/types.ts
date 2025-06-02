@@ -41,21 +41,21 @@ export interface MCPServerInfo {
  */
 export interface MCPServerConfig {
   /** For stdio transport: command to execute */
-  command?: string;
+  command?: string | undefined;
   /** For stdio transport: command arguments */
-  args?: string[];
+  args?: string[] | undefined;
   /** For stdio transport: working directory */
-  cwd?: string;
+  cwd?: string | undefined;
   /** For stdio transport: environment variables */
-  env?: Record<string, string>;
+  env?: Record<string, string> | undefined;
   /** For http transport: server URL */
-  url?: string;
+  url?: string | undefined;
   /** For http transport: API key or token */
-  apiKey?: string;
+  apiKey?: string | undefined;
   /** Connection timeout in milliseconds */
-  timeout?: number;
+  timeout?: number | undefined;
   /** Number of retry attempts */
-  retries?: number;
+  retries?: number | undefined;
 }
 
 /**
@@ -186,7 +186,7 @@ export interface LoggingConfig {
   /** Whether to log to console */
   console: boolean;
   /** Log file path (if logging to file) */
-  file?: string;
+  file?: string | undefined;
   /** Whether to include timestamps */
   timestamp: boolean;
   /** Whether to use colors in console output */
@@ -214,13 +214,52 @@ export interface Config {
 /**
  * Partial configuration for merging
  */
-export type PartialConfig = Partial<{
-  security: Partial<SecurityConfig>;
-  ollama: Partial<OllamaConfig>;
-  mcpServers: Record<string, Partial<MCPServerConfig>>;
-  logging: Partial<LoggingConfig>;
-  workingDirectory: string;
-}>;
+export type PartialConfig = {
+  /** Security settings */
+  security?:
+    | {
+        workspace?:
+          | {
+              allowedPaths?: string[] | undefined;
+              forbiddenPatterns?: string[] | undefined;
+              allowOutsideWorkspace?: boolean | undefined;
+            }
+          | undefined;
+        commands?:
+          | {
+              allowedCommands?: string[] | undefined;
+              forbiddenPatterns?: string[] | undefined;
+              allowArbitraryCommands?: boolean | undefined;
+            }
+          | undefined;
+      }
+    | undefined;
+  /** Ollama client configuration */
+  ollama?:
+    | {
+        url?: string | undefined;
+        model?: string | undefined;
+        timeout?: number | undefined;
+        retries?: number | undefined;
+        temperature?: number | undefined;
+        stream?: boolean | undefined;
+      }
+    | undefined;
+  /** MCP server configurations */
+  mcpServers?: Record<string, Partial<MCPServerConfig>> | undefined;
+  /** Logging configuration */
+  logging?:
+    | {
+        level?: 'error' | 'warn' | 'info' | 'debug' | undefined;
+        console?: boolean | undefined;
+        file?: string | undefined;
+        timestamp?: boolean | undefined;
+        colors?: boolean | undefined;
+      }
+    | undefined;
+  /** Working directory */
+  workingDirectory?: string | undefined;
+};
 
 /**
  * CLI command configuration
