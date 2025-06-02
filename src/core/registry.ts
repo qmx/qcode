@@ -238,7 +238,7 @@ export class ToolRegistry {
   }
 
   /**
-   * Executes a tool with security validation and context
+   * Execute a tool by its full name with security validation
    */
   async executeTool(
     toolIdentifier: string,
@@ -250,32 +250,24 @@ export class ToolRegistry {
     this.executionStats.totalExecutions++;
 
     try {
-      // Resolve the tool
+      // Get the tool
       const tool = this.getTool(toolIdentifier);
       if (!tool) {
-        throw new QCodeError(`Tool not found: ${toolIdentifier}`, 'TOOL_NOT_FOUND', {
+        throw new QCodeError(`Tool "${toolIdentifier}" not found`, 'TOOL_NOT_FOUND', {
           toolIdentifier,
-          availableTools: this.listToolNames(),
         });
       }
 
-      // Note: executionContext could be used for future security validation
-      // const executionContext: ToolExecutionContext = {
-      //   ...context,
-      //   tool,
-      //   startTime,
-      // };
-
-      // Validate tool arguments
+      // Validate arguments
       const validationResult = this.validateToolArguments(tool, args);
       if (!validationResult.success) {
         throw new QCodeError(
-          `Invalid tool arguments: ${validationResult.error}`,
-          'INVALID_TOOL_ARGS',
+          `Tool validation failed: ${validationResult.error}`,
+          'TOOL_VALIDATION_ERROR',
           {
             tool: tool.fullName,
             args,
-            errors: validationResult.details,
+            validationDetails: validationResult.details,
           }
         );
       }
@@ -283,7 +275,7 @@ export class ToolRegistry {
       // Execute the tool
       let result;
       try {
-        result = await tool.execute(validationResult.data!);
+        result = await tool.execute(validationResult.data!, _context);
       } catch (error) {
         // Wrap execution errors
         throw new QCodeError(
@@ -297,11 +289,31 @@ export class ToolRegistry {
         );
       }
 
+      if (result === undefined || result === null) {
+        throw new QCodeError('Tool execution returned null or undefined', 'TOOL_EXECUTION_ERROR', {
+          tool: tool.fullName,
+        });
+      }
+
       // Calculate execution time
       const duration = Date.now() - startTime;
       this.executionStats.successfulExecutions++;
       this.executionStats.totalExecutionTime += duration;
 
+      // Check if the result is already a ToolResult (has success, duration, tool, namespace properties)
+      if (
+        result &&
+        typeof result === 'object' &&
+        'success' in result &&
+        'duration' in result &&
+        'tool' in result &&
+        'namespace' in result
+      ) {
+        // Result is already a ToolResult, return it as-is but update stats
+        return result;
+      }
+
+      // Result is raw data, wrap it in a ToolResult
       return {
         success: true,
         data: result,
