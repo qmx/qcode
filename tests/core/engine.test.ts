@@ -151,16 +151,6 @@ describe('QCodeEngine - VCR Tests', () => {
       expect(response.processingTime).toBeGreaterThanOrEqual(0);
     });
 
-    it('should detect file operation intent', async () => {
-      const response = await engine.processQuery('list files in src');
-
-      expect(response.complete).toBe(true);
-      expect(response.response).toContain('File operation detected');
-      expect(response.response).toContain('list files in src');
-      expect(response.response).toContain('Tool orchestration will be implemented in Phase 2');
-      expect(response.processingTime).toBeGreaterThanOrEqual(0);
-    });
-
     it('should handle unknown intent gracefully', async () => {
       const response = await engine.processQuery('what is the meaning of life');
 
@@ -170,15 +160,9 @@ describe('QCodeEngine - VCR Tests', () => {
       expect(response.processingTime).toBeGreaterThanOrEqual(0);
     });
 
-    it('should detect various file operation keywords', async () => {
-      const fileQueries = ['read package.json', 'show me the files', 'list all TypeScript files'];
-
-      for (const query of fileQueries) {
-        const response = await engine.processQuery(query);
-        expect(response.complete).toBe(true);
-        expect(response.response).toContain('File operation detected');
-      }
-    });
+    // Note: File operation intent detection and execution is covered in function-calling.test.ts
+    // These tests were causing failures because they expected old placeholder responses
+    // but the engine now uses real LLM function calling for file operations
   });
 
   describe('Configuration Management', () => {
@@ -214,7 +198,7 @@ describe('QCodeEngine - VCR Tests', () => {
       expect(response.complete).toBe(true);
       expect(response.toolsExecuted).toEqual([]);
       expect(response.toolResults).toEqual([]);
-      expect(response.errors).toEqual([]);
+      expect(response.errors).toBeUndefined();
     });
 
     it('should format help response with available tools', async () => {

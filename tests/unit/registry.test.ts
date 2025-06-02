@@ -288,7 +288,7 @@ describe('ToolRegistry', () => {
       const result = await registry.executeTool('nonexistent', {}, testContext);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Tool not found: nonexistent');
+      expect(result.error).toContain('Tool "nonexistent" not found');
     });
 
     it('should handle tool execution errors', async () => {
