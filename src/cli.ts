@@ -11,6 +11,11 @@ import chalk from 'chalk';
 import path from 'path';
 import { loadConfigWithOverrides } from './config/manager.js';
 import { Config, PartialConfig, QCodeError } from './types.js';
+import { OllamaClient } from './core/client.js';
+import { ToolRegistry } from './core/registry.js';
+import { QCodeEngine } from './core/engine.js';
+import { FilesTool } from './tools/files.js';
+import { WorkspaceSecurity } from './security/workspace.js';
 
 /**
  * CLI options interface
@@ -31,6 +36,10 @@ interface CLIOptions {
 class QCodeCLI {
   private config?: Config;
   private options: CLIOptions = {};
+  private engine?: QCodeEngine;
+  private ollamaClient?: OllamaClient;
+  private toolRegistry?: ToolRegistry;
+  private workspaceSecurity?: WorkspaceSecurity;
 
   /**
    * Initialize the CLI application with configuration
@@ -90,8 +99,60 @@ class QCodeCLI {
         });
         console.log();
       }
+
+      // Initialize engine components
+      await this.initializeEngine();
     } catch (error) {
       throw this.handleError(error, 'Failed to initialize QCode CLI');
+    }
+  }
+
+  /**
+   * Initialize the QCode engine and its components
+   */
+  private async initializeEngine(): Promise<void> {
+    if (!this.config) {
+      throw new QCodeError('Configuration not loaded', 'CONFIG_NOT_LOADED');
+    }
+
+    try {
+      // Initialize Ollama client
+      this.ollamaClient = new OllamaClient(this.config.ollama);
+
+      // Initialize workspace security
+      this.workspaceSecurity = new WorkspaceSecurity(this.config.security);
+
+      // Initialize tool registry
+      this.toolRegistry = new ToolRegistry(this.config.security);
+
+      // Register internal FilesTool
+      const filesTool = new FilesTool(this.workspaceSecurity);
+      this.toolRegistry.registerInternalTool(
+        'files',
+        filesTool.definition,
+        filesTool.execute.bind(filesTool)
+      );
+
+      // Initialize QCode engine
+      this.engine = new QCodeEngine(this.ollamaClient, this.toolRegistry, this.config, {
+        enableStreaming: this.config.ollama.stream,
+        debug: this.options.debug || false,
+      });
+
+      // Validate engine health in debug mode
+      if (this.options.debug) {
+        console.log(chalk.gray('🔧 Initializing engine components...'));
+        const status = await this.engine.getStatus();
+        if (!status.healthy) {
+          console.warn(chalk.yellow('⚠️  Engine health check warnings:'));
+          status.errors.forEach(error => console.warn(chalk.yellow(`   • ${error}`)));
+        } else {
+          console.log(chalk.gray('✅ Engine components initialized successfully'));
+        }
+        console.log();
+      }
+    } catch (error) {
+      throw this.handleError(error, 'Failed to initialize QCode engine');
     }
   }
 
@@ -118,16 +179,14 @@ class QCodeCLI {
       const spinner = this.createSpinner('Processing query');
 
       try {
-        // TODO: This will be replaced with actual engine implementation in section 1.9
-        // For now, simulate the processing to demonstrate the CLI functionality
-        await this.simulateQueryProcessing(query);
+        // Process with real engine
+        if (!this.engine) {
+          throw new QCodeError('Engine not initialized', 'ENGINE_NOT_INITIALIZED');
+        }
 
-        // Future implementation will be:
-        // const engine = new QCodeEngine(this.config);
-        // const result = await engine.processQuery(query);
-        // this.displayQueryResult(result);
-
+        const result = await this.engine.processQuery(query);
         this.stopSpinner(spinner, '✅ Query processed successfully');
+        this.displayQueryResult(result);
       } catch (error) {
         this.stopSpinner(spinner, '❌ Query processing failed');
         throw error;
@@ -239,36 +298,53 @@ class QCodeCLI {
   }
 
   /**
-   * Simulate query processing (placeholder until engine is implemented)
+   * Display the results of a query processing
    */
-  private async simulateQueryProcessing(query: string): Promise<void> {
-    // Simulate realistic processing time
-    const processingTime = 800 + Math.random() * 1200;
-    await new Promise(resolve => setTimeout(resolve, processingTime));
+  private displayQueryResult(result: any): void {
+    console.log();
 
-    if (this.options.verbose) {
-      console.log();
-      console.log(chalk.gray('🔄 Simulated processing steps:'));
-      console.log(chalk.gray('   1. Parse query and extract intent'));
-      console.log(chalk.gray('   2. Initialize tool registry with security config'));
-      console.log(chalk.gray('   3. Connect to Ollama model'));
-      console.log(chalk.gray('   4. Execute query with available tools'));
-      console.log(chalk.gray('   5. Format and return response'));
-      console.log();
+    // Display the main response
+    if (result.response) {
+      console.log(chalk.white(result.response));
     }
 
-    // Display placeholder response
-    console.log(chalk.green(`✅ Successfully processed query: "${query}"`));
+    // Display tool execution information in verbose mode
+    if (this.options.verbose && result.toolsExecuted?.length > 0) {
+      console.log();
+      console.log(chalk.cyan('🔧 Tools executed:'));
+      result.toolsExecuted.forEach((tool: string) => {
+        console.log(chalk.gray(`   • ${tool}`));
+      });
+    }
+
+    // Display timing information in verbose mode
+    if (this.options.verbose && result.processingTime) {
+      console.log();
+      console.log(chalk.gray(`⏱️  Processing time: ${result.processingTime}ms`));
+    }
+
+    // Display errors if any
+    if (result.errors && result.errors.length > 0) {
+      console.log();
+      console.log(chalk.yellow('⚠️  Warnings/Errors:'));
+      result.errors.forEach((error: any) => {
+        console.log(chalk.yellow(`   • ${error.message}`));
+      });
+    }
+
+    // Show file operation results
+    if (result.toolResults && result.toolResults.length > 0) {
+      const fileResults = result.toolResults.filter((tr: any) => tr.toolName?.includes('files'));
+      if (fileResults.length > 0 && this.options.verbose) {
+        console.log();
+        console.log(chalk.gray('📋 File operation details:'));
+        fileResults.forEach((tr: any) => {
+          console.log(chalk.gray(`   • ${tr.toolName}: ${tr.success ? 'success' : 'failed'}`));
+        });
+      }
+    }
+
     console.log();
-    console.log(chalk.yellow('📝 Note: This is a placeholder response.'));
-    console.log(chalk.gray('   Full query processing will be available after implementing:'));
-    console.log(chalk.gray('   • Section 1.7: Internal File Operations Tool'));
-    console.log(chalk.gray('   • Section 1.9: Core Engine'));
-    console.log();
-    console.log(chalk.cyan('💡 Try these commands to test the CLI:'));
-    console.log(chalk.gray('   qcode config           # View configuration'));
-    console.log(chalk.gray('   qcode version          # Show version info'));
-    console.log(chalk.gray('   qcode --verbose "test" # Verbose output'));
   }
 
   /**
