@@ -37,29 +37,35 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 
 ### 1.3 Security Framework
 
-- [ ] Implement `src/security/workspace.ts`:
-  - [ ] `WorkspaceSecurity` class with path validation
-  - [ ] Workspace boundary enforcement with `isPathInside`
-  - [ ] Path traversal prevention
-  - [ ] Forbidden pattern checking
-  - [ ] Normalized path handling
-- [ ] Implement `src/security/paths.ts`:
-  - [ ] Path validation utilities
-  - [ ] Safe path resolution functions
-- [ ] Implement `src/security/commands.ts`:
-  - [ ] Command injection prevention
-  - [ ] Allowed command whitelist
-  - [ ] Argument sanitization
+- [x] Implement `src/security/workspace.ts`:
+  - [x] `WorkspaceSecurity` class with path validation
+  - [x] Workspace boundary enforcement with `isPathInside`
+  - [x] Path traversal prevention
+  - [x] Forbidden pattern checking
+  - [x] Normalized path handling
+- [x] Implement `src/security/paths.ts`:
+  - [x] Path validation utilities
+  - [x] Safe path resolution functions
+  - [x] **IMPROVED**: Now uses `micromatch` for proper glob pattern matching
+  - [x] **IMPROVED**: Now uses `sanitize-filename` for safe filename sanitization
+- [x] Implement `src/security/commands.ts`:
+  - [x] Command injection prevention
+  - [x] Allowed command whitelist
+  - [x] Argument sanitization
+  - [x] **IMPROVED**: Now uses `shell-escape` for proper argument escaping
+  - [x] **IMPROVED**: Now uses `execa` for safer command execution
+  - [x] **NEW**: Added `executeCommand` function with timeout and error handling
 
 ### 1.4 Configuration System
 
-- [ ] Implement `src/config/defaults.ts`:
-  - [ ] Default configuration object
-  - [ ] Security default settings
-  - [ ] Ollama default settings
-- [ ] Implement `src/config/validation.ts`:
-  - [ ] Zod schemas for configuration validation
-  - [ ] Configuration parsing and validation
+- [x] Implement `src/config/defaults.ts`:
+  - [x] Default configuration object
+  - [x] Security default settings
+  - [x] Ollama default settings
+- [x] Implement `src/config/validation.ts`:
+  - [x] Zod schemas for configuration validation
+  - [x] Configuration parsing and validation
+  - [x] **FIXED**: TypeScript compatibility with `exactOptionalPropertyTypes`
 - [ ] Implement `src/config/manager.ts`:
   - [ ] Hierarchical config loading (defaults → global → project → env → CLI)
   - [ ] Configuration merging and validation
