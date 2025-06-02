@@ -1,9 +1,9 @@
 /**
  * End-to-End Function Calling Tests (Phase 1.8.2)
- * 
+ *
  * Tests the complete workflow:
  * User Query -> LLM Function Calling -> Tool Execution -> Formatted Response
- * 
+ *
  * These tests use VCR-style testing to record and replay LLM interactions
  * for deterministic behavior in CI/CD environments.
  */
@@ -65,7 +65,7 @@ function createTestEngine(): QCodeEngine {
   const toolRegistry = createToolRegistry(TEST_CONFIG.security);
   const workspaceSecurity = new WorkspaceSecurity(TEST_CONFIG.security);
   const filesTool = new FilesTool(workspaceSecurity);
-  
+
   toolRegistry.registerInternalTool(
     filesTool.name,
     filesTool.definition,
@@ -101,7 +101,7 @@ describe('QCode Function Calling E2E Tests', () => {
 
     // Ensure test workspace exists
     await fs.mkdir(TEST_WORKSPACE, { recursive: true });
-    
+
     // Clean up any existing test files to ensure clean state
     try {
       await fs.rm(TEST_WORKSPACE, { recursive: true, force: true });
@@ -128,20 +128,24 @@ describe('QCode Function Calling E2E Tests', () => {
       const testName = 'file_read_package_json';
 
       // Setup test file
-      const packageJsonContent = JSON.stringify({
-        name: 'test-project',
-        version: '1.0.0',
-        description: 'Test project for QCode',
-        main: 'index.js',
-        scripts: {
-          test: 'jest',
-          build: 'tsc',
+      const packageJsonContent = JSON.stringify(
+        {
+          name: 'test-project',
+          version: '1.0.0',
+          description: 'Test project for QCode',
+          main: 'index.js',
+          scripts: {
+            test: 'jest',
+            build: 'tsc',
+          },
+          dependencies: {
+            typescript: '^5.0.0',
+            jest: '^29.0.0',
+          },
         },
-        dependencies: {
-          typescript: '^5.0.0',
-          jest: '^29.0.0',
-        },
-      }, null, 2);
+        null,
+        2
+      );
 
       await fs.writeFile(join(TEST_WORKSPACE, 'package.json'), packageJsonContent);
 
@@ -170,16 +174,16 @@ describe('QCode Function Calling E2E Tests', () => {
       // Verify results
       expect(result.complete).toBe(true);
       expect(result.errors).toBeUndefined();
-      
+
       if (result.toolsExecuted.length > 0) {
         // Tools were executed - verify they were the right ones
         expect(result.toolsExecuted).toContain('internal:files');
         expect(result.toolResults).toHaveLength(1);
-        
+
         // The result depends on whether the file exists or not
         const toolResult = result.toolResults[0];
         expect(toolResult).toBeDefined();
-        
+
         if (toolResult?.success) {
           // File was found and read successfully
           if (toolResult.data?.content) {
@@ -200,7 +204,7 @@ describe('QCode Function Calling E2E Tests', () => {
       if (process.env.NOCK_MODE === 'record') {
         console.log('Function calling response for package.json:', result.response);
         console.log('Tools executed:', result.toolsExecuted);
-        
+
         // Save recording
         const recordings = nock.recorder.play();
         if (recordings.length > 0) {
@@ -216,8 +220,9 @@ describe('QCode Function Calling E2E Tests', () => {
       const testName = 'file_read_with_line_range';
 
       // Setup test file with many lines - do this before VCR check
-      const mainTsContent = Array.from({ length: 50 }, (_, i) => 
-        `// Line ${i + 1}: This is a TypeScript file\nconst line${i + 1} = '${i + 1}';`
+      const mainTsContent = Array.from(
+        { length: 50 },
+        (_, i) => `// Line ${i + 1}: This is a TypeScript file\nconst line${i + 1} = '${i + 1}';`
       ).join('\n');
 
       await fs.mkdir(join(TEST_WORKSPACE, 'src'), { recursive: true });
@@ -248,13 +253,13 @@ describe('QCode Function Calling E2E Tests', () => {
       // Verify results
       expect(result.complete).toBe(true);
       expect(result.errors).toBeUndefined();
-      
+
       if (result.toolsExecuted.length > 0) {
         // Tools were executed
         expect(result.toolsExecuted).toContain('internal:files');
         const toolResult = result.toolResults[0];
         expect(toolResult).toBeDefined();
-        
+
         if (toolResult?.success) {
           // File was read successfully
           const fileData = toolResult.data;
@@ -277,7 +282,7 @@ describe('QCode Function Calling E2E Tests', () => {
       if (process.env.NOCK_MODE === 'record') {
         console.log('Function calling response for line range:', result.response);
         console.log('File data lines:', result.toolResults[0]?.data?.lines);
-        
+
         // Save recording
         const recordings = nock.recorder.play();
         if (recordings.length > 0) {
@@ -316,16 +321,16 @@ describe('QCode Function Calling E2E Tests', () => {
 
       // Verify the query was processed successfully
       expect(result.complete).toBe(true);
-      
+
       // The LLM might choose different strategies:
       // 1. Call a tool that fails (acceptable error handling)
-      // 2. Call a different tool that succeeds (intelligent behavior) 
+      // 2. Call a different tool that succeeds (intelligent behavior)
       // 3. Not call any tools (also acceptable)
       if (result.toolsExecuted.length > 0) {
         // Tools were executed - verify we got some result
         const toolResult = result.toolResults[0];
         expect(toolResult).toBeDefined();
-        
+
         // Either the tool failed (expected) or succeeded with a different operation (also good)
         if (toolResult?.success === false) {
           // Tool failed as expected
@@ -343,7 +348,7 @@ describe('QCode Function Calling E2E Tests', () => {
         console.log('Function calling response for invalid params:', result.response);
         console.log('Tools executed:', result.toolsExecuted);
         console.log('Errors:', result.errors);
-        
+
         // Save recording
         const recordings = nock.recorder.play();
         if (recordings.length > 0) {
@@ -397,12 +402,12 @@ export class UserService {
       const result = await engine.processQuery('show me user.ts');
 
       expect(result.complete).toBe(true);
-      
+
       // If tools were executed, verify results
       if (result.toolsExecuted.length > 0) {
         const toolResult = result.toolResults[0];
         expect(toolResult).toBeDefined();
-        
+
         if (toolResult?.success) {
           // File read successfully - verify formatting
           expect(result.response).toContain('user.ts');
@@ -421,7 +426,7 @@ export class UserService {
 
       if (process.env.NOCK_MODE === 'record') {
         console.log('Function calling response for TypeScript file:', result.response);
-        
+
         // Save recording
         const recordings = nock.recorder.play();
         if (recordings.length > 0) {
@@ -433,4 +438,4 @@ export class UserService {
       }
     });
   });
-}); 
+});
