@@ -1,9 +1,16 @@
-import path from 'path';
+import { normalize, resolve, relative, isAbsolute, dirname } from 'pathe';
 import fs from 'fs/promises';
-import isPathInside from 'is-path-inside';
-import normalizePath from 'normalize-path';
 import { SecurityConfig, QCodeError } from '../types.js';
-import { validatePath, safePath, isForbiddenPath, isAbsolutePath } from './paths.js';
+import { validatePath, safePath, isForbiddenPath } from './paths.js';
+
+/**
+ * Check if a file path is inside a directory path
+ * Using battle-tested TypeScript implementation
+ */
+function isPathInside(filePath: string, directoryPath: string): boolean {
+  const rel = relative(directoryPath, filePath);
+  return !!rel && !rel.startsWith('..') && !isAbsolute(rel);
+}
 
 /**
  * WorkspaceSecurity class handles all workspace-related security validations
@@ -14,9 +21,7 @@ export class WorkspaceSecurity {
 
   constructor(config: SecurityConfig) {
     this.config = config;
-    this.allowedPaths = new Set(
-      config.workspace.allowedPaths.map(p => normalizePath(path.resolve(p)))
-    );
+    this.allowedPaths = new Set(config.workspace.allowedPaths.map(p => normalize(resolve(p))));
   }
 
   /**
@@ -27,11 +32,11 @@ export class WorkspaceSecurity {
     const normalizedPath = validatePath(filePath);
 
     // Resolve to absolute path
-    const absolutePath = isAbsolutePath(normalizedPath)
+    const absolutePath = isAbsolute(normalizedPath)
       ? normalizedPath
-      : path.resolve(process.cwd(), normalizedPath);
+      : resolve(process.cwd(), normalizedPath);
 
-    const resolvedPath = normalizePath(absolutePath);
+    const resolvedPath = normalize(absolutePath);
 
     // Check if reading outside workspace is allowed
     if (!this.config.workspace.allowOutsideWorkspace) {
@@ -109,7 +114,7 @@ export class WorkspaceSecurity {
     const validatedPath = await this.validateWorkspacePath(filePath);
 
     // Additional checks for write operations
-    const directory = path.dirname(validatedPath);
+    const directory = dirname(validatedPath);
 
     try {
       // Ensure the directory exists or can be created
@@ -184,7 +189,8 @@ export class WorkspaceSecurity {
           await this.validateWritePath(filePath);
           return true;
         case 'execute':
-          // For now, treat execute same as read, but can be extended
+          // For execute operations, we currently treat them like read operations
+          // This can be enhanced with additional execute-specific checks
           await this.validateReadPath(filePath);
           return true;
         default:
@@ -196,25 +202,25 @@ export class WorkspaceSecurity {
   }
 
   /**
-   * Gets the list of allowed workspace paths
+   * Gets a list of all currently allowed workspace paths
    */
   getAllowedPaths(): string[] {
     return Array.from(this.allowedPaths);
   }
 
   /**
-   * Adds a new allowed workspace path
+   * Adds a new path to the allowed workspace paths
    */
   addAllowedPath(newPath: string): void {
-    const normalizedPath = normalizePath(path.resolve(newPath));
+    const normalizedPath = normalize(resolve(newPath));
     this.allowedPaths.add(normalizedPath);
   }
 
   /**
-   * Removes an allowed workspace path
+   * Removes a path from the allowed workspace paths
    */
   removeAllowedPath(pathToRemove: string): boolean {
-    const normalizedPath = normalizePath(path.resolve(pathToRemove));
+    const normalizedPath = normalize(resolve(pathToRemove));
     return this.allowedPaths.delete(normalizedPath);
   }
 
@@ -223,9 +229,7 @@ export class WorkspaceSecurity {
    */
   updateConfig(newConfig: SecurityConfig): void {
     this.config = newConfig;
-    this.allowedPaths = new Set(
-      newConfig.workspace.allowedPaths.map(p => normalizePath(path.resolve(p)))
-    );
+    this.allowedPaths = new Set(newConfig.workspace.allowedPaths.map(p => normalize(resolve(p))));
   }
 
   /**

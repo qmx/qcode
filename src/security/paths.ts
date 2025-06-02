@@ -1,10 +1,16 @@
-import path from 'path';
-import { isAbsolute } from 'path';
-import isPathInside from 'is-path-inside';
-import normalizePath from 'normalize-path';
+import { normalize, resolve, relative, isAbsolute, extname } from 'pathe';
 import micromatch from 'micromatch';
 import sanitize from 'sanitize-filename';
 import { QCodeError } from '../types.js';
+
+/**
+ * Check if a file path is inside a directory path
+ * Using battle-tested TypeScript implementation
+ */
+function isPathInside(filePath: string, directoryPath: string): boolean {
+  const rel = relative(directoryPath, filePath);
+  return !!rel && !rel.startsWith('..') && !isAbsolute(rel);
+}
 
 /**
  * Validates and normalizes a file path for safe operations
@@ -15,7 +21,7 @@ export function validatePath(filePath: string): string {
   }
 
   // Normalize the path to handle different OS formats
-  const normalized = normalizePath(path.normalize(filePath));
+  const normalized = normalize(filePath);
 
   // Check for path traversal attempts
   if (normalized.includes('../') || normalized.includes('..\\')) {
@@ -41,11 +47,11 @@ export function safePath(basePath: string, relativePath: string): string {
   const validatedRelative = validatePath(relativePath);
 
   // Resolve the path
-  const resolved = path.resolve(validatedBase, validatedRelative);
-  const normalizedResolved = normalizePath(resolved);
+  const resolved = resolve(validatedBase, validatedRelative);
+  const normalizedResolved = normalize(resolved);
 
   // Ensure the resolved path is within the base directory
-  if (!isPathInside(normalizedResolved, normalizePath(path.resolve(validatedBase)))) {
+  if (!isPathInside(normalizedResolved, normalize(resolve(validatedBase)))) {
     throw new QCodeError(
       'Resolved path is outside the allowed base directory',
       'PATH_OUTSIDE_BASE',
@@ -64,7 +70,7 @@ export function safePath(basePath: string, relativePath: string): string {
  * Checks if a path matches any of the forbidden patterns using micromatch
  */
 export function isForbiddenPath(filePath: string, forbiddenPatterns: string[]): boolean {
-  const normalized = normalizePath(filePath);
+  const normalized = normalize(filePath);
 
   // Use micromatch for proper glob pattern matching
   return micromatch.isMatch(normalized, forbiddenPatterns, {
@@ -75,21 +81,14 @@ export function isForbiddenPath(filePath: string, forbiddenPatterns: string[]): 
 }
 
 /**
- * Checks if a path is an absolute path
- */
-export function isAbsolutePath(filePath: string): boolean {
-  return isAbsolute(filePath);
-}
-
-/**
  * Gets the relative path from base to target, ensuring it's safe
  */
 export function getRelativePath(basePath: string, targetPath: string): string {
   const validatedBase = validatePath(basePath);
   const validatedTarget = validatePath(targetPath);
 
-  const relative = path.relative(validatedBase, validatedTarget);
-  const normalized = normalizePath(relative);
+  const rel = relative(validatedBase, validatedTarget);
+  const normalized = normalize(rel);
 
   // Check if the relative path tries to go outside the base
   if (normalized.startsWith('../')) {
@@ -111,7 +110,7 @@ export function isAllowedExtension(filePath: string, allowedExtensions: string[]
     return true; // No restrictions if empty
   }
 
-  const ext = path.extname(filePath).toLowerCase();
+  const ext = extname(filePath).toLowerCase();
   return allowedExtensions.includes(ext);
 }
 
