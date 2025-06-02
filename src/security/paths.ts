@@ -1,7 +1,9 @@
 import path from 'path';
-import { isAbsolute, normalize } from 'path';
+import { isAbsolute } from 'path';
 import isPathInside from 'is-path-inside';
 import normalizePath from 'normalize-path';
+import micromatch from 'micromatch';
+import sanitize from 'sanitize-filename';
 import { QCodeError } from '../types.js';
 
 /**
@@ -9,11 +11,7 @@ import { QCodeError } from '../types.js';
  */
 export function validatePath(filePath: string): string {
   if (!filePath || typeof filePath !== 'string') {
-    throw new QCodeError(
-      'Path must be a non-empty string',
-      'INVALID_PATH',
-      { path: filePath }
-    );
+    throw new QCodeError('Path must be a non-empty string', 'INVALID_PATH', { path: filePath });
   }
 
   // Normalize the path to handle different OS formats
@@ -21,20 +19,15 @@ export function validatePath(filePath: string): string {
 
   // Check for path traversal attempts
   if (normalized.includes('../') || normalized.includes('..\\')) {
-    throw new QCodeError(
-      'Path traversal detected',
-      'PATH_TRAVERSAL',
-      { path: filePath, normalized }
-    );
+    throw new QCodeError('Path traversal detected', 'PATH_TRAVERSAL', {
+      path: filePath,
+      normalized,
+    });
   }
 
   // Check for null bytes
   if (normalized.includes('\0')) {
-    throw new QCodeError(
-      'Null byte detected in path',
-      'INVALID_PATH',
-      { path: filePath }
-    );
+    throw new QCodeError('Null byte detected in path', 'INVALID_PATH', { path: filePath });
   }
 
   return normalized;
@@ -68,20 +61,16 @@ export function safePath(basePath: string, relativePath: string): string {
 }
 
 /**
- * Checks if a path matches any of the forbidden patterns
+ * Checks if a path matches any of the forbidden patterns using micromatch
  */
 export function isForbiddenPath(filePath: string, forbiddenPatterns: string[]): boolean {
   const normalized = normalizePath(filePath);
 
-  return forbiddenPatterns.some((pattern) => {
-    // Convert glob-like patterns to regex
-    const regexPattern = pattern
-      .replace(/\./g, '\\.')
-      .replace(/\*/g, '.*')
-      .replace(/\?/g, '.');
-
-    const regex = new RegExp(`^${regexPattern}$`, 'i');
-    return regex.test(normalized);
+  // Use micromatch for proper glob pattern matching
+  return micromatch.isMatch(normalized, forbiddenPatterns, {
+    dot: true, // Match dotfiles
+    matchBase: true, // Match basename of path
+    nocase: true, // Case insensitive on Windows
   });
 }
 
@@ -104,15 +93,11 @@ export function getRelativePath(basePath: string, targetPath: string): string {
 
   // Check if the relative path tries to go outside the base
   if (normalized.startsWith('../')) {
-    throw new QCodeError(
-      'Target path is outside the base directory',
-      'PATH_OUTSIDE_BASE',
-      {
-        basePath: validatedBase,
-        targetPath: validatedTarget,
-        relative: normalized,
-      }
-    );
+    throw new QCodeError('Target path is outside the base directory', 'PATH_OUTSIDE_BASE', {
+      basePath: validatedBase,
+      targetPath: validatedTarget,
+      relative: normalized,
+    });
   }
 
   return normalized;
@@ -131,47 +116,22 @@ export function isAllowedExtension(filePath: string, allowedExtensions: string[]
 }
 
 /**
- * Sanitizes a filename by removing dangerous characters
+ * Sanitizes a filename using the well-tested sanitize-filename library
  */
 export function sanitizeFilename(filename: string): string {
   if (!filename || typeof filename !== 'string') {
-    throw new QCodeError(
-      'Filename must be a non-empty string',
-      'INVALID_FILENAME',
-      { filename }
-    );
+    throw new QCodeError('Filename must be a non-empty string', 'INVALID_FILENAME', { filename });
   }
 
-  // Remove dangerous characters
-  const sanitized = filename
-    .replace(/[<>:"/\\|?*\x00-\x1f]/g, '')
-    .replace(/^\.+/, '') // Remove leading dots
-    .replace(/\.+$/, '') // Remove trailing dots
-    .trim();
+  // Use the sanitize-filename library for proper sanitization
+  const sanitized = sanitize(filename, { replacement: '_' });
 
   if (!sanitized) {
-    throw new QCodeError(
-      'Filename becomes empty after sanitization',
-      'INVALID_FILENAME',
-      { original: filename, sanitized }
-    );
-  }
-
-  // Check for reserved names on Windows
-  const reservedNames = [
-    'CON', 'PRN', 'AUX', 'NUL',
-    'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
-    'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'
-  ];
-
-  const nameWithoutExt = path.parse(sanitized).name.toUpperCase();
-  if (reservedNames.includes(nameWithoutExt)) {
-    throw new QCodeError(
-      'Filename is a reserved system name',
-      'RESERVED_FILENAME',
-      { filename: sanitized }
-    );
+    throw new QCodeError('Filename becomes empty after sanitization', 'INVALID_FILENAME', {
+      original: filename,
+      sanitized,
+    });
   }
 
   return sanitized;
-} 
+}

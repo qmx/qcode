@@ -1,22 +1,6 @@
 import { QCodeError } from '../types.js';
-
-/**
- * List of potentially dangerous command patterns
- */
-const DANGEROUS_PATTERNS = [
-  // Command injection patterns
-  /[;&|`$(){}[\]]/,
-  /\|\|/,
-  /&&/,
-  // Redirection patterns
-  /[<>]/,
-  // Process substitution
-  /\$\(/,
-  // Command substitution
-  /`/,
-  // Variable expansion
-  /\$[{]/,
-];
+import shellEscape from 'shell-escape';
+import { execa } from 'execa';
 
 /**
  * Default allowed commands for basic operations
@@ -75,34 +59,27 @@ const FORBIDDEN_COMMANDS = [
 /**
  * Validates that a command is safe to execute
  */
-export function validateCommand(command: string, allowedCommands: string[] = DEFAULT_ALLOWED_COMMANDS): void {
+export function validateCommand(
+  command: string,
+  allowedCommands: string[] = DEFAULT_ALLOWED_COMMANDS
+): void {
   if (!command || typeof command !== 'string') {
-    throw new QCodeError(
-      'Command must be a non-empty string',
-      'INVALID_COMMAND',
-      { command }
-    );
+    throw new QCodeError('Command must be a non-empty string', 'INVALID_COMMAND', { command });
   }
 
   const trimmedCommand = command.trim();
   if (!trimmedCommand) {
-    throw new QCodeError(
-      'Command cannot be empty',
-      'EMPTY_COMMAND',
-      { command }
-    );
+    throw new QCodeError('Command cannot be empty', 'EMPTY_COMMAND', { command });
   }
 
   // Extract the base command (first word)
   const commandParts = trimmedCommand.split(/\s+/);
   const baseCommand = commandParts[0];
-  
+
   if (!baseCommand) {
-    throw new QCodeError(
-      'Could not extract base command',
-      'INVALID_COMMAND',
-      { command: trimmedCommand }
-    );
+    throw new QCodeError('Could not extract base command', 'INVALID_COMMAND', {
+      command: trimmedCommand,
+    });
   }
 
   // Check against forbidden commands
@@ -112,17 +89,6 @@ export function validateCommand(command: string, allowedCommands: string[] = DEF
       'FORBIDDEN_COMMAND',
       { command: baseCommand, fullCommand: command }
     );
-  }
-
-  // Check against dangerous patterns
-  for (const pattern of DANGEROUS_PATTERNS) {
-    if (pattern.test(command)) {
-      throw new QCodeError(
-        'Command contains potentially dangerous patterns',
-        'DANGEROUS_COMMAND',
-        { command, pattern: pattern.source }
-      );
-    }
   }
 
   // Check if command is in allowed list
@@ -136,29 +102,18 @@ export function validateCommand(command: string, allowedCommands: string[] = DEF
 }
 
 /**
- * Sanitizes command arguments to prevent injection
+ * Validates command arguments - no manual pattern matching needed with proper execution
  */
 export function sanitizeArgs(args: string[]): string[] {
-  return args.map((arg) => {
+  return args.map(arg => {
     if (typeof arg !== 'string') {
-      throw new QCodeError(
-        'All arguments must be strings',
-        'INVALID_ARGUMENT',
-        { arg, type: typeof arg }
-      );
+      throw new QCodeError('All arguments must be strings', 'INVALID_ARGUMENT', {
+        arg,
+        type: typeof arg,
+      });
     }
 
-    // Check for dangerous patterns in arguments
-    for (const pattern of DANGEROUS_PATTERNS) {
-      if (pattern.test(arg)) {
-        throw new QCodeError(
-          'Argument contains potentially dangerous patterns',
-          'DANGEROUS_ARGUMENT',
-          { arg, pattern: pattern.source }
-        );
-      }
-    }
-
+    // Just validate they are strings - shell-escape will handle the rest
     return arg;
   });
 }
@@ -198,30 +153,78 @@ export function requiresElevatedPrivileges(command: string): boolean {
 
   const commandParts = command.trim().split(/\s+/);
   const baseCommand = commandParts[0];
-  
+
   if (!baseCommand) {
     return false;
   }
-  
+
   return elevatedCommands.includes(baseCommand.toLowerCase());
 }
 
 /**
- * Builds a safe command string for execution
+ * Builds a safe command string using shell-escape for proper escaping
  */
 export function buildSafeCommand(command: string, args: string[] = []): string {
   const validated = validateCommandWithArgs(command, args);
-  
-  // Escape arguments to prevent shell interpretation
-  const escapedArgs = validated.args.map(arg => {
-    // Simple escaping - wrap in quotes if contains spaces or special chars
-    if (/[\s"'\\$`]/.test(arg)) {
-      return `"${arg.replace(/["\\]/g, '\\$&')}"`;
-    }
-    return arg;
-  });
 
-  return [validated.command, ...escapedArgs].join(' ');
+  // Use shell-escape for proper argument escaping
+  return shellEscape([validated.command, ...validated.args]);
+}
+
+/**
+ * Safely executes a command using execa for better security
+ */
+export async function executeCommand(
+  command: string,
+  args: string[] = [],
+  options: {
+    cwd?: string;
+    env?: Record<string, string>;
+    timeout?: number;
+    allowedCommands?: string[];
+  } = {}
+): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+  const { cwd, env, timeout = 30000, allowedCommands } = options;
+
+  // Validate the command first
+  const validated = validateCommandWithArgs(command, args, allowedCommands);
+
+  // Validate environment variables if provided
+  const validatedEnv = env ? validateEnvironmentVariables(env) : undefined;
+
+  try {
+    // Build options object without undefined values
+    const execaOptions: Record<string, any> = {
+      timeout,
+      reject: false, // Don't throw on non-zero exit codes
+    };
+
+    if (cwd) {
+      execaOptions.cwd = cwd;
+    }
+
+    if (validatedEnv) {
+      execaOptions.env = validatedEnv;
+    }
+
+    // Use execa for safer command execution
+    const result = await execa(validated.command, validated.args, execaOptions);
+
+    return {
+      stdout: result.stdout,
+      stderr: result.stderr,
+      exitCode: result.exitCode,
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new QCodeError(
+        `Command execution failed: ${error.message}`,
+        'COMMAND_EXECUTION_ERROR',
+        { command: validated.command, args: validated.args, originalError: error }
+      );
+    }
+    throw error;
+  }
 }
 
 /**
@@ -233,35 +236,20 @@ export function validateEnvironmentVariables(env: Record<string, string>): Recor
   for (const [key, value] of Object.entries(env)) {
     // Validate environment variable names
     if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key)) {
-      throw new QCodeError(
-        'Invalid environment variable name',
-        'INVALID_ENV_VAR',
-        { key, value }
-      );
+      throw new QCodeError('Invalid environment variable name', 'INVALID_ENV_VAR', { key, value });
     }
 
     // Check for dangerous patterns in values
     if (typeof value !== 'string') {
-      throw new QCodeError(
-        'Environment variable values must be strings',
-        'INVALID_ENV_VALUE',
-        { key, value, type: typeof value }
-      );
-    }
-
-    // Check for injection attempts in values
-    for (const pattern of DANGEROUS_PATTERNS) {
-      if (pattern.test(value)) {
-        throw new QCodeError(
-          'Environment variable value contains dangerous patterns',
-          'DANGEROUS_ENV_VALUE',
-          { key, value, pattern: pattern.source }
-        );
-      }
+      throw new QCodeError('Environment variable values must be strings', 'INVALID_ENV_VALUE', {
+        key,
+        value,
+        type: typeof value,
+      });
     }
 
     validated[key] = value;
   }
 
   return validated;
-} 
+}

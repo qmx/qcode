@@ -25,18 +25,18 @@ export class WorkspaceSecurity {
   async validateWorkspacePath(filePath: string): Promise<string> {
     // First validate the path format
     const normalizedPath = validatePath(filePath);
-    
+
     // Resolve to absolute path
-    const absolutePath = isAbsolutePath(normalizedPath) 
-      ? normalizedPath 
+    const absolutePath = isAbsolutePath(normalizedPath)
+      ? normalizedPath
       : path.resolve(process.cwd(), normalizedPath);
-    
+
     const resolvedPath = normalizePath(absolutePath);
 
     // Check if reading outside workspace is allowed
     if (!this.config.workspace.allowOutsideWorkspace) {
-      const isInWorkspace = Array.from(this.allowedPaths).some(allowedPath => 
-        isPathInside(resolvedPath, allowedPath) || resolvedPath === allowedPath
+      const isInWorkspace = Array.from(this.allowedPaths).some(
+        allowedPath => isPathInside(resolvedPath, allowedPath) || resolvedPath === allowedPath
       );
 
       if (!isInWorkspace) {
@@ -77,7 +77,7 @@ export class WorkspaceSecurity {
     try {
       // Check if the path exists and is accessible
       const stats = await fs.stat(validatedPath);
-      
+
       // Ensure it's not a special file type (device, socket, etc.)
       if (!stats.isFile() && !stats.isDirectory() && !stats.isSymbolicLink()) {
         throw new QCodeError(
@@ -92,7 +92,7 @@ export class WorkspaceSecurity {
       if (error instanceof QCodeError) {
         throw error;
       }
-      
+
       // Handle filesystem errors
       throw new QCodeError(
         `Cannot access path: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -110,7 +110,7 @@ export class WorkspaceSecurity {
 
     // Additional checks for write operations
     const directory = path.dirname(validatedPath);
-    
+
     try {
       // Ensure the directory exists or can be created
       await fs.access(directory);
@@ -138,13 +138,12 @@ export class WorkspaceSecurity {
 
     try {
       const stats = await fs.stat(validatedPath);
-      
+
       if (!stats.isDirectory()) {
-        throw new QCodeError(
-          'Path exists but is not a directory',
-          'NOT_A_DIRECTORY',
-          { path: dirPath, resolvedPath: validatedPath }
-        );
+        throw new QCodeError('Path exists but is not a directory', 'NOT_A_DIRECTORY', {
+          path: dirPath,
+          resolvedPath: validatedPath,
+        });
       }
 
       return validatedPath;
@@ -152,7 +151,7 @@ export class WorkspaceSecurity {
       if (error instanceof QCodeError) {
         throw error;
       }
-      
+
       throw new QCodeError(
         `Directory access error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         'DIRECTORY_ACCESS_ERROR',
@@ -167,7 +166,7 @@ export class WorkspaceSecurity {
   async resolveSafePath(basePath: string, relativePath: string): Promise<string> {
     const validatedBase = await this.validateWorkspacePath(basePath);
     const resolvedPath = safePath(validatedBase, relativePath);
-    
+
     // Validate the resolved path is still within workspace
     return await this.validateWorkspacePath(resolvedPath);
   }
@@ -235,4 +234,4 @@ export class WorkspaceSecurity {
   getConfig(): SecurityConfig {
     return { ...this.config };
   }
-} 
+}
