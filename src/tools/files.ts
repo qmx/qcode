@@ -761,10 +761,224 @@ export class FilesTool implements NamespacedTool {
   }
 
   /**
-   * Search files operation - placeholder for step 1.7.5
+   * Search files operation - full implementation for step 1.7.5
    */
-  private async searchFiles(_params: SearchFilesParams): Promise<SearchFilesResult> {
-    throw new QCodeError('Search files operation not yet implemented', 'NOT_IMPLEMENTED');
+  private async searchFiles(params: SearchFilesParams): Promise<SearchFilesResult> {
+    const {
+      query,
+      path = '.',
+      pattern,
+      useRegex = false,
+      caseSensitive = false,
+      maxResults = 100,
+      includeContext = true,
+    } = params;
+
+    try {
+      // Validate and resolve the search path
+      const searchPath = await this.validatePath(path, 'read');
+
+      // Get list of files to search
+      let filesToSearch: string[] = [];
+
+      if (pattern) {
+        // Use glob pattern to find files
+        const globPattern = pattern.includes('/') ? pattern : `**/${pattern}`;
+        const globOptions = {
+          cwd: searchPath,
+          absolute: true,
+          dot: false, // Don't include hidden files by default
+          onlyFiles: true, // Only return files, not directories
+        };
+
+        try {
+          filesToSearch = await glob(globPattern, globOptions);
+        } catch (globError) {
+          throw new QCodeError(
+            `Error processing search pattern "${pattern}": ${globError instanceof Error ? globError.message : 'Unknown error'}`,
+            'PATTERN_ERROR'
+          );
+        }
+      } else {
+        // Get all files recursively
+        const getAllFiles = async (dirPath: string): Promise<string[]> => {
+          const files: string[] = [];
+
+          try {
+            const entries = await fs.readdir(dirPath, { withFileTypes: true });
+
+            for (const entry of entries) {
+              // Skip hidden files/directories
+              if (entry.name.startsWith('.')) {
+                continue;
+              }
+
+              const fullPath = join(dirPath, entry.name);
+
+              if (entry.isDirectory()) {
+                const subFiles = await getAllFiles(fullPath);
+                files.push(...subFiles);
+              } else if (entry.isFile()) {
+                files.push(fullPath);
+              }
+            }
+          } catch (error) {
+            // Skip directories we can't access
+          }
+
+          return files;
+        };
+
+        filesToSearch = await getAllFiles(searchPath);
+      }
+
+      // Filter out binary files and prepare search regex
+      let searchRegex: RegExp;
+      try {
+        if (useRegex) {
+          const flags = caseSensitive ? 'g' : 'gi';
+          searchRegex = new RegExp(query, flags);
+        } else {
+          // Escape special regex characters for literal search
+          const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const flags = caseSensitive ? 'g' : 'gi';
+          searchRegex = new RegExp(escapedQuery, flags);
+        }
+      } catch (regexError) {
+        throw new QCodeError(
+          `Invalid regex pattern: ${regexError instanceof Error ? regexError.message : 'Unknown error'}`,
+          'REGEX_ERROR'
+        );
+      }
+
+      // Search through files
+      const matches: SearchMatch[] = [];
+      let filesSearched = 0;
+      let totalMatches = 0;
+
+      for (const filePath of filesToSearch) {
+        try {
+          // Check if file is binary
+          if (await this.isBinaryFile(filePath)) {
+            continue;
+          }
+
+          filesSearched++;
+
+          // Read file content
+          const content = await fs.readFile(filePath, 'utf8');
+          const lines = content.split('\n');
+
+          // Search each line
+          for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+            const line = lines[lineIndex]!;
+            let match: RegExpExecArray | null;
+
+            // Reset regex lastIndex for global search
+            searchRegex.lastIndex = 0;
+
+            while ((match = searchRegex.exec(line)) !== null) {
+              totalMatches++;
+
+              // Check if we've hit the max results limit
+              if (matches.length >= maxResults) {
+                break;
+              }
+
+              const searchMatch: SearchMatch = {
+                file: filePath,
+                line: lineIndex + 1, // 1-indexed line numbers
+                column: match.index,
+                match: match[0],
+              };
+
+              // Add context if requested
+              if (includeContext) {
+                const contextLines = 2; // Number of lines before/after
+                const beforeLines: string[] = [];
+                const afterLines: string[] = [];
+
+                // Get lines before
+                for (let i = Math.max(0, lineIndex - contextLines); i < lineIndex; i++) {
+                  beforeLines.push(lines[i]!);
+                }
+
+                // Get lines after
+                for (
+                  let i = lineIndex + 1;
+                  i <= Math.min(lines.length - 1, lineIndex + contextLines);
+                  i++
+                ) {
+                  afterLines.push(lines[i]!);
+                }
+
+                searchMatch.context = {
+                  before: beforeLines,
+                  after: afterLines,
+                };
+              }
+
+              matches.push(searchMatch);
+
+              // For non-global regex (no 'g' flag), break to avoid infinite loop
+              if (!searchRegex.global) {
+                break;
+              }
+            }
+
+            // Break outer loop if we've hit max results
+            if (matches.length >= maxResults) {
+              break;
+            }
+          }
+
+          // Break if we've hit max results
+          if (matches.length >= maxResults) {
+            break;
+          }
+        } catch (fileError) {
+          // Skip files we can't read (permissions, etc.)
+          continue;
+        }
+      }
+
+      const result: SearchFilesResult = {
+        matches,
+        filesSearched,
+        totalMatches,
+        query,
+      };
+
+      // Mark as truncated if we hit the limit
+      if (totalMatches > matches.length) {
+        result.truncated = true;
+      }
+
+      return result;
+    } catch (error) {
+      if (error instanceof QCodeError) {
+        throw error;
+      }
+
+      // Handle common Node.js file system errors
+      if (error instanceof Error) {
+        if ('code' in error) {
+          switch (error.code) {
+            case 'ENOENT':
+              throw new QCodeError(`Directory not found: ${path}`, 'DIRECTORY_NOT_FOUND');
+            case 'EACCES':
+              throw new QCodeError(`Permission denied: ${path}`, 'PERMISSION_DENIED');
+            case 'ENOTDIR':
+              throw new QCodeError(`Path is not a directory: ${path}`, 'NOT_A_DIRECTORY');
+            default:
+              throw new QCodeError(`File system error: ${error.message}`, 'FS_ERROR');
+          }
+        }
+        throw new QCodeError(`Search error: ${error.message}`, 'SEARCH_ERROR');
+      }
+
+      throw new QCodeError('Unknown error occurred while searching files', 'UNKNOWN_ERROR');
+    }
   }
 
   /**
