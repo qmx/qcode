@@ -147,7 +147,7 @@ src/
   },
   "devDependencies": {
     "@types/jest": "^29.5.8",
-    "@types/micromatch": "^4.0.6", 
+    "@types/micromatch": "^4.0.6",
     "@types/nock": "^10.0.3",
     "@types/normalize-path": "^3.0.2",
     "@types/shell-escape": "^0.2.3",
@@ -160,6 +160,7 @@ src/
 ```
 
 **Key Architectural Decisions:**
+
 - **`ollama`**: Official Ollama client library for robust API integration
 - **`micromatch`**: Advanced glob pattern matching for security
 - **`sanitize-filename`**: Secure filename sanitization
@@ -812,27 +813,25 @@ export function loadConfig(): Config {
 export function createOllamaMock(fixtureName: string) {
   const fixturePath = `./tests/fixtures/recordings/${fixtureName}.json`;
   const fixture = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
-  
-  return nock('http://localhost:11434')
-    .persist()
-    .post('/api/chat')
-    .reply(200, fixture.response);
+
+  return nock('http://localhost:11434').persist().post('/api/chat').reply(200, fixture.response);
 }
 
 // Usage in tests
 test('file operations with real model responses', async () => {
   const mock = createOllamaMock('basic_chat_completion');
-  
+
   const response = await ollamaClient.chat([
-    { role: 'user', content: 'List TypeScript files in src/' }
+    { role: 'user', content: 'List TypeScript files in src/' },
   ]);
-  
+
   expect(response.message.content).toContain('TypeScript');
   expect(mock.isDone()).toBe(true);
 });
 ```
 
 **Architectural Decision:** Used `nock` instead of custom VCR implementation for:
+
 - Better Jest integration
 - Reliable HTTP mocking
 - Easier fixture management
