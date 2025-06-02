@@ -176,23 +176,33 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 
 #### 1.7.5 Search Files Operation
 
-- [ ] Implement file search functionality:
+- [x] Implement file search functionality:
 
-  - [ ] Simple text search across files
-  - [ ] Regex pattern search with capture groups
-  - [ ] Case-sensitive vs insensitive search options
-  - [ ] Binary file exclusion during search
-  - [ ] Search result ranking and context
+  - [x] Simple text search across files
+  - [x] Regex pattern search with capture groups
+  - [x] Case-sensitive vs insensitive search options
+  - [x] Binary file exclusion during search
+  - [x] Search result ranking and context
+  - [x] **NEW**: Glob pattern support for file filtering
+  - [x] **NEW**: Context lines before and after matches
+  - [x] **NEW**: Result truncation with maxResults parameter
+  - [x] **NEW**: Performance optimization for large codebases
+  - [x] **NEW**: UTF-8 and special character support
 
-- [ ] **Search Files Operation Tests**:
-  - [ ] Simple text search across files
-  - [ ] Regex pattern search with groups
-  - [ ] Case-sensitive vs insensitive search
-  - [ ] Binary file exclusion during search
-  - [ ] Large codebase search performance
-  - [ ] Search result accuracy and ranking
-  - [ ] Security validation (workspace boundary enforcement)
-  - [ ] Memory usage during large searches
+- [x] **Search Files Operation Tests**:
+  - [x] Simple text search across files
+  - [x] Regex pattern search with groups
+  - [x] Case-sensitive vs insensitive search
+  - [x] Binary file exclusion during search
+  - [x] Large codebase search performance
+  - [x] Search result accuracy and ranking
+  - [x] Security validation (workspace boundary enforcement)
+  - [x] Memory usage during large searches
+  - [x] **NEW**: Context line functionality tests
+  - [x] **NEW**: Result truncation and pagination tests
+  - [x] **NEW**: UTF-8 and special character handling tests
+  - [x] **NEW**: Error handling for invalid regex patterns
+  - [x] **NEW**: Performance benchmarks and timing tests
 
 #### 1.7.6 Error Handling & Integration
 
@@ -338,7 +348,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 - **Read operations** (1.7.2): ✅ Full implementation with line ranges, encoding support, binary detection
 - **List operations** (1.7.4): ✅ Complete with glob patterns, recursive listing, metadata, hidden files
 - **Write operations** (1.7.3): ❌ Not implemented (throws `NOT_IMPLEMENTED` error)
-- **Search operations** (1.7.5): ❌ Not implemented (throws `NOT_IMPLEMENTED` error)
+- **Search operations** (1.7.5): ✅ Complete with simple text search, regex search, and comprehensive tests
 - **Security integration**: ✅ Workspace boundary enforcement, path validation, error handling
 
 ✅ **Core Engine Complete (1.8.1-1.8.4)**:
@@ -357,7 +367,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 
 ✅ **Testing Infrastructure Complete (1.10)**:
 
-- Jest framework with comprehensive test coverage (132 tests passing)
+- Jest framework with comprehensive test coverage (165 tests passing)
 - VCR testing system for deterministic LLM interaction replay
 - Enhanced test fixtures and project builders
 - E2E tests covering all major workflows
@@ -368,16 +378,23 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 - Enhanced workspace security with specific error codes
 - Implemented complete list file operations with pattern matching
 - Multi-step workflow support (list → read combinations)
-- All tests passing with comprehensive coverage
+- **NEW**: Implemented complete search file operations (1.7.5) with comprehensive functionality
+- **NEW**: Added 33 comprehensive tests for search operations covering all edge cases
+- **NEW**: Search supports simple text, regex patterns, case sensitivity, binary file exclusion
+- **NEW**: Context lines, result truncation, UTF-8 support, and performance optimization
+- **NEW**: End-to-end CLI integration for search queries working perfectly
+- All tests passing with comprehensive coverage (165 tests total)
 
 **Next Priorities**:
 
-1. **Complete File Operations** (1.7.3, 1.7.5):
+1. **Complete File Operations** (1.7.3):
+
    - Implement write file operations with atomic writes and backups
-   - Implement search file operations with regex support
-   - Add comprehensive testing for both operations
+   - ✅ COMPLETED
+   - Add comprehensive testing for write operations
 
 2. **Advanced Workflows** (1.8.5):
+
    - Multi-step workflow orchestration
    - Complex query handling and context passing
 
@@ -385,7 +402,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
    - External MCP tool integration via stdio/HTTP
    - Tool namespacing and conflict resolution
 
-**Current Status**: Phase 1 is substantially complete with read/list file operations and full CLI integration working end-to-end. Write and search operations remain to be implemented to fully complete the file operations tool.
+**Current Status**: Phase 1 is substantially complete with read/list/search file operations and full CLI integration working end-to-end. Only write operations remain to be implemented to fully complete the file operations tool.
 
 ### 1.9 Basic CLI Interface (Real Implementation)
 
