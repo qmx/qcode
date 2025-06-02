@@ -905,13 +905,6 @@ describe('Security Validation', () => {
 - ✅ **Zero-config startup for basic usage**
 - ✅ **Professional terminal experience**
 
-### Performance Targets
-
-- ✅ **Tool execution**: <500ms for file operations
-- ✅ **MCP calls**: <2s timeout with retry logic
-- ✅ **Context building**: <1s for typical projects
-- ✅ **Memory usage**: <100MB baseline
-
 ## 📈 Implementation Timeline
 
 ### Week 1: Core Foundation

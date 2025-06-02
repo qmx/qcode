@@ -117,6 +117,15 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Binary file detection and graceful handling
   - [ ] Large file reading with memory management
 
+- [ ] **Read File Operation Tests**:
+  - [ ] Single file read (small text file)
+  - [ ] Large file read (>1MB) with chunking
+  - [ ] Line-range reading (lines 10-50 of large file)
+  - [ ] Binary file handling (should fail gracefully)
+  - [ ] Non-existent file error handling
+  - [ ] UTF-8 encoding with special characters
+  - [ ] Security validation (path traversal attempts)
+
 #### 1.7.3 Write File Operation
 
 - [ ] Implement write file functionality:
@@ -127,6 +136,16 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Handle write permissions and read-only scenarios
   - [ ] File overwrite protection and confirmation
 
+- [ ] **Write File Operation Tests**:
+  - [ ] Create new file in existing directory
+  - [ ] Overwrite existing file with backup
+  - [ ] Write to read-only directory (should fail)
+  - [ ] Atomic write operations
+  - [ ] Directory creation during write
+  - [ ] Large file write operations
+  - [ ] Security validation (workspace boundary enforcement)
+  - [ ] Concurrent write conflict handling
+
 #### 1.7.4 List Files Operation
 
 - [ ] Implement file listing functionality:
@@ -134,8 +153,16 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Glob pattern support (`**/*.ts`, `src/**/*.{js,ts}`)
   - [ ] Hidden file handling (`.env`, `.git/`)
   - [ ] Recursive directory traversal
-  - [ ] Performance optimization for large directories (1000+ files)
   - [ ] File metadata inclusion (size, dates, permissions)
+
+- [ ] **List Files Operation Tests**:
+  - [ ] Simple directory listing
+  - [ ] Glob pattern matching (`**/*.ts`, `src/**/*.{js,ts}`)
+  - [ ] Hidden file handling (`.env`, `.git/`)
+  - [ ] Nested directory recursion
+  - [ ] File metadata accuracy
+  - [ ] Security validation (workspace boundary enforcement)
+  - [ ] Error handling for inaccessible directories
 
 #### 1.7.5 Search Files Operation
 
@@ -145,7 +172,16 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Case-sensitive vs insensitive search options
   - [ ] Binary file exclusion during search
   - [ ] Search result ranking and context
-  - [ ] Performance optimization for large codebases
+
+- [ ] **Search Files Operation Tests**:
+  - [ ] Simple text search across files
+  - [ ] Regex pattern search with groups
+  - [ ] Case-sensitive vs insensitive search
+  - [ ] Binary file exclusion during search
+  - [ ] Large codebase search performance
+  - [ ] Search result accuracy and ranking
+  - [ ] Security validation (workspace boundary enforcement)
+  - [ ] Memory usage during large searches
 
 #### 1.7.6 Error Handling & Integration
 
@@ -172,29 +208,19 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
     - [ ] JavaScript, Python, and config files
     - [ ] Inconsistent structure for edge case testing
 
-- [ ] **File Operations Unit Tests**:
-  - [ ] **Read Operations**:
-    - [ ] Single file read (small text file)
-    - [ ] Large file read (>1MB) with chunking
-    - [ ] Line-range reading (lines 10-50 of large file)
-    - [ ] Binary file handling (should fail gracefully)
-    - [ ] Non-existent file error handling
-    - [ ] UTF-8 encoding with special characters
-  - [ ] **Write Operations**:
-    - [ ] Create new file in existing directory
-    - [ ] Overwrite existing file with backup
-    - [ ] Write to read-only directory (should fail)
-    - [ ] Atomic write operations
-  - [ ] **List Operations**:
-    - [ ] Simple directory listing
-    - [ ] Glob pattern matching (`**/*.ts`, `src/**/*.{js,ts}`)
-    - [ ] Hidden file handling (`.env`, `.git/`)
-    - [ ] Large directory performance (1000+ files)
-  - [ ] **Search Operations**:
-    - [ ] Simple text search across files
-    - [ ] Regex pattern search with groups
-    - [ ] Case-sensitive vs insensitive search
-    - [ ] Binary file exclusion during search
+- [ ] **File Operations Integration Tests**:
+  - [ ] **Multi-Operation Workflows**:
+    - [ ] List → Read → Write workflow
+    - [ ] Search → Read → Edit workflow
+    - [ ] Complex glob patterns across operations
+  - [ ] **Cross-Operation Error Handling**:
+    - [ ] Tool registry integration error handling
+    - [ ] Security validation across all operations
+    - [ ] Performance degradation under load
+  - [ ] **End-to-End FilesTool Testing**:
+    - [ ] Complete tool definition formatting for Ollama
+    - [ ] Result formatting consistency across operations
+    - [ ] Memory management during complex workflows
 
 ### 1.8 Core Engine
 
@@ -454,349 +480,4 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 ### 3.1 Advanced File Editing Tool
 
 - [ ] Implement `src/tools/edit.ts`:
-  - [ ] `EditTool` class with diff support
-  - [ ] Line-based editing operations
-  - [ ] Multi-file editing capabilities
-  - [ ] Diff generation and preview
-  - [ ] Backup and rollback functionality
-  - [ ] Conflict detection and resolution
-
-### 3.2 Shell Execution Tool
-
-- [ ] Implement `src/tools/shell.ts`:
-  - [ ] `ShellTool` class with security restrictions
-  - [ ] Command whitelist enforcement
-  - [ ] Argument sanitization
-  - [ ] Output capture and streaming
-  - [ ] Working directory management
-  - [ ] Timeout and process control
-
-### 3.3 Git Integration Tool
-
-- [ ] Implement `src/tools/git.ts`:
-  - [ ] `GitTool` class for repository operations
-  - [ ] Status, diff, and log operations
-  - [ ] Commit creation and management
-  - [ ] Branch operations
-  - [ ] Remote repository interaction
-  - [ ] Security validation for git operations
-
-### 3.4 Advanced Search Tool
-
-- [ ] Implement `src/tools/search.ts`:
-  - [ ] `SearchTool` class with multiple search types
-  - [ ] Code search with syntax awareness
-  - [ ] Regex and fuzzy search capabilities
-  - [ ] File content indexing
-  - [ ] Search result ranking and filtering
-  - [ ] Performance optimization for large codebases
-
-### 3.5 Project Context System
-
-- [ ] Implement `src/core/context.ts`:
-  - [ ] `ProjectContext` class for project understanding
-  - [ ] Codebase structure analysis
-  - [ ] Dependency detection and mapping
-  - [ ] File relationship analysis
-  - [ ] Project metadata extraction
-  - [ ] Context memory management
-
-### 3.6 Project Analysis Tool
-
-- [ ] Implement `src/tools/project.ts`:
-  - [ ] `ProjectTool` class for structure analysis
-  - [ ] Package.json and dependency analysis
-  - [ ] Framework and library detection
-  - [ ] Code quality metrics
-  - [ ] Architecture pattern recognition
-  - [ ] Documentation generation
-
-### 3.7 Enhanced Engine
-
-- [ ] Extend `src/core/engine.ts`:
-  - [ ] Context-aware query processing
-  - [ ] Multi-step task planning
-  - [ ] Tool chaining and workflow orchestration
-  - [ ] Progress tracking for complex operations
-  - [ ] Smart tool selection based on context
-
-### 3.8 Diff and Merge Utilities
-
-- [ ] Create diff utilities:
-  - [ ] Three-way merge support
-  - [ ] Conflict resolution strategies
-  - [ ] Visual diff formatting
-  - [ ] Patch generation and application
-
-### 3.9 Enhanced Testing
-
-- [ ] Add comprehensive tool tests:
-
-  - [ ] Edit tool tests with real file scenarios
-  - [ ] Git integration tests
-  - [ ] Search performance tests
-  - [ ] Context building tests
-  - [ ] Multi-tool workflow tests
-
-- [ ] **Advanced Tool Testing**:
-  - [ ] **EditTool Integration Tests**:
-    - [ ] Line-based editing operations
-    - [ ] Multi-file editing capabilities
-    - [ ] Diff generation and preview
-    - [ ] Backup and rollback functionality
-    - [ ] Conflict detection and resolution
-  - [ ] **GitTool Tests**:
-    - [ ] Status, diff, and log operations
-    - [ ] Commit creation and management
-    - [ ] Branch operations
-    - [ ] Security validation for git operations
-  - [ ] **Performance Benchmarks**:
-    - [ ] Large project handling (10,000+ files)
-    - [ ] Large individual files (>10MB)
-    - [ ] Memory usage monitoring
-    - [ ] Response time benchmarks
-
-**Phase 3 Acceptance Criteria**:
-
-- [ ] Can intelligently edit files with diff preview
-- [ ] Understands project structure and dependencies
-- [ ] Git operations work securely and correctly
-- [ ] Search finds relevant code across large projects
-- [ ] Context system improves query relevance
-
----
-
-## 🎨 Phase 4: Professional Experience (Week 4)
-
-**Goal**: Production-ready CLI with interactive mode and polish  
-**Deliverable**: Enterprise-grade QCode ready for daily use
-
-### 4.1 Interactive Chat Mode
-
-- [ ] Implement interactive CLI interface:
-  - [ ] Readline-based chat interface
-  - [ ] Command history and autocomplete
-  - [ ] Multi-line input support
-  - [ ] Session persistence
-  - [ ] Context preservation across queries
-
-### 4.2 Slash Command System
-
-- [ ] Implement Claude Coder-compatible slash commands:
-  - [ ] `/init` - Project initialization
-  - [ ] `/config` - Configuration management
-  - [ ] `/mcp` - MCP server status
-  - [ ] `/commit` - Git commit creation
-  - [ ] `/pr` - Pull request creation
-  - [ ] `/help` - Command documentation
-
-### 4.3 Streaming UX Enhancement
-
-- [ ] Implement professional streaming interface:
-  - [ ] Real-time progress indicators
-  - [ ] Tool execution feedback
-  - [ ] Animated loading states
-  - [ ] Success/error status display
-  - [ ] Token-by-token streaming for responses
-
-### 4.4 Enhanced Error Handling
-
-- [ ] Implement comprehensive error system:
-  - [ ] Contextual error messages
-  - [ ] Recovery suggestions
-  - [ ] Error categorization and codes
-  - [ ] Graceful degradation strategies
-  - [ ] Error reporting and logging
-
-### 4.5 Configuration UI
-
-- [ ] Create configuration management interface:
-  - [ ] Interactive config setup
-  - [ ] Configuration validation and testing
-  - [ ] Model availability checking
-  - [ ] MCP server configuration wizard
-  - [ ] Security settings management
-
-### 4.6 Help and Documentation System
-
-- [ ] Implement comprehensive help system:
-  - [ ] Built-in command documentation
-  - [ ] Example query suggestions
-  - [ ] Tool capability descriptions
-  - [ ] Troubleshooting guides
-  - [ ] Performance tips and best practices
-
-### 4.7 Performance Optimization
-
-- [ ] Optimize performance across the system:
-  - [ ] Response time optimization
-  - [ ] Memory usage optimization
-  - [ ] Caching strategies for context and tools
-  - [ ] Lazy loading for MCP servers
-  - [ ] Background processing for non-blocking operations
-
-### 4.8 Production Hardening
-
-- [ ] Implement production-ready features:
-  - [ ] Comprehensive logging system
-  - [ ] Health checks and monitoring
-  - [ ] Graceful shutdown handling
-  - [ ] Resource cleanup and management
-  - [ ] Rate limiting and throttling
-
-### 4.9 VCR Testing System
-
-- [ ] Implement VCR-style testing:
-  - [ ] Ollama API response recording
-  - [ ] Deterministic test playback
-  - [ ] Test cassette management
-  - [ ] Real API integration tests
-  - [ ] Test coverage reporting
-
-### 4.10 Final Integration and Polish
-
-- [ ] Complete system integration:
-
-  - [ ] End-to-end workflow testing
-  - [ ] Performance benchmarking
-  - [ ] Security audit and hardening
-  - [ ] Documentation completion
-  - [ ] Release preparation
-
-- [ ] **Production Readiness Testing**:
-  - [ ] **Cross-Platform Testing**:
-    - [ ] Windows path separators (`\` vs `/`)
-    - [ ] Case sensitivity differences
-    - [ ] File permission models (Unix vs Windows)
-    - [ ] Symlink behavior differences
-  - [ ] **Security Penetration Testing**:
-    - [ ] Path traversal prevention (`../../../etc/passwd`)
-    - [ ] Command injection prevention
-    - [ ] Forbidden pattern detection (`.env`, SSH keys)
-    - [ ] Workspace boundary enforcement
-  - [ ] **Load and Stress Testing**:
-    - [ ] Concurrent request handling
-    - [ ] Memory leak detection
-    - [ ] Resource cleanup validation
-    - [ ] Graceful degradation under load
-  - [ ] **CI/CD Integration**:
-    - [ ] Test matrix for Node.js versions
-    - [ ] Automated security scanning
-    - [ ] Performance regression detection
-    - [ ] Test coverage reporting (target: >90%)
-
-**Phase 4 Acceptance Criteria**:
-
-- [ ] Interactive mode provides smooth chat experience
-- [ ] All slash commands work like Claude Coder
-- [ ] Error messages are helpful with recovery suggestions
-- [ ] Performance meets all targets (<2s response, <100MB memory)
-- [ ] System is ready for production deployment
-
----
-
-## 🧪 Testing Strategy (Ongoing)
-
-### Unit Tests
-
-- [ ] Security validation tests (path traversal, command injection)
-- [ ] Configuration loading and validation tests
-- [ ] Tool execution tests with mocked dependencies
-- [ ] Error handling and recovery tests
-
-### Integration Tests
-
-- [ ] Ollama API integration with VCR recordings
-- [ ] MCP server integration tests
-- [ ] Multi-tool workflow tests
-- [ ] File system operation tests
-
-### End-to-End Tests
-
-- [ ] Complete user workflow scenarios
-- [ ] Interactive mode testing
-- [ ] Performance and stress testing
-- [ ] Security penetration testing
-
----
-
-## 📦 Deployment Preparation
-
-### Build System
-
-- [ ] Production build configuration
-- [ ] Binary packaging (optional)
-- [ ] npm package preparation
-- [ ] Cross-platform compatibility testing
-
-### Documentation
-
-- [ ] README.md with installation and usage
-- [ ] Configuration documentation
-- [ ] API documentation for tools
-- [ ] Troubleshooting guide
-- [ ] Security best practices
-
-### Release Preparation
-
-- [ ] Version management setup
-- [ ] Release automation
-- [ ] Update mechanism (if needed)
-- [ ] Backup and recovery procedures
-
----
-
-## 🎯 Success Metrics Tracking
-
-### Technical Requirements
-
-- [ ] Zero critical security vulnerabilities
-- [ ] > 95% tool execution success rate
-- [ ] <2s response time for simple queries
-- [ ] > 90% test coverage (unit + integration)
-- [ ] Graceful handling of MCP server failures
-
-### User Experience Goals
-
-- [ ] Claude Coder-compatible commands and workflow
-- [ ] Real-time streaming with clear progress indicators
-- [ ] Helpful error messages with recovery suggestions
-- [ ] Zero-config startup for basic usage
-- [ ] Professional terminal experience
-
-### Performance Targets
-
-- [ ] Tool execution: <500ms for file operations
-- [ ] MCP calls: <2s timeout with retry logic
-- [ ] Context building: <1s for typical projects
-- [ ] Memory usage: <100MB baseline
-
----
-
-## 🚀 Dependencies and Blockers
-
-### External Dependencies
-
-- [ ] Ollama server availability and compatibility
-- [ ] MCP specification stability
-- [ ] Node.js and TypeScript ecosystem
-
-### Internal Dependencies
-
-- [ ] Security framework must be completed before tools
-- [ ] Core registry required before MCP integration
-- [ ] Basic CLI needed before interactive mode
-- [ ] Configuration system required for all phases
-
-### Risk Mitigation
-
-- [ ] Fallback strategies for MCP server failures
-- [ ] Offline mode for basic operations
-- [ ] Alternative model support beyond Ollama
-- [ ] Backward compatibility considerations
-
----
-
-**Total Estimated Tasks**: ~120 tasks across 4 weeks
-**Critical Path**: Security → Core → MCP → Tools → UX
-**Key Milestones**: Week 1 (Basic functionality), Week 2 (MCP integration), Week 3 (Advanced tools), Week 4 (Production ready)
+  - [ ] `
