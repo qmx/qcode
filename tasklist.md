@@ -98,14 +98,64 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 
 ### 1.7 Internal File Operations Tool
 
-- [ ] Implement `src/tools/files.ts`:
-  - [ ] `FilesTool` class with Zod schema validation
-  - [ ] Read file operation (with line range support)
-  - [ ] Write file operation
-  - [ ] List files operation with glob patterns
-  - [ ] Search files operation with regex
-  - [ ] Integration with security validation
-  - [ ] Error handling for file operations
+#### 1.7.1 Basic FilesTool Class Structure
+
+- [ ] Create `src/tools/files.ts` foundation:
+  - [ ] Basic `FilesTool` class structure
+  - [ ] Zod schema definitions for all operations
+  - [ ] Tool interface and registration structure
+  - [ ] Security integration setup with `WorkspaceSecurity`
+  - [ ] Basic error handling framework
+
+#### 1.7.2 Read File Operation
+
+- [ ] Implement read file functionality:
+  - [ ] Basic file reading with UTF-8 encoding
+  - [ ] Line range support (e.g., lines 10-50 of large file)
+  - [ ] Handle special characters and encoding issues
+  - [ ] Error handling for non-existent files
+  - [ ] Binary file detection and graceful handling
+  - [ ] Large file reading with memory management
+
+#### 1.7.3 Write File Operation
+
+- [ ] Implement write file functionality:
+  - [ ] File writing with security validation
+  - [ ] Atomic write operations to prevent corruption
+  - [ ] Directory creation when needed
+  - [ ] Backup functionality for existing files
+  - [ ] Handle write permissions and read-only scenarios
+  - [ ] File overwrite protection and confirmation
+
+#### 1.7.4 List Files Operation
+
+- [ ] Implement file listing functionality:
+  - [ ] Basic directory listing
+  - [ ] Glob pattern support (`**/*.ts`, `src/**/*.{js,ts}`)
+  - [ ] Hidden file handling (`.env`, `.git/`)
+  - [ ] Recursive directory traversal
+  - [ ] Performance optimization for large directories (1000+ files)
+  - [ ] File metadata inclusion (size, dates, permissions)
+
+#### 1.7.5 Search Files Operation
+
+- [ ] Implement file search functionality:
+  - [ ] Simple text search across files
+  - [ ] Regex pattern search with capture groups
+  - [ ] Case-sensitive vs insensitive search options
+  - [ ] Binary file exclusion during search
+  - [ ] Search result ranking and context
+  - [ ] Performance optimization for large codebases
+
+#### 1.7.6 Error Handling & Integration
+
+- [ ] Complete FilesTool integration:
+  - [ ] Comprehensive error handling for all operations
+  - [ ] Integration with `WorkspaceSecurity` validation
+  - [ ] Tool registry integration and registration
+  - [ ] Tool definition formatting for Ollama function calling
+  - [ ] Result formatting and standardization
+  - [ ] Performance monitoring and optimization
 
 - [ ] **Test Fixtures for File Operations**:
   - [ ] Create `tests/fixtures/projects/ts-monorepo/`:
