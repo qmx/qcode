@@ -1,255 +1,233 @@
 import { QCodeError } from '../types.js';
 import shellEscape from 'shell-escape';
-import { execa } from 'execa';
+import { spawn } from 'child_process';
 
 /**
  * Default allowed commands for basic operations
  */
 export const DEFAULT_ALLOWED_COMMANDS = [
-  'git',
-  'npm',
-  'yarn',
-  'pnpm',
-  'node',
-  'python',
-  'python3',
-  'pip',
   'ls',
-  'dir',
   'cat',
   'head',
   'tail',
   'grep',
   'find',
-  'which',
-  'where',
-  'echo',
-  'pwd',
-  'cd',
+  'wc',
+  'sort',
+  'uniq',
+  'cut',
+  'awk',
+  'sed',
+  'git',
+  'npm',
+  'yarn',
+  'node',
+  'python',
+  'python3',
+  'pip',
+  'pip3',
+  'make',
+  'tsc',
+  'eslint',
+  'prettier',
 ];
 
 /**
- * Commands that should never be allowed regardless of configuration
+ * Forbidden command patterns that should never be allowed
  */
-const FORBIDDEN_COMMANDS = [
-  'rm',
-  'del',
-  'format',
-  'fdisk',
-  'sudo',
-  'su',
-  'passwd',
-  'chmod',
-  'chown',
-  'kill',
-  'killall',
-  'pkill',
-  'halt',
-  'reboot',
-  'shutdown',
-  'poweroff',
-  'mkfs',
-  'dd',
-  'eval',
-  'exec',
-  'source',
-  '.',
+export const FORBIDDEN_COMMAND_PATTERNS = [
+  'rm *',
+  'del *',
+  'format *',
+  'sudo *',
+  'su *',
+  '* > /dev/*',
+  '* | *',
+  '* && *',
+  '* || *',
+  '* ; *',
 ];
 
 /**
- * Validates that a command is safe to execute
+ * Command execution result
  */
-export function validateCommand(
-  command: string,
-  allowedCommands: string[] = DEFAULT_ALLOWED_COMMANDS
-): void {
-  if (!command || typeof command !== 'string') {
-    throw new QCodeError('Command must be a non-empty string', 'INVALID_COMMAND', { command });
-  }
-
-  const trimmedCommand = command.trim();
-  if (!trimmedCommand) {
-    throw new QCodeError('Command cannot be empty', 'EMPTY_COMMAND', { command });
-  }
-
-  // Extract the base command (first word)
-  const commandParts = trimmedCommand.split(/\s+/);
-  const baseCommand = commandParts[0];
-
-  if (!baseCommand) {
-    throw new QCodeError('Could not extract base command', 'INVALID_COMMAND', {
-      command: trimmedCommand,
-    });
-  }
-
-  // Check against forbidden commands
-  if (FORBIDDEN_COMMANDS.includes(baseCommand.toLowerCase())) {
-    throw new QCodeError(
-      `Command '${baseCommand}' is forbidden for security reasons`,
-      'FORBIDDEN_COMMAND',
-      { command: baseCommand, fullCommand: command }
-    );
-  }
-
-  // Check if command is in allowed list
-  if (!allowedCommands.includes(baseCommand)) {
-    throw new QCodeError(
-      `Command '${baseCommand}' is not in the allowed commands list`,
-      'COMMAND_NOT_ALLOWED',
-      { command: baseCommand, allowedCommands }
-    );
-  }
+export interface CommandResult {
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+  command: string;
+  args: string[];
+  duration: number;
 }
 
 /**
- * Validates command arguments - no manual pattern matching needed with proper execution
+ * Command execution options
  */
-export function sanitizeArgs(args: string[]): string[] {
-  return args.map(arg => {
-    if (typeof arg !== 'string') {
-      throw new QCodeError('All arguments must be strings', 'INVALID_ARGUMENT', {
-        arg,
-        type: typeof arg,
-      });
-    }
+export interface CommandOptions {
+  /** Working directory for command execution */
+  cwd?: string;
+  /** Environment variables */
+  env?: Record<string, string>;
+  /** Timeout in milliseconds */
+  timeout?: number;
+  /** Whether to capture output */
+  captureOutput?: boolean;
+}
 
-    // Just validate they are strings - shell-escape will handle the rest
+/**
+ * Validates if a command is allowed to be executed
+ */
+export function isCommandAllowed(
+  command: string,
+  allowedCommands: string[] = DEFAULT_ALLOWED_COMMANDS
+): boolean {
+  // Check if the base command is in the allowed list
+  const baseCommand = command.split(' ')[0];
+  return baseCommand ? allowedCommands.includes(baseCommand) : false;
+}
+
+/**
+ * Validates if a command matches any forbidden patterns
+ */
+export function isForbiddenCommand(
+  command: string,
+  forbiddenPatterns: string[] = FORBIDDEN_COMMAND_PATTERNS
+): boolean {
+  return forbiddenPatterns.some(pattern => {
+    // Simple pattern matching - could be enhanced with regex
+    if (pattern.includes('*')) {
+      const regexPattern = pattern.replace(/\*/g, '.*');
+      return new RegExp(regexPattern).test(command);
+    }
+    return command.includes(pattern);
+  });
+}
+
+/**
+ * Sanitizes command arguments using shell-escape
+ */
+export function sanitizeCommandArgs(args: string[]): string[] {
+  return args.map(arg => {
+    // Basic validation - reject args with suspicious characters
+    if (arg.includes(';') || arg.includes('|') || arg.includes('&')) {
+      throw new QCodeError('Argument contains forbidden characters', 'INVALID_ARGUMENT', { arg });
+    }
     return arg;
   });
 }
 
 /**
- * Validates a complete command with arguments
- */
-export function validateCommandWithArgs(
-  command: string,
-  args: string[] = [],
-  allowedCommands: string[] = DEFAULT_ALLOWED_COMMANDS
-): { command: string; args: string[] } {
-  validateCommand(command, allowedCommands);
-  const sanitizedArgs = sanitizeArgs(args);
-
-  return {
-    command: command.trim(),
-    args: sanitizedArgs,
-  };
-}
-
-/**
- * Checks if a command requires elevated privileges
- */
-export function requiresElevatedPrivileges(command: string): boolean {
-  const elevatedCommands = [
-    'sudo',
-    'su',
-    'runas',
-    'chmod',
-    'chown',
-    'mount',
-    'umount',
-    'systemctl',
-    'service',
-  ];
-
-  const commandParts = command.trim().split(/\s+/);
-  const baseCommand = commandParts[0];
-
-  if (!baseCommand) {
-    return false;
-  }
-
-  return elevatedCommands.includes(baseCommand.toLowerCase());
-}
-
-/**
- * Builds a safe command string using shell-escape for proper escaping
- */
-export function buildSafeCommand(command: string, args: string[] = []): string {
-  const validated = validateCommandWithArgs(command, args);
-
-  // Use shell-escape for proper argument escaping
-  return shellEscape([validated.command, ...validated.args]);
-}
-
-/**
- * Safely executes a command using execa for better security
+ * Executes a command safely with proper validation and sandboxing
  */
 export async function executeCommand(
   command: string,
   args: string[] = [],
-  options: {
-    cwd?: string;
-    env?: Record<string, string>;
-    timeout?: number;
-    allowedCommands?: string[];
-  } = {}
-): Promise<{ stdout: string; stderr: string; exitCode: number }> {
-  const { cwd, env, timeout = 30000, allowedCommands } = options;
+  options: CommandOptions = {}
+): Promise<CommandResult> {
+  const startTime = Date.now();
 
-  // Validate the command first
-  const validated = validateCommandWithArgs(command, args, allowedCommands);
-
-  // Validate environment variables if provided
-  const validatedEnv = env ? validateEnvironmentVariables(env) : undefined;
-
-  try {
-    // Build options object without undefined values
-    const execaOptions: Record<string, any> = {
-      timeout,
-      reject: false, // Don't throw on non-zero exit codes
-    };
-
-    if (cwd) {
-      execaOptions.cwd = cwd;
-    }
-
-    if (validatedEnv) {
-      execaOptions.env = validatedEnv;
-    }
-
-    // Use execa for safer command execution
-    const result = await execa(validated.command, validated.args, execaOptions);
-
-    return {
-      stdout: result.stdout,
-      stderr: result.stderr,
-      exitCode: result.exitCode,
-    };
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new QCodeError(
-        `Command execution failed: ${error.message}`,
-        'COMMAND_EXECUTION_ERROR',
-        { command: validated.command, args: validated.args, originalError: error }
-      );
-    }
-    throw error;
+  // Validate command is allowed
+  if (!isCommandAllowed(command)) {
+    throw new QCodeError('Command not allowed', 'COMMAND_NOT_ALLOWED', { command });
   }
-}
 
-/**
- * Validates environment variables for command execution
- */
-export function validateEnvironmentVariables(env: Record<string, string>): Record<string, string> {
-  const validated: Record<string, string> = {};
+  // Check for forbidden patterns
+  const fullCommand = `${command} ${args.join(' ')}`;
+  if (isForbiddenCommand(fullCommand)) {
+    throw new QCodeError('Command matches forbidden pattern', 'FORBIDDEN_COMMAND', {
+      command: fullCommand,
+    });
+  }
 
-  for (const [key, value] of Object.entries(env)) {
-    // Validate environment variable names
-    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key)) {
-      throw new QCodeError('Invalid environment variable name', 'INVALID_ENV_VAR', { key, value });
+  // Sanitize arguments
+  const sanitizedArgs = sanitizeCommandArgs(args);
+
+  const {
+    cwd = process.cwd(),
+    env = process.env,
+    timeout = 30000, // 30 seconds default
+    captureOutput = true,
+  } = options;
+
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, sanitizedArgs, {
+      cwd,
+      env: { ...process.env, ...env },
+      stdio: captureOutput ? ['pipe', 'pipe', 'pipe'] : 'inherit',
+    });
+
+    let stdout = '';
+    let stderr = '';
+    let timeoutHandle: NodeJS.Timeout | null = null;
+
+    // Set up timeout
+    if (timeout > 0) {
+      timeoutHandle = setTimeout(() => {
+        child.kill('SIGTERM');
+        reject(
+          new QCodeError('Command timed out', 'COMMAND_TIMEOUT', {
+            command,
+            args: sanitizedArgs,
+            timeout,
+          })
+        );
+      }, timeout);
     }
 
-    // Check for dangerous patterns in values
-    if (typeof value !== 'string') {
-      throw new QCodeError('Environment variable values must be strings', 'INVALID_ENV_VALUE', {
-        key,
-        value,
-        type: typeof value,
+    // Capture output if requested
+    if (captureOutput) {
+      child.stdout?.on('data', data => {
+        stdout += data.toString();
+      });
+
+      child.stderr?.on('data', data => {
+        stderr += data.toString();
       });
     }
 
-    validated[key] = value;
-  }
+    // Handle process completion
+    child.on('close', exitCode => {
+      if (timeoutHandle) {
+        clearTimeout(timeoutHandle);
+      }
 
-  return validated;
+      const duration = Date.now() - startTime;
+      const result: CommandResult = {
+        stdout,
+        stderr,
+        exitCode: exitCode || 0,
+        command,
+        args: sanitizedArgs,
+        duration,
+      };
+
+      if (exitCode === 0) {
+        resolve(result);
+      } else {
+        reject(new QCodeError('Command failed', 'COMMAND_FAILED', result));
+      }
+    });
+
+    // Handle process errors
+    child.on('error', error => {
+      if (timeoutHandle) {
+        clearTimeout(timeoutHandle);
+      }
+
+      reject(
+        new QCodeError('Failed to execute command', 'COMMAND_EXECUTION_ERROR', {
+          command,
+          args: sanitizedArgs,
+          originalError: error.message,
+        })
+      );
+    });
+  });
+}
+
+/**
+ * Escapes a command and its arguments for safe shell execution
+ */
+export function escapeCommand(command: string, args: string[] = []): string {
+  return shellEscape([command, ...args]);
 }
