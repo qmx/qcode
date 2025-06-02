@@ -53,8 +53,10 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [x] Allowed command whitelist
   - [x] Argument sanitization
   - [x] **IMPROVED**: Now uses `shell-escape` for proper argument escaping
-  - [x] **IMPROVED**: Now uses `execa` for safer command execution
-  - [x] **NEW**: Added `executeCommand` function with timeout and error handling
+  - [x] **CHANGED**: Now uses native Node.js `spawn` instead of `execa` for simpler, more secure execution
+  - [x] **NEW**: Added comprehensive `CommandResult` interface with execution metrics
+  - [x] **NEW**: Added `CommandOptions` interface for flexible execution configuration
+  - [x] **NEW**: Added pattern-based forbidden command detection
 
 ### 1.4 Configuration System
 
@@ -124,11 +126,15 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 
 ### 1.10 Testing Setup
 
-- [ ] Set up Jest testing framework
-- [ ] Create test directory structure
-- [ ] Implement basic security tests
-- [ ] Create sample test workspace
-- [ ] Basic tool execution tests
+- [x] Set up Jest testing framework
+- [x] Create test directory structure
+- [x] Implement basic security tests
+- [x] Create sample test workspace
+- [x] Basic tool execution tests
+- [x] **NEW**: VCR-style testing system implemented with `nock`
+- [x] **NEW**: Real Ollama API response recording and playback
+- [x] **NEW**: JSON fixtures for deterministic test behavior
+- [x] **NEW**: Integration tests with comprehensive API coverage
 
 **Phase 1 Acceptance Criteria**:
 

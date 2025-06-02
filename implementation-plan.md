@@ -129,20 +129,42 @@ src/
 ```json
 {
   "dependencies": {
-    "@types/node": "^20.0.0",
-    "typescript": "^5.0.0",
-    "commander": "^11.0.0",
-    "chalk": "^5.0.0",
-    "fast-glob": "^3.3.0",
-    "zod": "^3.22.0",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "commander": "^11.1.0",
+    "chalk": "^5.3.0",
+    "fast-glob": "^3.3.2",
+    "zod": "^3.22.4",
     "@modelcontextprotocol/sdk": "^0.4.0",
-    "node-diff3": "^3.1.0",
-    "zod-to-json-schema": "^3.21.0",
+    "ollama": "^0.5.16",
+    "node-diff3": "^3.1.1",
+    "zod-to-json-schema": "^3.22.4",
     "normalize-path": "^3.0.0",
-    "is-path-inside": "^4.0.0"
+    "is-path-inside": "^4.0.0",
+    "micromatch": "^4.0.5",
+    "sanitize-filename": "^1.6.3",
+    "shell-escape": "^0.2.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.8",
+    "@types/micromatch": "^4.0.6", 
+    "@types/nock": "^10.0.3",
+    "@types/normalize-path": "^3.0.2",
+    "@types/shell-escape": "^0.2.3",
+    "jest": "^29.7.0",
+    "nock": "^14.0.5",
+    "ts-jest": "^29.1.1",
+    "prettier": "^3.1.0"
   }
 }
 ```
+
+**Key Architectural Decisions:**
+- **`ollama`**: Official Ollama client library for robust API integration
+- **`micromatch`**: Advanced glob pattern matching for security
+- **`sanitize-filename`**: Secure filename sanitization
+- **`shell-escape`**: Proper argument escaping for command execution
+- **`nock`**: HTTP mocking for VCR-style testing without custom implementation
 
 ## 🚀 Implementation Phases
 
@@ -786,28 +808,35 @@ export function loadConfig(): Config {
 ### VCR Implementation
 
 ```typescript
-export function withVCR(cassetteName: string, record = false) {
-  return async <T>(testFn: () => Promise<T>): Promise<T> => {
-    const cassettePath = `./tests/fixtures/ollama-cassettes/${cassetteName}.json`;
-
-    if (record || !existsSync(cassettePath)) {
-      console.log(`🔴 Recording cassette: ${cassetteName}`);
-      return await recordCassette(cassettePath, testFn);
-    } else {
-      console.log(`▶️  Playing cassette: ${cassetteName}`);
-      return await playCassette(cassettePath, testFn);
-    }
-  };
+// Using nock for HTTP mocking with recorded fixtures
+export function createOllamaMock(fixtureName: string) {
+  const fixturePath = `./tests/fixtures/recordings/${fixtureName}.json`;
+  const fixture = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
+  
+  return nock('http://localhost:11434')
+    .persist()
+    .post('/api/chat')
+    .reply(200, fixture.response);
 }
 
 // Usage in tests
-test('file operations with real model', async () => {
-  await withVCR('file-operations')(() => async () => {
-    const response = await engine.process('List TypeScript files in src/');
-    expect(response).toContain('TypeScript');
-  });
+test('file operations with real model responses', async () => {
+  const mock = createOllamaMock('basic_chat_completion');
+  
+  const response = await ollamaClient.chat([
+    { role: 'user', content: 'List TypeScript files in src/' }
+  ]);
+  
+  expect(response.message.content).toContain('TypeScript');
+  expect(mock.isDone()).toBe(true);
 });
 ```
+
+**Architectural Decision:** Used `nock` instead of custom VCR implementation for:
+- Better Jest integration
+- Reliable HTTP mocking
+- Easier fixture management
+- Standard testing patterns
 
 ### Test Architecture
 
