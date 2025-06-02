@@ -448,14 +448,16 @@ describe('FilesTool', () => {
       expect(Array.isArray(result.data.files)).toBe(true);
     });
 
-    it('should throw NOT_IMPLEMENTED for search operation', async () => {
+    it('should successfully execute search operation', async () => {
       const result = await filesTool.execute({
         operation: 'search',
         query: 'test',
       });
 
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('not yet implemented');
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      expect(result.data.matches).toBeDefined();
+      expect(Array.isArray(result.data.matches)).toBe(true);
     });
   });
 
@@ -514,9 +516,11 @@ describe('FilesTool', () => {
         includeContext: true,
       });
 
-      // Should fail with NOT_IMPLEMENTED, not parameter validation error
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('not yet implemented');
+      // Should succeed since search operation is now implemented
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      expect(result.data.matches).toBeDefined();
+      expect(Array.isArray(result.data.matches)).toBe(true);
     });
   });
 });
