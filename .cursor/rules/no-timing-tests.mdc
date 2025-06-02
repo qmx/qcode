@@ -1,0 +1,39 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Testing Guidelines - Avoid Timing Tests
+
+## DO NOT create timing/performance tests unless absolutely necessary
+
+**Avoid these patterns:**
+- Tests that assert execution duration (`expect(result.duration).toBeGreaterThan(0)`)
+- Tests that measure millisecond-level performance
+- Tests that depend on execution speed
+- Fragile timing assertions that can fail based on system load
+
+**Instead focus on:**
+- Functional correctness (does it work?)
+- Error handling (does it fail gracefully?)
+- Security validation (are boundaries enforced?)
+- Data validation (are inputs/outputs correct?)
+- Integration behavior (do components work together?)
+
+**Exception:** Only create timing tests when:
+- Testing actual performance requirements (e.g., must complete within 5 seconds)
+- Testing timeout behavior
+- Testing rate limiting
+- Performance is a critical business requirement
+
+**Timing data can be tracked without assertions:**
+```typescript
+// Good: Track timing without asserting on it
+const result = await tool.execute(args);
+expect(typeof result.duration).toBe('number'); // Just verify it's a number
+
+// Bad: Don't assert on specific timing values
+expect(result.duration).toBeGreaterThan(0); // Fragile and pointless
+```
+
+**Focus on value, not micro-optimizations in tests.**
