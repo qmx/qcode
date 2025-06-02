@@ -88,13 +88,13 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 
 ### 1.6 Tool Registry System
 
-- [ ] Implement `src/core/registry.ts`:
-  - [ ] `ToolRegistry` class with namespacing
-  - [ ] Internal tool registration with "internal" namespace
-  - [ ] MCP server registration and tool discovery
-  - [ ] Tool execution with security validation
-  - [ ] Namespaced tool name resolution
-  - [ ] Tool definition formatting for Ollama
+- [x] Implement `src/core/registry.ts`:
+  - [x] `ToolRegistry` class with namespacing
+  - [x] Internal tool registration with "internal" namespace
+  - [x] MCP server registration and tool discovery
+  - [x] Tool execution with security validation
+  - [x] Namespaced tool name resolution
+  - [x] Tool definition formatting for Ollama
 
 ### 1.7 Internal File Operations Tool
 
