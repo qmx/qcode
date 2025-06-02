@@ -1,0 +1,57 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# QCode Project Navigation Guide
+
+## Core Project Files
+
+### Planning and Documentation
+- [tasklist.md](mdc:tasklist.md) - Detailed implementation task list organized by phases
+- [implementation-plan.md](mdc:implementation-plan.md) - High-level architecture and strategy
+- [package.json](mdc:package.json) - Dependencies and build configuration
+- [tsconfig.json](mdc:tsconfig.json) - TypeScript configuration
+
+### Source Code Structure
+- `src/` - Main TypeScript source code
+  - `src/types.ts` - Core type definitions and interfaces
+  - `src/core/` - Core engine, client, registry
+  - `src/tools/` - Internal tools (files, shell, git, etc.)
+  - `src/security/` - Security validation and workspace enforcement
+  - `src/config/` - Configuration management
+  - `src/mcp/` - MCP client integration
+  - `src/cli.ts` - Command-line interface
+
+### Testing Structure  
+- `tests/` - Test files organized by type
+  - `tests/unit/` - Unit tests for individual components
+  - `tests/integration/` - Integration tests
+  - `tests/fixtures/` - Test data and sample projects
+
+## Implementation Status
+
+### Current Phase: Phase 1 (Core Foundation)
+- **Completed:** Basic project setup, security framework, configuration system
+- **In Progress:** File operations tool implementation (section 1.7)
+- **Next:** Core engine implementation (section 1.8)
+
+### Key Implementation Sections
+- **1.7 Internal File Operations Tool** - Currently implementing FilesTool class
+- **1.8 Core Engine** - Main query processing engine  
+- **2.x MCP Integration** - External tool integration
+- **3.x Enhanced Tools** - Advanced internal tools
+- **4.x Professional Experience** - Interactive CLI and polish
+
+## File Relationships
+
+### Core Dependencies
+- [src/types.ts](mdc:src/types.ts) - Foundation interfaces used throughout
+- Security classes validate all file operations
+- Configuration system loads settings for all components
+- Tool registry manages both internal and MCP tools
+
+### Testing Dependencies
+- Tests use fixtures in `tests/fixtures/`
+- VCR-style testing with recorded API responses
+- Security tests validate workspace boundary enforcement
