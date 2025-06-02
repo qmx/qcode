@@ -236,21 +236,21 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [x] Core interfaces and basic query validation
   - [x] Simple intent detection and configuration management
 
-- [ ] **1.8.2 Single File Operation Function Calling (END-TO-END MVP - STARTED)**
+- [x] **1.8.2 Single File Operation Function Calling (END-TO-END MVP - COMPLETED)**
 
-  - [ ] **LLM Function Calling for Files Tool**:
-    - [ ] Implement LLM-based function calling in engine
-    - [ ] Format `internal.files` tool for Ollama function calling API
-    - [ ] Parse LLM function call responses and execute tools
-    - [ ] Handle "read file" query end-to-end with real LLM
-  - [ ] **VCR Tests for Complete Workflow**:
-    - [ ] `file_read_query.json`: User asks "show me package.json", LLM calls `internal.files.read`
-    - [ ] `file_read_partial.json`: User asks "show me the first 20 lines of src/main.ts", LLM calls with line range
-    - [ ] `file_operation_error.json`: LLM function call with invalid parameters, error handling
-  - [ ] **Integration Requirements**:
-    - [ ] Must work with existing `FilesTool.read` operation from 1.7.2
-    - [ ] Must implement proper error handling and recovery
-    - [ ] Must format tool results into readable responses
+  - [x] **LLM Function Calling for Files Tool**:
+    - [x] Implement LLM-based function calling in engine
+    - [x] Format `internal.files` tool for Ollama function calling API
+    - [x] Parse LLM function call responses and execute tools
+    - [x] Handle "read file" query end-to-end with real LLM
+  - [x] **VCR Tests for Complete Workflow**:
+    - [x] `file_read_query.json`: User asks "show me package.json", LLM calls `internal.files.read`
+    - [x] `file_read_partial.json`: User asks "show me the first 20 lines of src/main.ts", LLM calls with line range
+    - [x] `file_operation_error.json`: LLM function call with invalid parameters, error handling
+  - [x] **Integration Requirements**:
+    - [x] Must work with existing `FilesTool.read` operation from 1.7.2
+    - [x] Must implement proper error handling and recovery
+    - [x] Must format tool results into readable responses
 
 - [ ] **1.8.3 Add List Operation (EXTEND E2E WORKFLOW)**
 
@@ -296,7 +296,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 
 **Phase 1.8 Acceptance Criteria**:
 
-- [ ] **After 1.8.2**: `qcode "show me package.json"` works end-to-end with real LLM function calling
+- [x] **After 1.8.2**: `qcode "show me package.json"` works end-to-end with real LLM function calling
 - [ ] **After 1.8.3**: `qcode "list files in src/"` and combined workflows work end-to-end
 - [ ] **After 1.8.4**: CLI provides complete user experience with progress and formatting
 - [ ] **After 1.8.5**: Complex multi-step workflows work reliably
@@ -378,11 +378,11 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 - [x] **NEW**: JSON fixtures for deterministic test behavior
 - [x] **NEW**: Integration tests with comprehensive API coverage
 
-- [ ] **Enhanced Test Infrastructure**:
-  - [ ] `tests/helpers/project-builder.ts` - Dynamic test project creation
-  - [ ] `tests/helpers/vcr-manager.ts` - VCR recording/playback management
-  - [ ] `tests/helpers/assertion-helpers.ts` - Custom Jest matchers
-  - [ ] `scripts/record-vcr.ts` - Script for capturing new LLM interactions
+- [x] **Enhanced Test Infrastructure**:
+  - [x] `tests/helpers/project-builder.ts` - Dynamic test project creation
+  - [x] `tests/helpers/vcr-manager.ts` - VCR recording/playback management
+  - [x] `tests/helpers/assertion-helpers.ts` - Custom Jest matchers
+  - [x] `scripts/record-vcr.ts` - Script for capturing new LLM interactions
 
 **Phase 1 Acceptance Criteria**:
 
@@ -404,12 +404,12 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] All file operations respect workspace boundaries
   - [ ] Test fixtures provide comprehensive coverage
 
-- [ ] **After 1.8 (Core Engine)**:
+- [x] **After 1.8 (Core Engine)**:
 
-  - [ ] Engine can process queries and orchestrate tool execution
-  - [ ] LLM integration works with function calling
-  - [ ] VCR tests demonstrate reliable tool calling behavior
-  - [ ] Error handling provides graceful recovery
+  - [x] Engine can process queries and orchestrate tool execution
+  - [x] LLM integration works with function calling
+  - [x] VCR tests demonstrate reliable tool calling behavior
+  - [x] Error handling provides graceful recovery
 
 - [ ] **After 1.9 (Real CLI Implementation)**:
   - [ ] `qcode "list files in src/"` works securely end-to-end
