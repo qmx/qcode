@@ -8,10 +8,16 @@ alwaysApply: false
 ## DO NOT create timing/performance tests unless absolutely necessary
 
 **Avoid these patterns:**
-- Tests that assert execution duration (`expect(result.duration).toBeGreaterThan(0)`)
+- Tests that assert specific execution duration values (`expect(result.duration).toBeGreaterThan(0)`)
 - Tests that measure millisecond-level performance
 - Tests that depend on execution speed
 - Fragile timing assertions that can fail based on system load
+
+**DO assert on data types and structure:**
+- `expect(typeof result.duration).toBe('number')` ✅
+- `expect(typeof result.size).toBe('number')` ✅
+- `expect(Array.isArray(result.items)).toBe(true)` ✅
+- `expect(result.count).toBeGreaterThanOrEqual(0)` ✅ (logical constraint)
 
 **Instead focus on:**
 - Functional correctness (does it work?)
@@ -26,14 +32,16 @@ alwaysApply: false
 - Testing rate limiting
 - Performance is a critical business requirement
 
-**Timing data can be tracked without assertions:**
+**Good vs Bad examples:**
 ```typescript
-// Good: Track timing without asserting on it
-const result = await tool.execute(args);
-expect(typeof result.duration).toBe('number'); // Just verify it's a number
+// Good: Type checking and logical constraints
+expect(typeof result.duration).toBe('number');
+expect(result.count).toBeGreaterThanOrEqual(0);
+expect(result.files).toHaveLength(3);
 
-// Bad: Don't assert on specific timing values
-expect(result.duration).toBeGreaterThan(0); // Fragile and pointless
+// Bad: Specific timing assertions
+expect(result.duration).toBeGreaterThan(0); // Can fail on fast systems
+expect(result.duration).toBeLessThan(100); // Brittle
 ```
 
-**Focus on value, not micro-optimizations in tests.**
+**Focus on value and correctness, not micro-timing.**
