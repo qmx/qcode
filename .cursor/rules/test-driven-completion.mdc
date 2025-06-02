@@ -1,0 +1,111 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Test-Driven Completion Rule
+
+## Core Principle
+**If you have broken tests, you are not done and work is not complete.**
+
+This is a fundamental rule for the QCode project. No feature, refactor, or implementation can be considered "complete" while tests are failing.
+
+## Test Hierarchy & Requirements
+
+### 1. Unit Tests Must Pass First
+Before any integration or e2e tests, all unit tests must be green:
+- [tests/tools/files.listOperation.test.ts](mdc:tests/tools/files.listOperation.test.ts) - File operations unit tests
+- [tests/tools/files.test.ts](mdc:tests/tools/files.test.ts) - Core file tool tests
+- [src/tools/files.ts](mdc:src/tools/files.ts) - Implementation being tested
+
+### 2. E2E Tests Must Follow Unit Tests
+End-to-end tests validate the complete workflow:
+- [tests/e2e/file-list-workflow.test.ts](mdc:tests/e2e/file-list-workflow.test.ts) - LLM function calling with list operations
+- [tests/e2e/cli-file-reads.test.ts](mdc:tests/e2e/cli-file-reads.test.ts) - CLI integration tests
+
+### 3. VCR Testing Pattern
+Follow the established VCR (Video Cassette Recorder) pattern for LLM interactions:
+- Mock LLM responses in test mode
+- Record real interactions when `NOCK_MODE=record`
+- Ensure deterministic, fast test execution
+
+## Common Test Failure Patterns & Solutions
+
+### Workspace Security Issues
+**Problem**: "Access denied: Path is outside allowed workspace boundaries"
+**Solution**: 
+- Check [src/security/workspace.ts](mdc:src/security/workspace.ts) configuration
+- Ensure `config.security.workspace.allowedPaths` includes test directories
+- Verify [src/config/defaults.ts](mdc:src/config/defaults.ts) has proper defaults
+
+### Type Errors in Tests
+**Problem**: TypeScript compilation errors in test files
+**Solution**:
+- Fix import paths and type definitions
+- Check [src/types.ts](mdc:src/types.js) for interface compatibility
+- Ensure test setup matches production interfaces
+
+### VCR Mock Mismatches
+**Problem**: Nock mocks don't match actual LLM API calls
+**Solution**:
+- Check [src/core/engine.ts](mdc:src/core/engine.ts) for actual API call patterns
+- Verify [src/core/client.ts](mdc:src/core/client.ts) request formats
+- Update mock responses to match real API structure
+
+## Implementation Completion Checklist
+
+Before declaring any work "complete":
+
+1. **Run All Tests**: `npm test` - All tests must pass
+2. **Check Specific Test Suites**: 
+   - `npm test -- tests/tools/files.listOperation.test.ts`
+   - `npm test -- tests/e2e/file-list-workflow.test.ts`
+3. **Verify Type Safety**: `npm run build` - No TypeScript errors
+4. **Test Coverage**: Ensure new functionality has comprehensive test coverage
+
+## Test Categories
+
+### Unit Tests (Fast, Isolated)
+- Test individual functions and classes in isolation
+- Mock external dependencies
+- Should run in < 1 second per test
+
+### Integration Tests (Medium, Connected)
+- Test multiple components working together
+- Use real instances but controlled environments
+- Should run in < 5 seconds per test
+
+### E2E Tests (Slow, Full Workflow)
+- Test complete user workflows
+- Use VCR for LLM interactions to keep them fast
+- Should run in < 10 seconds per test with mocks
+
+## Current Status Tracking
+
+### ✅ Completed & Tested
+- File read operations (unit + e2e tests passing)
+- Basic file listing (unit tests passing: 18/18)
+- VCR testing infrastructure
+
+### ❌ Needs Fixing 
+- E2E file list workflow tests (workspace security configuration)
+- Multi-step LLM function calling validation
+
+### 📋 Test Maintenance
+When adding new features:
+1. Write tests first (TDD approach)
+2. Ensure existing tests continue to pass
+3. Add both unit and integration test coverage
+4. Update this rule if new testing patterns emerge
+
+## Emergency Test Fixing Protocol
+
+If you encounter broken tests:
+
+1. **Stop all other work immediately**
+2. **Identify the root cause** (not just the symptoms)
+3. **Fix the underlying issue** (don't just make tests pass)
+4. **Verify fix doesn't break other tests**
+5. **Only then continue with feature development**
+
+Remember: **Broken tests = Broken confidence in the codebase**
