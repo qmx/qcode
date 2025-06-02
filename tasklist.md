@@ -110,6 +110,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 #### 1.7.2 Read File Operation
 
 - [x] Implement read file functionality:
+
   - [x] Basic file reading with UTF-8 encoding
   - [x] Line range support (e.g., lines 10-50 of large file)
   - [x] Handle special characters and encoding issues
@@ -129,6 +130,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 #### 1.7.3 Write File Operation
 
 - [ ] Implement write file functionality:
+
   - [ ] File writing with security validation
   - [ ] Atomic write operations to prevent corruption
   - [ ] Directory creation when needed
@@ -149,6 +151,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 #### 1.7.4 List Files Operation
 
 - [ ] Implement file listing functionality:
+
   - [ ] Basic directory listing
   - [ ] Glob pattern support (`**/*.ts`, `src/**/*.{js,ts}`)
   - [ ] Hidden file handling (`.env`, `.git/`)
@@ -167,6 +170,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 #### 1.7.5 Search Files Operation
 
 - [ ] Implement file search functionality:
+
   - [ ] Simple text search across files
   - [ ] Regex pattern search with capture groups
   - [ ] Case-sensitive vs insensitive search options
@@ -222,45 +226,80 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
     - [ ] Result formatting consistency across operations
     - [ ] Memory management during complex workflows
 
-### 1.8 Core Engine
+### 1.8 Core Engine - End-to-End Function Calling
 
-- [ ] Implement `src/core/engine.ts`:
+**GOAL**: Implement ONE complete function calling workflow that works end-to-end
 
-  - [ ] Main query processing engine
-  - [ ] Tool orchestration and execution
-  - [ ] Response formatting and streaming
-  - [ ] Error handling and recovery
+- [x] **1.8.1 Basic Query Processing Engine (FOUNDATION - COMPLETED)**
 
-- [ ] **LLM Integration Tests with VCR**:
-  - [ ] **VCR Recordings for Tool Calling**:
-    - [ ] `ollama-simple-file-query.json`:
-      - [ ] User: "List all TypeScript files in src/"
-      - [ ] Expected: JSON function call to `internal.files`
-      - [ ] Response: Formatted file list
-    - [ ] `ollama-complex-analysis.json`:
-      - [ ] User: "Find all React components and analyze their props"
-      - [ ] Expected: Multiple function calls (list, read, search)
-      - [ ] Response: Structured analysis with findings
-    - [ ] `ollama-error-recovery.json`:
-      - [ ] User request that initially fails
-      - [ ] Model attempts alternative approach
-      - [ ] Successful completion on retry
-  - [ ] **Function Calling Edge Cases**:
-    - [ ] Invalid JSON in function call
-    - [ ] Missing required parameters
-    - [ ] Wrong parameter types
-    - [ ] Tool returns error, model handles gracefully
-  - [ ] **Integration Workflow Tests**:
-    - [ ] **"Analyze Project"** workflow:
-      1. List all files to understand structure
-      2. Read package.json for dependencies
-      3. Search for main entry points
-      4. Generate project summary
-    - [ ] **"Find and Fix Issue"** workflow:
-      1. Search for specific error pattern
-      2. Read affected files
-      3. Analyze problem context
-      4. Suggest fix with diff
+  - [x] Create initial `src/core/engine.ts` structure
+  - [x] Core interfaces and basic query validation
+  - [x] Simple intent detection and configuration management
+
+- [ ] **1.8.2 Single File Operation Function Calling (END-TO-END MVP - STARTED)**
+
+  - [ ] **LLM Function Calling for Files Tool**:
+    - [ ] Implement LLM-based function calling in engine
+    - [ ] Format `internal.files` tool for Ollama function calling API
+    - [ ] Parse LLM function call responses and execute tools
+    - [ ] Handle "read file" query end-to-end with real LLM
+  - [ ] **VCR Tests for Complete Workflow**:
+    - [ ] `file_read_query.json`: User asks "show me package.json", LLM calls `internal.files.read`
+    - [ ] `file_read_partial.json`: User asks "show me the first 20 lines of src/main.ts", LLM calls with line range
+    - [ ] `file_operation_error.json`: LLM function call with invalid parameters, error handling
+  - [ ] **Integration Requirements**:
+    - [ ] Must work with existing `FilesTool.read` operation from 1.7.2
+    - [ ] Must implement proper error handling and recovery
+    - [ ] Must format tool results into readable responses
+
+- [ ] **1.8.3 Add List Operation (EXTEND E2E WORKFLOW)**
+
+  - [ ] **Implement List Operation in FilesTool**:
+    - [ ] Complete the `listFiles` method in `src/tools/files.ts`
+    - [ ] Support glob patterns, recursive listing, hidden files
+    - [ ] Security validation and workspace boundary enforcement
+    - [ ] Comprehensive error handling and metadata support
+  - [ ] **Extend LLM Function Calling**:
+    - [ ] LLM can now call both `read` and `list` operations
+    - [ ] Handle "list files in src/" queries end-to-end
+    - [ ] Support complex queries: "list TypeScript files and show me the main one"
+  - [ ] **VCR Tests for List Workflow**:
+    - [ ] `file_list_query.json`: User asks "list files in src/", LLM calls `internal.files.list`
+    - [ ] `file_list_pattern.json`: User asks "show me all TypeScript files", LLM uses pattern matching
+    - [ ] `file_list_then_read.json`: Multi-step workflow - list files, then read specific one
+  - [ ] **Integration Requirements**:
+    - [ ] Must work with existing read function calling from 1.8.2
+    - [ ] Must handle both single operations and multi-step workflows
+    - [ ] Must format list results in user-friendly way
+
+- [ ] **1.8.4 CLI Integration (REAL USER EXPERIENCE)**
+
+  - [ ] **Replace CLI Simulation** (from 1.9):
+    - [ ] Remove `simulateQueryProcessing()`
+    - [ ] Integrate real `QCodeEngine` with function calling
+    - [ ] Display tool execution progress and results
+  - [ ] **End-to-End CLI Testing**:
+    - [ ] `qcode "show me package.json"` works completely
+    - [ ] `qcode "list files in src/"` works completely
+    - [ ] `qcode "show me all TypeScript files and read the main one"` works
+    - [ ] Error handling and user-friendly messages
+
+- [ ] **1.8.5 Advanced Workflows (MULTI-STEP ORCHESTRATION)**
+  - [ ] **Sequential Tool Execution**:
+    - [ ] Multi-step workflows: analyze → read → summarize
+    - [ ] Context passing between tool executions
+    - [ ] Workflow state management and error recovery
+  - [ ] **Complex Query Examples**:
+    - [ ] "Analyze the project structure and find potential issues"
+    - [ ] "Find all React components and check their props usage"
+    - [ ] "Review recent changes and suggest improvements"
+
+**Phase 1.8 Acceptance Criteria**:
+
+- [ ] **After 1.8.2**: `qcode "show me package.json"` works end-to-end with real LLM function calling
+- [ ] **After 1.8.3**: `qcode "list files in src/"` and combined workflows work end-to-end
+- [ ] **After 1.8.4**: CLI provides complete user experience with progress and formatting
+- [ ] **After 1.8.5**: Complex multi-step workflows work reliably
 
 ### 1.9 Basic CLI Interface (Real Implementation)
 
