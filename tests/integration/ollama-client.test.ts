@@ -74,14 +74,14 @@ describe('OllamaClient VCR Tests', () => {
       }
 
       const models = await client.listModels();
-      
+
       // Validate that we get a meaningful response
       expect(Array.isArray(models)).toBe(true);
       expect(models.length).toBeGreaterThan(0);
-      
+
       // Validate that our target model llama3.1:8b is available
       expect(models).toContain('llama3.1:8b');
-      
+
       // Validate that models are properly formatted strings
       models.forEach(model => {
         expect(typeof model).toBe('string');
@@ -91,7 +91,7 @@ describe('OllamaClient VCR Tests', () => {
       if (process.env.NOCK_MODE === 'record') {
         console.log('Available models:', models);
         console.log(`✓ Target model 'llama3.1:8b' is available`);
-        
+
         // Save recording with explicit name
         const recordings = nock.recorder.play();
         if (recordings.length > 0) {
