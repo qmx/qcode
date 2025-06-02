@@ -98,6 +98,39 @@ export class WorkspaceSecurity {
         throw error;
       }
 
+      // Handle specific filesystem errors with better messages
+      if (error && typeof error === 'object' && 'code' in error) {
+        const errorCode = (error as any).code;
+        const errorMessage = (error as any).message || 'Unknown error';
+
+        switch (errorCode) {
+          case 'ENOENT':
+            throw new QCodeError(`Path does not exist: ${filePath}`, 'PATH_NOT_FOUND', {
+              path: filePath,
+              resolvedPath: validatedPath,
+              originalError: error,
+            });
+          case 'EACCES':
+            throw new QCodeError(`Permission denied: ${filePath}`, 'PERMISSION_DENIED', {
+              path: filePath,
+              resolvedPath: validatedPath,
+              originalError: error,
+            });
+          case 'ENOTDIR':
+            throw new QCodeError(`Not a directory: ${filePath}`, 'NOT_A_DIRECTORY', {
+              path: filePath,
+              resolvedPath: validatedPath,
+              originalError: error,
+            });
+          default:
+            throw new QCodeError(`Cannot access path: ${errorMessage}`, 'PATH_ACCESS_ERROR', {
+              path: filePath,
+              resolvedPath: validatedPath,
+              originalError: error,
+            });
+        }
+      }
+
       // Handle filesystem errors
       throw new QCodeError(
         `Cannot access path: ${error instanceof Error ? error.message : 'Unknown error'}`,
