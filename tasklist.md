@@ -73,13 +73,16 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 
 ### 1.5 Ollama Client
 
-- [ ] Implement `src/core/client.ts`:
-  - [ ] HTTP client for Ollama API
-  - [ ] Function calling support with JSON formatting
-  - [ ] Streaming response handling
-  - [ ] Error handling and retries
-  - [ ] Connection validation
-  - [ ] Model availability checking
+- [x] Implement `src/core/client.ts`:
+  - [x] HTTP client for Ollama API using official Ollama library
+  - [x] Function calling support with JSON formatting
+  - [x] Streaming response handling
+  - [x] Error handling and retries with exponential backoff
+  - [x] Connection validation
+  - [x] Model availability checking
+  - [x] Chat API integration
+  - [x] Generate API integration
+  - [x] Configuration management and updates
 
 ### 1.6 Tool Registry System
 
