@@ -1,0 +1,10 @@
+Hello World!
+
+This is a test file for QCode CLI testing.
+It contains multiple lines to test the file reading functionality.
+
+Line 1: TypeScript
+Line 2: AI Assistant  
+Line 3: File Operations
+Line 4: Security
+Line 5: Workspace 
