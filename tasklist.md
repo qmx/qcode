@@ -66,10 +66,10 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [x] Zod schemas for configuration validation
   - [x] Configuration parsing and validation
   - [x] **FIXED**: TypeScript compatibility with `exactOptionalPropertyTypes`
-- [ ] Implement `src/config/manager.ts`:
-  - [ ] Hierarchical config loading (defaults → global → project → env → CLI)
-  - [ ] Configuration merging and validation
-  - [ ] Config file discovery and parsing
+- [x] Implement `src/config/manager.ts`:
+  - [x] Hierarchical config loading (defaults → global → project → env → CLI)
+  - [x] Configuration merging and validation
+  - [x] Config file discovery and parsing
 
 ### 1.5 Ollama Client
 
