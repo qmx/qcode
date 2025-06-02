@@ -107,22 +107,142 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Integration with security validation
   - [ ] Error handling for file operations
 
-### 1.8 Basic CLI Interface
+- [ ] **Test Fixtures for File Operations**:
+  - [ ] Create `tests/fixtures/projects/ts-monorepo/`:
+    - [ ] Multiple packages with tsconfig.json
+    - [ ] Mix of small and large TypeScript files
+    - [ ] Nested directory structure
+  - [ ] Create `tests/fixtures/projects/react-app/`:
+    - [ ] Standard CRA structure with components
+    - [ ] JSX files with complex imports
+    - [ ] Public assets and package.json
+  - [ ] Create `tests/fixtures/projects/mixed-legacy/`:
+    - [ ] JavaScript, Python, and config files
+    - [ ] Inconsistent structure for edge case testing
 
-- [x] Implement `src/cli.ts`:
-  - [x] Command-line argument parsing with Commander
-  - [x] One-shot command execution
-  - [x] Basic query processing
-  - [x] Output formatting with Chalk
-  - [x] Error handling and user feedback
+- [ ] **File Operations Unit Tests**:
+  - [ ] **Read Operations**:
+    - [ ] Single file read (small text file)
+    - [ ] Large file read (>1MB) with chunking
+    - [ ] Line-range reading (lines 10-50 of large file)
+    - [ ] Binary file handling (should fail gracefully)
+    - [ ] Non-existent file error handling
+    - [ ] UTF-8 encoding with special characters
+  - [ ] **Write Operations**:
+    - [ ] Create new file in existing directory
+    - [ ] Overwrite existing file with backup
+    - [ ] Write to read-only directory (should fail)
+    - [ ] Atomic write operations
+  - [ ] **List Operations**:
+    - [ ] Simple directory listing
+    - [ ] Glob pattern matching (`**/*.ts`, `src/**/*.{js,ts}`)
+    - [ ] Hidden file handling (`.env`, `.git/`)
+    - [ ] Large directory performance (1000+ files)
+  - [ ] **Search Operations**:
+    - [ ] Simple text search across files
+    - [ ] Regex pattern search with groups
+    - [ ] Case-sensitive vs insensitive search
+    - [ ] Binary file exclusion during search
 
-### 1.9 Core Engine
+### 1.8 Core Engine
 
 - [ ] Implement `src/core/engine.ts`:
   - [ ] Main query processing engine
   - [ ] Tool orchestration and execution
   - [ ] Response formatting and streaming
   - [ ] Error handling and recovery
+
+- [ ] **LLM Integration Tests with VCR**:
+  - [ ] **VCR Recordings for Tool Calling**:
+    - [ ] `ollama-simple-file-query.json`:
+      - [ ] User: "List all TypeScript files in src/"
+      - [ ] Expected: JSON function call to `internal.files`
+      - [ ] Response: Formatted file list
+    - [ ] `ollama-complex-analysis.json`:
+      - [ ] User: "Find all React components and analyze their props"
+      - [ ] Expected: Multiple function calls (list, read, search)
+      - [ ] Response: Structured analysis with findings
+    - [ ] `ollama-error-recovery.json`:
+      - [ ] User request that initially fails
+      - [ ] Model attempts alternative approach
+      - [ ] Successful completion on retry
+  - [ ] **Function Calling Edge Cases**:
+    - [ ] Invalid JSON in function call
+    - [ ] Missing required parameters
+    - [ ] Wrong parameter types
+    - [ ] Tool returns error, model handles gracefully
+  - [ ] **Integration Workflow Tests**:
+    - [ ] **"Analyze Project"** workflow:
+      1. List all files to understand structure
+      2. Read package.json for dependencies
+      3. Search for main entry points
+      4. Generate project summary
+    - [ ] **"Find and Fix Issue"** workflow:
+      1. Search for specific error pattern
+      2. Read affected files
+      3. Analyze problem context
+      4. Suggest fix with diff
+
+### 1.9 Basic CLI Interface (Real Implementation)
+
+- [x] **Hollow CLI Implementation** (Phase 1 Foundation):
+  - [x] Command-line argument parsing with Commander
+  - [x] Configuration loading and validation
+  - [x] Output formatting with Chalk
+  - [x] Error handling framework
+  - [x] Spinner and progress indicators
+  - [x] Version and help commands
+
+- [ ] **Real Engine Integration** (Remove Simulation):
+  - [ ] Replace `simulateQueryProcessing()` with real engine calls
+  - [ ] Integrate `QCodeEngine` class from section 1.8
+  - [ ] Implement tool registry initialization in CLI
+  - [ ] Connect file operations tool to CLI workflow
+  - [ ] Add proper streaming response handling
+  - [ ] Implement real-time tool execution feedback
+
+- [ ] **Enhanced CLI Functionality**:
+  - [ ] **Tool Registration and Discovery**:
+    - [ ] Initialize internal tools (files) on startup
+    - [ ] Display available tools in help/debug mode
+    - [ ] Handle tool registration errors gracefully
+  - [ ] **Query Processing Pipeline**:
+    - [ ] Parse user queries for intent detection
+    - [ ] Route queries to appropriate engine methods
+    - [ ] Handle multi-step tool execution workflows
+    - [ ] Display tool execution progress in real-time
+  - [ ] **Response Formatting**:
+    - [ ] Format LLM responses with proper syntax highlighting
+    - [ ] Display tool results in structured format
+    - [ ] Show file paths with proper workspace-relative formatting
+    - [ ] Handle large outputs with pagination/truncation
+  - [ ] **Error Recovery and User Guidance**:
+    - [ ] Detect common user intent errors
+    - [ ] Suggest corrections for malformed queries
+    - [ ] Provide contextual help based on current workspace
+    - [ ] Handle tool failures with actionable suggestions
+
+- [ ] **CLI Integration Tests** (Post-Engine):
+  - [ ] End-to-end query processing with file operations
+  - [ ] Tool execution error handling and recovery
+  - [ ] Configuration loading with various CLI options
+  - [ ] Output formatting verification
+  - [ ] Performance testing with large project fixtures
+  - [ ] Memory usage monitoring during complex queries
+
+- [ ] **CLI UX Enhancements**:
+  - [ ] **Progress Indicators**:
+    - [ ] Tool-specific progress messages ("🔧 Using internal.files...")
+    - [ ] Step-by-step workflow progress for complex queries
+    - [ ] Time estimates for long-running operations
+  - [ ] **Smart Defaults**:
+    - [ ] Auto-detect project type and suggest relevant queries
+    - [ ] Remember frequently used commands
+    - [ ] Workspace-aware help suggestions
+  - [ ] **Debug and Verbose Modes**:
+    - [ ] Show detailed tool execution logs
+    - [ ] Display LLM request/response in debug mode
+    - [ ] Tool execution timing and performance metrics
 
 ### 1.10 Testing Setup
 
@@ -136,13 +256,32 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 - [x] **NEW**: JSON fixtures for deterministic test behavior
 - [x] **NEW**: Integration tests with comprehensive API coverage
 
+- [ ] **Enhanced Test Infrastructure**:
+  - [ ] `tests/helpers/project-builder.ts` - Dynamic test project creation
+  - [ ] `tests/helpers/vcr-manager.ts` - VCR recording/playback management
+  - [ ] `tests/helpers/assertion-helpers.ts` - Custom Jest matchers
+  - [ ] `scripts/record-vcr.ts` - Script for capturing new LLM interactions
+
 **Phase 1 Acceptance Criteria**:
 
-- [ ] `qcode "list files in src/"` works securely
-- [ ] All file operations respect workspace boundaries
-- [ ] Configuration loads from multiple sources
-- [ ] Security prevents path traversal and command injection
-- [ ] Basic error handling provides useful feedback
+- [ ] **After 1.7 (File Operations Tool)**:
+  - [ ] File operations work in isolation (unit tests pass)
+  - [ ] Security validation prevents path traversal and unauthorized access
+  - [ ] All file operations respect workspace boundaries
+  - [ ] Test fixtures provide comprehensive coverage
+
+- [ ] **After 1.8 (Core Engine)**:
+  - [ ] Engine can process queries and orchestrate tool execution
+  - [ ] LLM integration works with function calling
+  - [ ] VCR tests demonstrate reliable tool calling behavior
+  - [ ] Error handling provides graceful recovery
+
+- [ ] **After 1.9 (Real CLI Implementation)**:
+  - [ ] `qcode "list files in src/"` works securely end-to-end
+  - [ ] CLI integrates engine and displays formatted results
+  - [ ] Configuration loads from multiple sources correctly
+  - [ ] User experience includes progress indicators and helpful errors
+  - [ ] All Phase 1 components work together seamlessly
 
 ---
 
@@ -218,6 +357,24 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Integration tests with real MCP servers
   - [ ] Connection failure recovery tests
   - [ ] Tool execution tests across transports
+
+- [ ] **MCP Integration Test Scenarios**:
+  - [ ] **Stdio Transport Tests**:
+    - [ ] Process spawning and lifecycle management
+    - [ ] stdin/stdout communication protocol
+    - [ ] Error handling for process failures
+  - [ ] **HTTP Transport Tests**:
+    - [ ] Connection management and pooling
+    - [ ] Request/response handling
+    - [ ] Timeout and retry logic
+  - [ ] **Tool Discovery Tests**:
+    - [ ] Automatic MCP server discovery
+    - [ ] Tool enumeration and registration
+    - [ ] Server capability detection
+  - [ ] **Namespace Conflict Resolution**:
+    - [ ] Tools with same name from different servers
+    - [ ] Graceful server failure handling
+    - [ ] Dynamic tool loading/unloading
 
 **Phase 2 Acceptance Criteria**:
 
@@ -319,6 +476,24 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Search performance tests
   - [ ] Context building tests
   - [ ] Multi-tool workflow tests
+
+- [ ] **Advanced Tool Testing**:
+  - [ ] **EditTool Integration Tests**:
+    - [ ] Line-based editing operations
+    - [ ] Multi-file editing capabilities
+    - [ ] Diff generation and preview
+    - [ ] Backup and rollback functionality
+    - [ ] Conflict detection and resolution
+  - [ ] **GitTool Tests**:
+    - [ ] Status, diff, and log operations
+    - [ ] Commit creation and management
+    - [ ] Branch operations
+    - [ ] Security validation for git operations
+  - [ ] **Performance Benchmarks**:
+    - [ ] Large project handling (10,000+ files)
+    - [ ] Large individual files (>10MB)
+    - [ ] Memory usage monitoring
+    - [ ] Response time benchmarks
 
 **Phase 3 Acceptance Criteria**:
 
@@ -425,6 +600,28 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] Security audit and hardening
   - [ ] Documentation completion
   - [ ] Release preparation
+
+- [ ] **Production Readiness Testing**:
+  - [ ] **Cross-Platform Testing**:
+    - [ ] Windows path separators (`\` vs `/`)
+    - [ ] Case sensitivity differences
+    - [ ] File permission models (Unix vs Windows)
+    - [ ] Symlink behavior differences
+  - [ ] **Security Penetration Testing**:
+    - [ ] Path traversal prevention (`../../../etc/passwd`)
+    - [ ] Command injection prevention
+    - [ ] Forbidden pattern detection (`.env`, SSH keys)
+    - [ ] Workspace boundary enforcement
+  - [ ] **Load and Stress Testing**:
+    - [ ] Concurrent request handling
+    - [ ] Memory leak detection
+    - [ ] Resource cleanup validation
+    - [ ] Graceful degradation under load
+  - [ ] **CI/CD Integration**:
+    - [ ] Test matrix for Node.js versions
+    - [ ] Automated security scanning
+    - [ ] Performance regression detection
+    - [ ] Test coverage reporting (target: >90%)
 
 **Phase 4 Acceptance Criteria**:
 
