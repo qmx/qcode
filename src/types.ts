@@ -10,8 +10,8 @@ export interface NamespacedTool {
   fullName: string;
   /** The tool's JSON schema definition for function calling */
   definition: ToolDefinition;
-  /** Function to execute the tool */
-  execute: (args: Record<string, any>) => Promise<any>;
+  /** Tool execution function - context is always optional */
+  execute: (args: Record<string, any>, context?: ToolContext) => Promise<any>;
 }
 
 /**
@@ -372,4 +372,38 @@ export interface ProjectContext {
     remote?: string;
     hasUncommittedChanges: boolean;
   };
+}
+
+/**
+ * Native Ollama chat response format
+ */
+export interface OllamaChatResponse {
+  message: {
+    role: string;
+    content: string;
+    tool_calls?: Array<{
+      function: {
+        name: string;
+        arguments: Record<string, any>;
+      };
+    }>;
+  };
+  model: string;
+  done: boolean;
+  eval_count?: number;
+  total_duration?: number;
+  [key: string]: any;
+}
+
+/**
+ * Native Ollama generate response format
+ */
+export interface OllamaGenerateResponse {
+  response: string;
+  model: string;
+  done: boolean;
+  context?: number[];
+  eval_count?: number;
+  total_duration?: number;
+  [key: string]: any;
 }

@@ -1,8 +1,14 @@
 import { Ollama } from 'ollama';
-import { OllamaConfig, QCodeError, ToolDefinition } from '../types.js';
+import {
+  OllamaConfig,
+  QCodeError,
+  ToolDefinition,
+  OllamaChatResponse,
+  OllamaGenerateResponse,
+} from '../types.js';
 
 /**
- * Response from Ollama generate/chat operations
+ * Standardized response format from Ollama
  */
 export interface OllamaResponse {
   /** The generated response text */
@@ -17,8 +23,17 @@ export interface OllamaResponse {
   eval_count?: number;
   /** Duration metrics */
   total_duration?: number;
-  /** Additional response metadata */
-  [key: string]: any;
+  /** Full message structure (for function calls) */
+  message?: {
+    role: string;
+    content: string;
+    tool_calls?: Array<{
+      function: {
+        name: string;
+        arguments: Record<string, any>;
+      };
+    }>;
+  };
 }
 
 /**
@@ -60,8 +75,6 @@ export interface StreamingChunk {
     role: string;
     content: string;
   };
-  /** Any additional metadata */
-  [key: string]: any;
 }
 
 /**
@@ -144,44 +157,24 @@ export class OllamaClient {
   ): Promise<OllamaResponse> {
     const model = options.model || this.config.model;
 
-    const requestOptions: any = {
+    const requestOptions = {
       model,
       prompt,
-      stream: false, // Force non-streaming for this method
+      stream: false as const,
       options: {
         temperature: this.config.temperature,
         ...options.options,
       },
+      ...(options.system !== undefined && { system: options.system }),
+      ...(options.template !== undefined && { template: options.template }),
+      ...(options.context !== undefined && { context: options.context }),
+      ...(options.format !== undefined && { format: options.format }),
+      ...(options.keepAlive !== undefined && { keep_alive: options.keepAlive }),
     };
 
-    // Only add optional properties if they have defined values
-    if (options.system !== undefined) {
-      requestOptions.system = options.system;
-    }
-    if (options.template !== undefined) {
-      requestOptions.template = options.template;
-    }
-    if (options.context !== undefined) {
-      requestOptions.context = options.context;
-    }
-    if (options.format !== undefined) {
-      requestOptions.format = options.format;
-    }
-    if (options.keepAlive !== undefined) {
-      requestOptions.keep_alive = options.keepAlive;
-    }
-
     return this.executeWithRetry(async () => {
-      const response = await this.ollama.generate(requestOptions);
-      // For non-streaming generate, response is a GenerateResponse object
-      return {
-        response: (response as any).response || '',
-        model: (response as any).model,
-        context: (response as any).context,
-        done: (response as any).done || true,
-        eval_count: (response as any).eval_count,
-        total_duration: (response as any).total_duration,
-      } as OllamaResponse;
+      const response = (await this.ollama.generate(requestOptions)) as OllamaGenerateResponse;
+      return this.mapGenerateResponseToOllamaResponse(response);
     }, 'GENERATE_ERROR');
   }
 
@@ -203,49 +196,32 @@ export class OllamaClient {
   ): Promise<OllamaResponse> {
     const model = options.model || this.config.model;
 
-    const requestOptions: any = {
+    const requestOptions = {
       model,
       prompt,
-      stream: true,
+      stream: true as const,
       options: {
         temperature: this.config.temperature,
         ...options.options,
       },
+      ...(options.system !== undefined && { system: options.system }),
+      ...(options.template !== undefined && { template: options.template }),
+      ...(options.context !== undefined && { context: options.context }),
+      ...(options.format !== undefined && { format: options.format }),
+      ...(options.keepAlive !== undefined && { keep_alive: options.keepAlive }),
     };
 
-    // Only add optional properties if they have defined values
-    if (options.system !== undefined) {
-      requestOptions.system = options.system;
-    }
-    if (options.template !== undefined) {
-      requestOptions.template = options.template;
-    }
-    if (options.context !== undefined) {
-      requestOptions.context = options.context;
-    }
-    if (options.format !== undefined) {
-      requestOptions.format = options.format;
-    }
-    if (options.keepAlive !== undefined) {
-      requestOptions.keep_alive = options.keepAlive;
-    }
-
     return this.executeWithRetry(async () => {
-      const stream = await this.ollama.generate(requestOptions);
+      const stream = (await this.ollama.generate(
+        requestOptions
+      )) as AsyncIterable<OllamaGenerateResponse>;
       let finalResponse: OllamaResponse | null = null;
 
-      for await (const chunk of stream as AsyncIterable<any>) {
+      for await (const chunk of stream) {
         onChunk(chunk);
 
         if (chunk.done) {
-          finalResponse = {
-            response: chunk.response || '',
-            model: chunk.model,
-            context: chunk.context,
-            done: chunk.done,
-            eval_count: chunk.eval_count,
-            total_duration: chunk.total_duration,
-          } as OllamaResponse;
+          finalResponse = this.mapGenerateResponseToOllamaResponse(chunk);
         }
       }
 
@@ -258,35 +234,25 @@ export class OllamaClient {
   }
 
   /**
-   * Performs function calling using Ollama's chat API with tool support
+   * Performs function calling using Ollama's chat API
    */
   async functionCall(request: FunctionCallRequest): Promise<OllamaResponse> {
-    const requestOptions: any = {
+    const requestOptions = {
       model: request.model || this.config.model,
       messages: request.messages,
-      stream: false,
+      stream: false as const,
       format: request.format || 'json',
       options: {
         temperature: request.temperature ?? this.config.temperature,
         ...request.options,
       },
+      ...(request.tools && { tools: request.tools }),
     };
 
-    // Only add tools if they are defined
-    if (request.tools !== undefined) {
-      requestOptions.tools = request.tools;
-    }
-
     return this.executeWithRetry(async () => {
-      const response = await this.ollama.chat(requestOptions);
-      // For non-streaming chat, response is a ChatResponse object
-      return {
-        response: (response as any).message?.content || '',
-        model: (response as any).model,
-        done: (response as any).done || true,
-        eval_count: (response as any).eval_count,
-        total_duration: (response as any).total_duration,
-      } as OllamaResponse;
+      const response = (await this.ollama.chat(requestOptions)) as OllamaChatResponse;
+
+      return this.mapChatResponseToOllamaResponse(response);
     }, 'FUNCTION_CALL_ERROR');
   }
 
@@ -297,33 +263,28 @@ export class OllamaClient {
     request: FunctionCallRequest,
     onChunk: (chunk: StreamingChunk) => void
   ): Promise<OllamaResponse> {
-    const requestOptions: any = {
+    const requestOptions = {
       model: request.model || this.config.model,
       messages: request.messages,
-      stream: true,
+      stream: true as const,
       format: request.format || 'json',
       options: {
         temperature: request.temperature ?? this.config.temperature,
         ...request.options,
       },
+      ...(request.tools && { tools: request.tools }),
     };
 
-    // Only add tools if they are defined
-    if (request.tools !== undefined) {
-      requestOptions.tools = request.tools;
-    }
-
     return this.executeWithRetry(async () => {
-      const stream = await this.ollama.chat(requestOptions);
+      const stream = (await this.ollama.chat(requestOptions)) as AsyncIterable<OllamaChatResponse>;
       let finalResponse: OllamaResponse | null = null;
       let accumulatedContent = '';
 
-      for await (const chunk of stream as AsyncIterable<any>) {
+      for await (const chunk of stream) {
         const streamChunk: StreamingChunk = {
           response: chunk.message?.content || '',
           done: chunk.done,
           message: chunk.message,
-          ...chunk,
         };
 
         if (chunk.message?.content) {
@@ -333,13 +294,7 @@ export class OllamaClient {
         onChunk(streamChunk);
 
         if (chunk.done) {
-          finalResponse = {
-            response: accumulatedContent,
-            model: chunk.model,
-            done: chunk.done,
-            eval_count: chunk.eval_count,
-            total_duration: chunk.total_duration,
-          } as OllamaResponse;
+          finalResponse = this.mapChatResponseToOllamaResponse(chunk, accumulatedContent);
         }
       }
 
@@ -367,34 +322,22 @@ export class OllamaClient {
       options?: Record<string, any>;
     } = {}
   ): Promise<OllamaResponse> {
-    const requestOptions: any = {
+    const requestOptions = {
       model: options.model || this.config.model,
       messages,
-      stream: false,
+      stream: false as const,
       options: {
         temperature: this.config.temperature,
         ...options.options,
       },
+      ...(options.format && { format: options.format }),
+      ...(options.keepAlive !== undefined && { keep_alive: options.keepAlive }),
     };
 
-    // Only add optional properties if they have defined values
-    if (options.format !== undefined) {
-      requestOptions.format = options.format;
-    }
-    if (options.keepAlive !== undefined) {
-      requestOptions.keep_alive = options.keepAlive;
-    }
-
     return this.executeWithRetry(async () => {
-      const response = await this.ollama.chat(requestOptions);
-      // For non-streaming chat, response is a ChatResponse object
-      return {
-        response: (response as any).message?.content || '',
-        model: (response as any).model,
-        done: (response as any).done || true,
-        eval_count: (response as any).eval_count,
-        total_duration: (response as any).total_duration,
-      } as OllamaResponse;
+      const response = (await this.ollama.chat(requestOptions)) as OllamaChatResponse;
+
+      return this.mapChatResponseToOllamaResponse(response);
     }, 'CHAT_ERROR');
   }
 
@@ -414,35 +357,28 @@ export class OllamaClient {
       options?: Record<string, any>;
     } = {}
   ): Promise<OllamaResponse> {
-    const requestOptions: any = {
+    const requestOptions = {
       model: options.model || this.config.model,
       messages,
-      stream: true,
+      stream: true as const,
       options: {
         temperature: this.config.temperature,
         ...options.options,
       },
+      ...(options.format && { format: options.format }),
+      ...(options.keepAlive !== undefined && { keep_alive: options.keepAlive }),
     };
 
-    // Only add optional properties if they have defined values
-    if (options.format !== undefined) {
-      requestOptions.format = options.format;
-    }
-    if (options.keepAlive !== undefined) {
-      requestOptions.keep_alive = options.keepAlive;
-    }
-
     return this.executeWithRetry(async () => {
-      const stream = await this.ollama.chat(requestOptions);
+      const stream = (await this.ollama.chat(requestOptions)) as AsyncIterable<OllamaChatResponse>;
       let finalResponse: OllamaResponse | null = null;
       let accumulatedContent = '';
 
-      for await (const chunk of stream as AsyncIterable<any>) {
+      for await (const chunk of stream) {
         const streamChunk: StreamingChunk = {
           response: chunk.message?.content || '',
           done: chunk.done,
           message: chunk.message,
-          ...chunk,
         };
 
         if (chunk.message?.content) {
@@ -452,13 +388,7 @@ export class OllamaClient {
         onChunk(streamChunk);
 
         if (chunk.done) {
-          finalResponse = {
-            response: accumulatedContent,
-            model: chunk.model,
-            done: chunk.done,
-            eval_count: chunk.eval_count,
-            total_duration: chunk.total_duration,
-          } as OllamaResponse;
+          finalResponse = this.mapChatResponseToOllamaResponse(chunk, accumulatedContent);
         }
       }
 
@@ -467,7 +397,7 @@ export class OllamaClient {
       }
 
       return finalResponse;
-    }, 'CHAT_STREAM_ERROR');
+    }, 'FUNCTION_CALL_STREAM_ERROR');
   }
 
   /**
@@ -575,6 +505,37 @@ export class OllamaClient {
         host: newConfig.url,
       });
     }
+  }
+
+  /**
+   * Maps Ollama's native chat response to our standardized format
+   */
+  private mapChatResponseToOllamaResponse(
+    response: OllamaChatResponse,
+    overrideContent?: string
+  ): OllamaResponse {
+    return {
+      response: overrideContent || response.message?.content || '',
+      model: response.model,
+      done: response.done,
+      ...(response.eval_count !== undefined && { eval_count: response.eval_count }),
+      ...(response.total_duration !== undefined && { total_duration: response.total_duration }),
+      message: response.message,
+    };
+  }
+
+  /**
+   * Maps Ollama's native generate response to our standardized format
+   */
+  private mapGenerateResponseToOllamaResponse(response: OllamaGenerateResponse): OllamaResponse {
+    return {
+      response: response.response,
+      model: response.model,
+      done: response.done,
+      ...(response.context !== undefined && { context: response.context }),
+      ...(response.eval_count !== undefined && { eval_count: response.eval_count }),
+      ...(response.total_duration !== undefined && { total_duration: response.total_duration }),
+    };
   }
 }
 

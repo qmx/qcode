@@ -1,8 +1,9 @@
 import { z } from 'zod';
-import { normalize } from 'pathe';
+import { normalize, join } from 'pathe';
 import { promises as fs } from 'fs';
 import { NamespacedTool, ToolDefinition, ToolResult, QCodeError } from '../types.js';
 import { WorkspaceSecurity } from '../security/workspace.js';
+import { isAbsolute } from 'path';
 
 /**
  * Zod schemas for file operation parameters
@@ -12,8 +13,8 @@ import { WorkspaceSecurity } from '../security/workspace.js';
 const ReadFileSchema = z.object({
   operation: z.literal('read'),
   path: z.string().min(1, 'File path is required'),
-  startLine: z.number().int().positive().optional(),
-  endLine: z.number().int().positive().optional(),
+  startLine: z.coerce.number().int().positive().optional(),
+  endLine: z.coerce.number().int().positive().optional(),
   encoding: z.enum(['utf8', 'utf-8', 'ascii', 'base64', 'hex']).default('utf8').optional(),
 });
 
@@ -23,8 +24,8 @@ const WriteFileSchema = z.object({
   path: z.string().min(1, 'File path is required'),
   content: z.string(),
   encoding: z.enum(['utf8', 'utf-8', 'ascii', 'base64', 'hex']).default('utf8').optional(),
-  backup: z.boolean().default(true).optional(),
-  createDirs: z.boolean().default(true).optional(),
+  backup: z.coerce.boolean().default(true).optional(),
+  createDirs: z.coerce.boolean().default(true).optional(),
 });
 
 // List files operation schema
@@ -32,9 +33,9 @@ const ListFilesSchema = z.object({
   operation: z.literal('list'),
   path: z.string().default('.').optional(),
   pattern: z.string().optional(),
-  recursive: z.boolean().default(false).optional(),
-  includeHidden: z.boolean().default(false).optional(),
-  includeMetadata: z.boolean().default(false).optional(),
+  recursive: z.coerce.boolean().default(false).optional(),
+  includeHidden: z.coerce.boolean().default(false).optional(),
+  includeMetadata: z.coerce.boolean().default(false).optional(),
 });
 
 // Search files operation schema
@@ -43,10 +44,10 @@ const SearchFilesSchema = z.object({
   query: z.string().min(1, 'Search query is required'),
   path: z.string().default('.').optional(),
   pattern: z.string().optional(),
-  useRegex: z.boolean().default(false).optional(),
-  caseSensitive: z.boolean().default(false).optional(),
-  maxResults: z.number().int().positive().default(100).optional(),
-  includeContext: z.boolean().default(true).optional(),
+  useRegex: z.coerce.boolean().default(false).optional(),
+  caseSensitive: z.coerce.boolean().default(false).optional(),
+  maxResults: z.coerce.number().int().positive().default(100).optional(),
+  includeContext: z.coerce.boolean().default(true).optional(),
 });
 
 // Union schema for all file operations
@@ -236,9 +237,9 @@ export class FilesTool implements NamespacedTool {
   }
 
   /**
-   * Execute file operation with security validation
+   * Execute file operation with optional context
    */
-  public async execute(args: Record<string, any>): Promise<ToolResult> {
+  public async execute(args: Record<string, any>, context?: any): Promise<ToolResult> {
     const startTime = Date.now();
 
     try {
@@ -249,7 +250,7 @@ export class FilesTool implements NamespacedTool {
       let data: any;
       switch (params.operation) {
         case 'read':
-          data = await this.readFile(params);
+          data = await this.readFile(params, context);
           break;
         case 'write':
           data = await this.writeFile(params);
@@ -260,11 +261,14 @@ export class FilesTool implements NamespacedTool {
         case 'search':
           data = await this.searchFiles(params);
           break;
-        default:
+        default: {
+          // TypeScript exhaustiveness check - this should never be reached
+          const exhaustiveCheck: never = params;
           throw new QCodeError(
-            `Unknown operation: ${(params as any).operation}`,
+            `Unknown operation: ${(exhaustiveCheck as { operation: string }).operation}`,
             'INVALID_OPERATION'
           );
+        }
       }
 
       return {
@@ -288,12 +292,18 @@ export class FilesTool implements NamespacedTool {
   /**
    * Read file operation - Implementation for step 1.7.2
    */
-  private async readFile(params: ReadFileParams): Promise<ReadFileResult> {
+  private async readFile(params: ReadFileParams, context?: any): Promise<ReadFileResult> {
     const { path: filePath, startLine, endLine, encoding = 'utf8' } = params;
 
     try {
+      // Resolve path using context working directory if available and path is relative
+      let resolvedPath = filePath;
+      if (context?.workingDirectory && !isAbsolute(filePath)) {
+        resolvedPath = join(context.workingDirectory, filePath);
+      }
+
       // Validate file path with security checks
-      const validatedPath = await this.validatePath(filePath, 'read');
+      const validatedPath = await this.validatePath(resolvedPath, 'read');
 
       // Check if file exists and get stats
       const stats = await fs.stat(validatedPath);
