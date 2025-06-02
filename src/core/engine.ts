@@ -441,6 +441,12 @@ ${availableTools.map(tool => `- ${tool.function.name}: ${tool.function.descripti
 When a user asks about files, use the appropriate tool to help them. Always use function calling when file operations are needed.
 
 For file paths, assume they are relative to the current workspace unless otherwise specified.
+
+IMPORTANT for the 'files' tool list operation:
+- Use 'path' parameter for the directory to search in (default: current directory)
+- Use 'pattern' parameter for glob patterns like "*.swift", "**/*.ts", "*.{js,jsx}"
+- If the user wants files by extension, use the 'pattern' parameter, NOT the 'path' parameter
+- Example: To find Swift files, use operation="list", pattern="**/*.swift", recursive=true
 `;
 
       // Create function call request
