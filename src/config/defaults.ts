@@ -48,7 +48,7 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
  */
 export const DEFAULT_OLLAMA_CONFIG: OllamaConfig = {
   url: 'http://localhost:11434',
-  model: 'codestral:latest',
+  model: 'llama3.1:8b',
   timeout: 30000, // 30 seconds
   retries: 3,
   temperature: 0.1,
