@@ -406,12 +406,14 @@ describe('FilesTool', () => {
       });
 
       it('should handle concurrent file reads without issues', async () => {
-        const promises = Array(5).fill(null).map(() =>
-          filesTool.execute({
-            operation: 'read',
-            path: smallTextPath,
-          })
-        );
+        const promises = Array(5)
+          .fill(null)
+          .map(() =>
+            filesTool.execute({
+              operation: 'read',
+              path: smallTextPath,
+            })
+          );
 
         const results = await Promise.all(promises);
 
