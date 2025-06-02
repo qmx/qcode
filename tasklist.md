@@ -109,12 +109,12 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 
 ### 1.8 Basic CLI Interface
 
-- [ ] Implement `src/cli.ts`:
-  - [ ] Command-line argument parsing with Commander
-  - [ ] One-shot command execution
-  - [ ] Basic query processing
-  - [ ] Output formatting with Chalk
-  - [ ] Error handling and user feedback
+- [x] Implement `src/cli.ts`:
+  - [x] Command-line argument parsing with Commander
+  - [x] One-shot command execution
+  - [x] Basic query processing
+  - [x] Output formatting with Chalk
+  - [x] Error handling and user feedback
 
 ### 1.9 Core Engine
 
