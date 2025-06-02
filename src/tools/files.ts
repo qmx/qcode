@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { normalize, join } from 'pathe';
+import { normalize, join, relative, basename } from 'pathe';
 import { promises as fs } from 'fs';
+import glob, { Options as GlobOptions } from 'fast-glob';
 import { NamespacedTool, ToolDefinition, ToolResult, QCodeError } from '../types.js';
 import { WorkspaceSecurity } from '../security/workspace.js';
 import { isAbsolute } from 'path';
@@ -156,7 +157,8 @@ export class FilesTool implements NamespacedTool {
           },
           path: {
             type: 'string',
-            description: 'File or directory path (relative to workspace root)',
+            description:
+              'For read/write: file path. For list: directory path to search in (default: current directory)',
           },
           content: {
             type: 'string',
@@ -168,7 +170,8 @@ export class FilesTool implements NamespacedTool {
           },
           pattern: {
             type: 'string',
-            description: 'Glob pattern to filter files (e.g., "**/*.ts")',
+            description:
+              'Glob pattern to filter files (e.g., "**/*.ts", "*.swift"). Use this to find files by extension or name pattern.',
           },
           startLine: {
             type: 'number',
@@ -256,7 +259,7 @@ export class FilesTool implements NamespacedTool {
           data = await this.writeFile(params);
           break;
         case 'list':
-          data = await this.listFiles(params);
+          data = await this.listFiles(params, context);
           break;
         case 'search':
           data = await this.searchFiles(params);
@@ -488,10 +491,273 @@ export class FilesTool implements NamespacedTool {
   }
 
   /**
-   * List files operation - placeholder for step 1.7.4
+   * List files operation - implementation for step 1.7.4
    */
-  private async listFiles(_params: ListFilesParams): Promise<ListFilesResult> {
-    throw new QCodeError('List files operation not yet implemented', 'NOT_IMPLEMENTED');
+  private async listFiles(params: ListFilesParams, context?: any): Promise<ListFilesResult> {
+    const {
+      path = '.',
+      pattern,
+      recursive = false,
+      includeHidden = false,
+      includeMetadata = false,
+    } = params;
+
+    try {
+      let basePath = path;
+      let searchPattern = pattern;
+
+      // Resolve base path using context working directory if available and path is relative
+      if (context?.workingDirectory && !isAbsolute(basePath)) {
+        basePath = join(context.workingDirectory, basePath);
+      }
+
+      // Smart glob pattern detection: if path contains glob characters and no separate pattern is provided
+      const globChars = ['*', '?', '[', ']', '{', '}'];
+      const hasGlobChars = globChars.some(char => path.includes(char));
+
+      if (hasGlobChars && !pattern) {
+        // The path itself is a glob pattern - use it as the pattern and extract base directory
+        searchPattern = path;
+
+        // Find the last directory separator before any glob characters
+        let lastDirIndex = -1;
+        for (let i = 0; i < path.length; i++) {
+          if (path[i] === '/') {
+            // Check if there are any glob characters after this slash
+            const afterSlash = path.substring(i + 1);
+            if (!globChars.some(char => afterSlash.includes(char))) {
+              lastDirIndex = i;
+            }
+          }
+        }
+
+        if (lastDirIndex >= 0) {
+          basePath = path.substring(0, lastDirIndex);
+          searchPattern = path.substring(lastDirIndex + 1);
+        } else {
+          basePath = '.';
+          searchPattern = path;
+        }
+
+        // Resolve the base path with context
+        if (context?.workingDirectory && !isAbsolute(basePath)) {
+          basePath = join(context.workingDirectory, basePath);
+        }
+      }
+
+      // Validate the base directory path
+      let validatedPath: string;
+      try {
+        validatedPath = await this.validatePath(basePath, 'read');
+      } catch (error) {
+        if (error instanceof QCodeError) {
+          if (error.code === 'PATH_NOT_FOUND') {
+            throw new QCodeError(`Directory not found: ${basePath}`, 'DIRECTORY_NOT_FOUND');
+          } else if (error.code === 'PATH_ACCESS_ERROR') {
+            // Check if this is due to a non-existent path (fallback)
+            try {
+              await fs.access(basePath);
+            } catch (fsError) {
+              if (fsError instanceof Error && 'code' in fsError && fsError.code === 'ENOENT') {
+                throw new QCodeError(`Directory not found: ${basePath}`, 'DIRECTORY_NOT_FOUND');
+              }
+            }
+          }
+        }
+        throw error;
+      }
+
+      // Check if the path exists and is a directory
+      const stats = await fs.stat(validatedPath);
+      if (!stats.isDirectory()) {
+        throw new QCodeError(`Path is not a directory: ${basePath}`, 'NOT_A_DIRECTORY', {
+          path: basePath,
+          validatedPath,
+        });
+      }
+
+      let allFiles: string[] = [];
+
+      if (searchPattern) {
+        // Use fast-glob for pattern matching
+        const globOptions: GlobOptions = {
+          cwd: validatedPath,
+          absolute: true,
+          dot: includeHidden,
+        };
+
+        // Add depth control for recursion using 'deep' option
+        if (!recursive) {
+          globOptions.deep = 1;
+        }
+
+        try {
+          allFiles = await glob(searchPattern, globOptions);
+        } catch (globError) {
+          throw new QCodeError(
+            `Error processing glob pattern "${searchPattern}": ${globError instanceof Error ? globError.message : 'Unknown error'}`,
+            'GLOB_ERROR'
+          );
+        }
+      } else {
+        // No pattern - list directory contents directly
+        if (recursive) {
+          allFiles = await this.getAllFilesRecursive(validatedPath, includeHidden);
+        } else {
+          allFiles = await this.getDirectoryContents(validatedPath, includeHidden);
+        }
+      }
+
+      // Convert file paths to FileMetadata objects
+      const fileMetadataPromises = allFiles.map(async filePath => {
+        try {
+          const fileStats = await fs.stat(filePath);
+          const fileName = basename(filePath);
+          const relativePath = relative(validatedPath, filePath);
+
+          const metadata: FileMetadata = {
+            name: fileName,
+            path: filePath,
+            relativePath: relativePath || fileName,
+            size: fileStats.size,
+            isDirectory: fileStats.isDirectory(),
+            isFile: fileStats.isFile(),
+            modified: fileStats.mtime,
+          };
+
+          // Add extended metadata if requested
+          if (includeMetadata) {
+            metadata.created = fileStats.birthtime;
+            // Convert file mode to readable permissions string
+            const mode = fileStats.mode;
+            const permissions = [
+              mode & parseInt('400', 8) ? 'r' : '-',
+              mode & parseInt('200', 8) ? 'w' : '-',
+              mode & parseInt('100', 8) ? 'x' : '-',
+              mode & parseInt('040', 8) ? 'r' : '-',
+              mode & parseInt('020', 8) ? 'w' : '-',
+              mode & parseInt('010', 8) ? 'x' : '-',
+              mode & parseInt('004', 8) ? 'r' : '-',
+              mode & parseInt('002', 8) ? 'w' : '-',
+              mode & parseInt('001', 8) ? 'x' : '-',
+            ].join('');
+            metadata.permissions = permissions;
+          }
+
+          return metadata;
+        } catch (error) {
+          // Skip files that can't be accessed
+          return null;
+        }
+      });
+
+      // Wait for all metadata to be collected and filter out null results
+      const fileMetadataResults = await Promise.all(fileMetadataPromises);
+      const files = fileMetadataResults.filter(
+        (metadata): metadata is FileMetadata => metadata !== null
+      );
+
+      // Sort files: directories first, then files, both alphabetically
+      files.sort((a, b) => {
+        if (a.isDirectory && !b.isDirectory) return -1;
+        if (!a.isDirectory && b.isDirectory) return 1;
+        return a.name.localeCompare(b.name);
+      });
+
+      const result: ListFilesResult = {
+        files,
+        path: validatedPath,
+        count: files.length,
+      };
+
+      if (searchPattern) {
+        result.pattern = searchPattern;
+      }
+
+      return result;
+    } catch (error) {
+      if (error instanceof QCodeError) {
+        throw error;
+      }
+
+      // Handle common Node.js file system errors
+      if (error instanceof Error) {
+        if ('code' in error) {
+          switch (error.code) {
+            case 'ENOENT':
+              throw new QCodeError(`Directory not found: ${path}`, 'DIRECTORY_NOT_FOUND');
+            case 'EACCES':
+              throw new QCodeError(`Permission denied: ${path}`, 'PERMISSION_DENIED');
+            case 'ENOTDIR':
+              throw new QCodeError(`Path is not a directory: ${path}`, 'NOT_A_DIRECTORY');
+            default:
+              throw new QCodeError(`File system error: ${error.message}`, 'FS_ERROR');
+          }
+        }
+        throw new QCodeError(`Unexpected error: ${error.message}`, 'UNKNOWN_ERROR');
+      }
+
+      throw new QCodeError('Unknown error occurred while listing files', 'UNKNOWN_ERROR');
+    }
+  }
+
+  /**
+   * Helper method to get all files recursively from a directory
+   */
+  private async getAllFilesRecursive(dirPath: string, includeHidden: boolean): Promise<string[]> {
+    const allFiles: string[] = [];
+
+    const processDirectory = async (currentPath: string): Promise<void> => {
+      try {
+        const entries = await fs.readdir(currentPath, { withFileTypes: true });
+
+        for (const entry of entries) {
+          // Skip hidden files/directories if not requested
+          if (!includeHidden && entry.name.startsWith('.')) {
+            continue;
+          }
+
+          const fullPath = join(currentPath, entry.name);
+          allFiles.push(fullPath);
+
+          // Recursively process subdirectories
+          if (entry.isDirectory()) {
+            await processDirectory(fullPath);
+          }
+        }
+      } catch (error) {
+        // Skip directories we can't access
+      }
+    };
+
+    await processDirectory(dirPath);
+    return allFiles;
+  }
+
+  /**
+   * Helper method to get direct contents of a directory (non-recursive)
+   */
+  private async getDirectoryContents(dirPath: string, includeHidden: boolean): Promise<string[]> {
+    try {
+      const entries = await fs.readdir(dirPath, { withFileTypes: true });
+      const files: string[] = [];
+
+      for (const entry of entries) {
+        // Skip hidden files/directories if not requested
+        if (!includeHidden && entry.name.startsWith('.')) {
+          continue;
+        }
+
+        files.push(join(dirPath, entry.name));
+      }
+
+      return files;
+    } catch (error) {
+      throw new QCodeError(
+        `Cannot read directory contents: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'DIRECTORY_READ_ERROR'
+      );
+    }
   }
 
   /**

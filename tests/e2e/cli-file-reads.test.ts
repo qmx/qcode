@@ -203,7 +203,9 @@ describe('CLI File Read Operations (VCR)', () => {
     expect(result.errors).toBeDefined();
     expect(result.errors!.length).toBeGreaterThan(0);
     // The error message may vary depending on what the LLM calls
-    expect(result.response).toMatch(/Cannot access path|not yet implemented|no such file/i);
+    expect(result.response).toMatch(
+      /Cannot access path|not yet implemented|no such file|not found|does not exist/i
+    );
 
     await saveVCRRecording(testName);
   }, 30000);

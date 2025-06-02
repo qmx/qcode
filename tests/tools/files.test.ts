@@ -248,7 +248,7 @@ describe('FilesTool', () => {
         });
 
         expect(result.success).toBe(false);
-        expect(result.error).toMatch(/File not found|Cannot access path/);
+        expect(result.error).toMatch(/File not found|Cannot access path|Path does not exist/);
         expect(result.duration).toBeGreaterThanOrEqual(0);
       });
 
@@ -437,13 +437,15 @@ describe('FilesTool', () => {
       expect(result.error).toContain('not yet implemented');
     });
 
-    it('should throw NOT_IMPLEMENTED for list operation', async () => {
+    it('should successfully execute list operation', async () => {
       const result = await filesTool.execute({
         operation: 'list',
       });
 
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('not yet implemented');
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      expect(result.data.files).toBeDefined();
+      expect(Array.isArray(result.data.files)).toBe(true);
     });
 
     it('should throw NOT_IMPLEMENTED for search operation', async () => {
@@ -493,9 +495,11 @@ describe('FilesTool', () => {
         includeMetadata: true,
       });
 
-      // Should fail with NOT_IMPLEMENTED, not parameter validation error
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('not yet implemented');
+      // Should succeed since list operation is now implemented
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      expect(result.data.files).toBeDefined();
+      expect(Array.isArray(result.data.files)).toBe(true);
     });
 
     it('should accept valid optional parameters for search operation', async () => {
