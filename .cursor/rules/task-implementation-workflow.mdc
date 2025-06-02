@@ -1,0 +1,40 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Task Implementation Workflow
+
+## Working with the Task List
+
+**Task List Structure:**
+- [tasklist.md](mdc:tasklist.md) contains the complete implementation plan
+- Tasks are broken down into manageable steps (like 1.7.1, 1.7.2, etc.)
+- Each step has specific deliverables and acceptance criteria
+
+**Implementation Pattern:**
+1. **Read the specific task section** before starting
+2. **Implement incrementally** - one small step at a time
+3. **Write tests first or alongside** implementation
+4. **Run validation** after each change (`npm run validate`)
+5. **Update task list** to mark completed items with `[x]`
+6. **Wait for explicit commit instruction**
+
+**Current Progress Tracking:**
+- ✅ Sections 1.1-1.6 and 1.9 (hollow CLI) are complete
+- 🚧 Section 1.7 (File Operations) is in progress:
+  - ✅ 1.7.1 Basic FilesTool Class Structure - COMPLETE
+  - ⏳ 1.7.2 Read File Operation - NEXT
+  - ⏳ 1.7.3-1.7.6 remaining steps
+
+**Testing Strategy:**
+- Focus on functional correctness, not timing
+- Type checking is good (`expect(typeof result.duration).toBe('number')`)
+- Avoid brittle timing assertions
+- Security validation tests are critical
+- Follow the "no timing tests" rule from [.cursor/rules/no-timing-tests.mdc](mdc:.cursor/rules/no-timing-tests.mdc)
+
+**Breaking Down Large Tasks:**
+- When a task seems too big, break it into smaller steps
+- Update [tasklist.md](mdc:tasklist.md) to reflect the breakdown
+- Implement one focused piece at a time

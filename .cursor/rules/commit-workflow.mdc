@@ -1,0 +1,34 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Commit Workflow Rules
+
+## NEVER commit without explicit user instruction
+
+**Absolute Rules:**
+- ❌ **DO NOT** run `git commit` unless the user explicitly says "commit" or "commit this"
+- ❌ **DO NOT** add and commit in one command without permission
+- ❌ **DO NOT** assume the user wants changes committed
+
+**Always validate before any commit:**
+1. `npm run validate` (includes TypeScript check, linting, formatting, tests)
+2. Review what files are being committed with `git status`
+3. Only commit when explicitly instructed
+
+**Proper workflow:**
+```bash
+# After making changes:
+npm run validate  # Always run this first
+git status        # Show what changed
+# Wait for explicit commit instruction from user
+```
+
+**Exception:** Only commit immediately if the user says:
+- "commit this"
+- "commit these changes" 
+- "please commit"
+- Or other explicit commit instructions
+
+**The user wants control over commits - respect this.**

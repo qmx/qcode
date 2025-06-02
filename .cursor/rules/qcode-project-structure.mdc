@@ -1,0 +1,44 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# QCode Project Structure Guide
+
+## Key Files and Components
+
+**Entry Points:**
+- [src/index.ts](mdc:src/index.ts) - Main library export
+- [src/cli.ts](mdc:src/cli.ts) - CLI interface with Commander.js
+
+**Core System:**
+- [src/types.ts](mdc:src/types.ts) - All TypeScript interfaces and types
+- [src/core/client.ts](mdc:src/core/client.ts) - Ollama API client
+- [src/core/registry.ts](mdc:src/core/registry.ts) - Tool registry with namespacing
+
+**Configuration:**
+- [src/config/defaults.ts](mdc:src/config/defaults.ts) - Default configuration
+- [src/config/manager.ts](mdc:src/config/manager.ts) - Config loading and merging
+- [src/config/validation.ts](mdc:src/config/validation.ts) - Zod schemas
+
+**Security:**
+- [src/security/workspace.ts](mdc:src/security/workspace.ts) - Workspace boundary enforcement
+- [src/security/paths.ts](mdc:src/security/paths.ts) - Path validation utilities
+- [src/security/commands.ts](mdc:src/security/commands.ts) - Command execution security
+
+**Tools:**
+- [src/tools/files.ts](mdc:src/tools/files.ts) - File operations tool (read, write, list, search)
+
+**Project Management:**
+- [tasklist.md](mdc:tasklist.md) - Implementation task breakdown
+- [package.json](mdc:package.json) - Dependencies and scripts
+
+**Testing:**
+- [tests/](mdc:tests/) - All test files
+- Use `npm run validate` to run full test suite + linting + formatting
+
+**Architecture Pattern:**
+- Security-first design with workspace boundaries
+- Namespaced tools (internal: vs external MCP servers)
+- Zod schemas for all data validation
+- Ollama for local LLM with function calling
