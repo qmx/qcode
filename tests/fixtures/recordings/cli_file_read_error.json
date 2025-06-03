@@ -12,7 +12,7 @@
         },
         {
           "role": "user",
-          "content": "search for \"nonexistentterm12345\" in all files"
+          "content": "show me nonexistent-file.txt"
         }
       ],
       "stream": false,
@@ -120,7 +120,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-03T12:44:22.610087Z",
+      "created_at": "2025-06-03T12:06:26.639182Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -129,13 +129,8 @@
             "function": {
               "name": "internal:files",
               "arguments": {
-                "caseSensitive": true,
-                "includeContext": false,
-                "operation": "search",
-                "path": ".",
-                "pattern": "nonexistentterm12345",
-                "recursive": true,
-                "useRegex": true
+                "operation": "read",
+                "path": "nonexistent-file.txt"
               }
             }
           }
@@ -143,17 +138,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 1438757542,
-      "load_duration": 12956917,
-      "prompt_eval_count": 785,
-      "prompt_eval_duration": 130993000,
-      "eval_count": 55,
-      "eval_duration": 1293193250
+      "total_duration": 686020250,
+      "load_duration": 10705917,
+      "prompt_eval_count": 778,
+      "prompt_eval_duration": 105721125,
+      "eval_count": 27,
+      "eval_duration": 568467667
     },
     "rawHeaders": {
-      "content-length": "506",
+      "content-length": "411",
       "content-type": "application/json; charset=utf-8",
-      "date": "Tue, 03 Jun 2025 12:44:22 GMT"
+      "date": "Tue, 03 Jun 2025 12:06:26 GMT"
     },
     "responseIsBinary": false
   }

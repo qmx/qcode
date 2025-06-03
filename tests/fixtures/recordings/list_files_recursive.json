@@ -12,7 +12,7 @@
         },
         {
           "role": "user",
-          "content": "search for \"nonexistentterm12345\" in all files"
+          "content": "List all files recursively in this project"
         }
       ],
       "stream": false,
@@ -120,7 +120,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-03T12:44:22.610087Z",
+      "created_at": "2025-06-03T12:06:46.89455Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -129,13 +129,10 @@
             "function": {
               "name": "internal:files",
               "arguments": {
-                "caseSensitive": true,
-                "includeContext": false,
-                "operation": "search",
+                "operation": "list",
                 "path": ".",
-                "pattern": "nonexistentterm12345",
-                "recursive": true,
-                "useRegex": true
+                "pattern": "",
+                "recursive": true
               }
             }
           }
@@ -143,17 +140,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 1438757542,
-      "load_duration": 12956917,
-      "prompt_eval_count": 785,
-      "prompt_eval_duration": 130993000,
-      "eval_count": 55,
-      "eval_duration": 1293193250
+      "total_duration": 2189991416,
+      "load_duration": 11332166,
+      "prompt_eval_count": 780,
+      "prompt_eval_duration": 1410448083,
+      "eval_count": 32,
+      "eval_duration": 767086292
     },
     "rawHeaders": {
-      "content-length": "506",
+      "content-length": "423",
       "content-type": "application/json; charset=utf-8",
-      "date": "Tue, 03 Jun 2025 12:44:22 GMT"
+      "date": "Tue, 03 Jun 2025 12:06:46 GMT"
     },
     "responseIsBinary": false
   }

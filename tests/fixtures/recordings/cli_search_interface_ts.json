@@ -12,7 +12,7 @@
         },
         {
           "role": "user",
-          "content": "search for \"nonexistentterm12345\" in all files"
+          "content": "search for \"interface\" in TypeScript files"
         }
       ],
       "stream": false,
@@ -120,7 +120,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-03T12:44:22.610087Z",
+      "created_at": "2025-06-03T13:00:36.845044Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -131,11 +131,15 @@
               "arguments": {
                 "caseSensitive": true,
                 "includeContext": false,
+                "includeHidden": false,
+                "includeMetadata": false,
+                "maxResults": 0,
                 "operation": "search",
                 "path": ".",
-                "pattern": "nonexistentterm12345",
+                "pattern": "**/*.ts",
+                "query": "interface",
                 "recursive": true,
-                "useRegex": true
+                "useRegex": false
               }
             }
           }
@@ -143,17 +147,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 1438757542,
-      "load_duration": 12956917,
-      "prompt_eval_count": 785,
-      "prompt_eval_duration": 130993000,
-      "eval_count": 55,
-      "eval_duration": 1293193250
+      "total_duration": 1991114000,
+      "load_duration": 18383125,
+      "prompt_eval_count": 781,
+      "prompt_eval_duration": 145479958,
+      "eval_count": 77,
+      "eval_duration": 1825769834
     },
     "rawHeaders": {
-      "content-length": "506",
+      "content-length": "575",
       "content-type": "application/json; charset=utf-8",
-      "date": "Tue, 03 Jun 2025 12:44:22 GMT"
+      "date": "Tue, 03 Jun 2025 13:00:36 GMT"
     },
     "responseIsBinary": false
   }

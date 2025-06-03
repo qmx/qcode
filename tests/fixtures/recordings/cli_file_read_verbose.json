@@ -12,7 +12,7 @@
         },
         {
           "role": "user",
-          "content": "Analyze the project structure, find the configuration files like package.json or tsconfig.json, then read package.json and explain its purpose"
+          "content": "read /Users/qmx/dev/qcode/tests/fixtures/test-files/sample.txt"
         }
       ],
       "stream": false,
@@ -120,7 +120,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-03T04:34:42.019177Z",
+      "created_at": "2025-06-03T12:06:24.697684Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -129,10 +129,9 @@
             "function": {
               "name": "internal:files",
               "arguments": {
-                "operation": "list",
-                "path": ".",
-                "pattern": "**/package.json",
-                "recursive": "true"
+                "encoding": "utf8",
+                "operation": "read",
+                "path": "/Users/qmx/dev/qcode/tests/fixtures/test-files/sample.txt"
               }
             }
           }
@@ -140,17 +139,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 1912694709,
-      "load_duration": 14519417,
-      "prompt_eval_count": 799,
-      "prompt_eval_duration": 1105212959,
-      "eval_count": 36,
-      "eval_duration": 790680500
+      "total_duration": 1117396250,
+      "load_duration": 45449417,
+      "prompt_eval_count": 787,
+      "prompt_eval_duration": 110604791,
+      "eval_count": 42,
+      "eval_duration": 957513959
     },
     "rawHeaders": {
-      "content-length": "441",
+      "content-length": "467",
       "content-type": "application/json; charset=utf-8",
-      "date": "Tue, 03 Jun 2025 04:34:42 GMT"
+      "date": "Tue, 03 Jun 2025 12:06:24 GMT"
     },
     "responseIsBinary": false
   }
