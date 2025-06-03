@@ -1,0 +1,83 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Testing Best Practices
+
+## ❌ NEVER DO THESE IN TESTS
+
+### No Artificial Delays
+- **NEVER** add `setTimeout`, `sleep`, or any artificial delays to tests
+- **NEVER** use `new Promise(resolve => setTimeout(resolve, ms))` in tests
+- Tests should be deterministic and fast
+
+### Instead of artificial delays:
+1. Use `toBeGreaterThanOrEqual(0)` for timing assertions that might be 0
+2. Remove timing assertions entirely if they don't test core functionality  
+3. Fix the actual timing calculation to be more robust
+4. Mock time-dependent operations
+
+## ✅ GOOD TEST PRACTICES
+
+### TDD Approach
+- Write failing tests first that define expected behavior
+- Implement code to make tests pass
+- Refactor while keeping tests green
+
+### Test Structure
+- Use descriptive test names that explain the behavior being tested
+- Group related tests with `describe` blocks
+- Use `beforeEach` for test setup, not inline setup
+
+### Assertions
+- Test behavior, not implementation details
+- Use specific assertions (`toBe`, `toEqual`) over generic ones
+- Verify error conditions and edge cases
+
+### File Organization
+- Tests should mirror source structure: `src/core/engine.ts` → `tests/core/engine.test.ts`
+- Use `tests/unit/`, `tests/integration/`, `tests/e2e/` for different test types
+- VCR tests go in `tests/fixtures/vcr/`
+
+## 🔧 QCode-Specific Testing
+
+### Workflow State Tests
+- Test step management, context preservation, error recovery
+- Verify state transitions are correct
+- Test memory management and cleanup
+
+### File Operations Tests  
+- Test security validation (workspace boundaries)
+- Test with various file types and sizes
+- Mock filesystem operations where appropriate
+
+### Engine Integration Tests
+- Use VCR for LLM interactions in `tests/fixtures/vcr/`
+- Test complete workflows end-to-end
+- Verify tool execution and response formatting
+
+### Example Test Pattern
+```typescript
+describe('WorkflowState', () => {
+  let workflowState: WorkflowState;
+  let mockContext: WorkflowContext;
+
+  beforeEach(() => {
+    mockContext = { /* setup */ };
+    workflowState = new WorkflowState('test-id', mockContext);
+  });
+
+  it('should handle step completion correctly', async () => {
+    const stepId = await workflowState.startStep('test-step', 'tool', {});
+    const result = { success: true, data: 'test', duration: 100 };
+    
+    await workflowState.completeStep(stepId, result);
+    
+    expect(workflowState.getStepResult(stepId)).toBe(result);
+    expect(workflowState.getStatus()).toBe('completed');
+  });
+});
+```
+
+Remember: **Fast, deterministic tests that verify behavior without artificial delays!**

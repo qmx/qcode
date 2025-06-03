@@ -1,0 +1,99 @@
+---
+description: E2E testing standards for QCode - VCR patterns, honest test naming, complete system integration, and deterministic LLM behavior
+globs:
+  - tests/e2e/**/*.ts
+  - tests/e2e/**/*.test.ts
+autoApply: false
+---
+# E2E Testing Standards for QCode
+
+## 🚨 CRITICAL E2E TESTING RULES
+
+### 1. ✅ Always Use VCR for LLM Interactions
+E2E tests MUST use VCR recording pattern for deterministic LLM behavior.
+
+### 2. ✅ Test Current Implementation, Not Future Features
+E2E tests must reflect **actual** engine capabilities, not aspirational ones.
+
+**❌ BAD: Tests non-existent multi-step workflows:**
+```typescript
+it('should handle complex multi-step workflows', async () => {
+  const response = await engine.processQuery('List files then read package.json');
+  // Engine doesn't support this yet!
+  expect(response.toolsExecuted.length).toBeGreaterThan(1);
+});
+```
+
+**✅ GOOD: Tests actual single-step behavior:**
+```typescript
+it('should handle single-step workflow with complex query', async () => {
+  const response = await engine.processQuery('List files then read package.json');
+  // Engine currently interprets as single file listing
+  expect(response.toolsExecuted.length).toBe(1);
+  expect(response.toolsExecuted[0]).toBe('internal:files');
+});
+```
+
+### 3. ✅ Create All VCR Recordings Before Claiming Completion
+When refactoring e2e tests, create ALL recordings immediately:
+
+```bash
+# Check for missing recordings first
+npm test -- --testPathPattern="your-test.test.ts"
+
+# If recordings missing, create them immediately
+NOCK_MODE=record npm test -- --testPathPattern="your-test.test.ts"
+
+# Verify all tests pass in replay mode
+npm test -- --testPathPattern="your-test.test.ts"
+```
+
+### 4. ✅ With VCR, Behavior MUST Be Deterministic
+**NEVER** write comments like "LLM may choose differently" or "behavior may vary". VCR recordings are deterministic - same input = same output always.
+
+### 5. ✅ Use Honest Test Names
+Test names must accurately describe what the test actually validates.
+
+**❌ BAD:** `'should handle complex multi-step workflows'` (when it only does single-step)
+**✅ GOOD:** `'should handle single-step workflow with complex query'`
+
+## E2E Test Setup Template
+
+```typescript
+describe('E2E Test Suite', () => {
+  let engine: QCodeEngine;
+  const vcr = setupVCRTests(__filename);
+
+  beforeEach(() => {
+    const config = getDefaultConfig();
+    const client = new OllamaClient(config.ollama);
+    const workspaceSecurity = new WorkspaceSecurity(config.security);
+    const toolRegistry = new ToolRegistry(config.security);
+    const filesTool = new FilesTool(workspaceSecurity);
+
+    // CRITICAL: Register tools properly
+    toolRegistry.registerInternalTool(
+      'files',
+      filesTool.definition,
+      filesTool.execute.bind(filesTool)
+    );
+
+    engine = new QCodeEngine(client, toolRegistry, config);
+  });
+
+  it('should do something specific', async () => {
+    await vcr.withRecording('test_name', async () => {
+      const response = await engine.processQuery('specific query');
+      
+      // Test ACTUAL behavior, not aspirational behavior
+      expect(response.complete).toBe(true);
+      expect(response.toolsExecuted.length).toBe(1); // If engine only supports single calls
+    });
+  });
+});
+```
+
+**Remember: When refactoring tests to VCR, NEVER leave them broken. Create all recordings immediately and ensure 100% test pass rate before claiming completion.**
+
+
+# E2E Testing Standards for QCode

@@ -1,9 +1,13 @@
 ---
-description:
-globs:
+description: Comprehensive VCR (Video Cassette Recorder) testing guide for QCode - covers recording/replaying HTTP interactions with Ollama API, modern VCR helper patterns, critical refactoring rules, E2E test setup, and deterministic test behavior. Essential for maintaining reliable integration tests with external LLM services while ensuring fast, reproducible test execution.
+globs: 
 alwaysApply: false
 ---
 # VCR Testing Guide for QCode
+
+## Description
+
+Comprehensive VCR (Video Cassette Recorder) testing guide for QCode - covers recording/replaying HTTP interactions with Ollama API, modern VCR helper patterns, critical refactoring rules, E2E test setup, and deterministic test behavior. Essential for maintaining reliable integration tests with external LLM services while ensuring fast, reproducible test execution.
 
 ## Overview
 
@@ -15,11 +19,148 @@ VCR (Video Cassette Recorder) testing allows us to record real HTTP interactions
 
 This file demonstrates the modern VCR helper approach with clean, maintainable test code.
 
+## 🚨 CRITICAL VCR REFACTORING RULES 
+
+**NEVER break these rules when refactoring tests to use VCR:**
+
+### 1. ✅ Always Check for Existing Recordings First
+Before claiming a refactoring is "complete", check `tests/fixtures/recordings/` for required files.
+
+### 2. ✅ Create Missing Recordings Immediately
+Don't leave tests in a broken state. If recordings are missing, create them with:
+```bash
+NOCK_MODE=record npm test -- --testPathPattern="your-test-file.test.ts"
+```
+
+### 3. ✅ Validate ALL Tests Pass Before Claiming Completion
+Run the full test suite after refactoring. If any tests fail, fix them immediately.
+
+### 4. ✅ Fix Test Assertion Issues Discovered During Recording
+VCR recording may reveal that test expectations don't match actual LLM behavior. Fix assertions to match reality.
+
+### 5. ✅ Ensure Tests Match Actual Implementation Behavior
+**No wishful thinking!** If the engine only supports single function calls, don't test for multi-step workflows.
+
+### 6. ✅ With VCR, Behavior MUST Be Deterministic
+**NEVER** write comments like "LLM may choose differently" or "behavior may vary". VCR recordings are deterministic - same input = same output always.
+
+### 7. ✅ Test Descriptions Must Be Honest
+If a test only does single-step workflow, don't call it "complex multi-step workflow". Name tests accurately.
+
+### Example of BAD vs GOOD Test Refactoring:
+
+**❌ BAD (Dishonest, leaves broken tests):**
+```typescript
+it('should handle complex multi-step workflows', async () => {
+  await vcr.withRecording('multi_step_workflow', async () => {
+    const response = await engine.processQuery('List files then read package.json');
+    
+    // Wishful thinking - engine doesn't actually support this
+    expect(response.toolsExecuted.length).toBeGreaterThan(1);
+    // Note: LLM may choose differently - WRONG! VCR is deterministic
+    expect(response.response).toContain('test-project');
+  });
+});
+```
+
+**✅ GOOD (Honest, matches actual behavior):**
+```typescript
+it('should handle single-step workflow with complex query', async () => {
+  await vcr.withRecording('multi_step_workflow', async () => {
+    const response = await engine.processQuery('List files then read package.json');
+    
+    // Current engine implementation only supports single function calls
+    // LLM interprets this as a file listing request (first part of query)
+    expect(response.toolsExecuted.length).toBe(1);
+    expect(response.toolsExecuted[0]).toBe('internal:files');
+    expect(response.response).toContain('package.json');
+  });
+});
+```
+
+## E2E Test VCR Patterns
+
+### Directory Structure for E2E Tests
+```
+tests/
+├── e2e/                           # E2E tests with VCR
+│   ├── function-calling.test.ts   # Engine + LLM function calling
+│   ├── cli-*.test.ts             # CLI integration tests  
+│   ├── workflow-*.test.ts        # Multi-step workflow tests
+│   └── search-*.test.ts          # Search operation tests
+├── fixtures/
+│   └── recordings/               # VCR recordings for ALL tests
+│       ├── function_calling/     # Organized by test suite
+│       ├── cli/
+│       ├── workflow/
+│       └── search/
+└── helpers/
+    └── vcr-helper.ts            # Shared VCR helper
+```
+
+### E2E Test Glob Patterns
+Ensure Jest can find e2e tests by checking [jest.config.js](mdc:jest.config.js):
+```javascript
+module.exports = {
+  testMatch: [
+    '**/tests/**/*.test.ts',      // Covers tests/unit/
+    '**/tests/**/*.test.js',      // Covers tests/integration/
+    '**/tests/e2e/**/*.test.ts',  // Explicitly include e2e/
+  ],
+  // ...
+};
+```
+
+### E2E VCR Test Template
+```typescript
+import { QCodeEngine } from '../../src/core/engine.js';
+import { OllamaClient } from '../../src/core/client.js';
+import { ToolRegistry } from '../../src/core/registry.js';
+import { FilesTool } from '../../src/tools/files.js';
+import { WorkspaceSecurity } from '../../src/security/workspace.js';
+import { getDefaultConfig } from '../../src/config/defaults.js';
+import { setupVCRTests } from '../helpers/vcr-helper';
+
+describe('Your E2E Test Suite', () => {
+  let engine: QCodeEngine;
+  const vcr = setupVCRTests(__filename);
+
+  beforeEach(() => {
+    // Setup real engine with all components
+    const config = getDefaultConfig();
+    const client = new OllamaClient(config.ollama);
+    const workspaceSecurity = new WorkspaceSecurity(config.security);
+    const toolRegistry = new ToolRegistry(config.security);
+    const filesTool = new FilesTool(workspaceSecurity);
+
+    toolRegistry.registerInternalTool(
+      'files',
+      filesTool.definition,
+      filesTool.execute.bind(filesTool)
+    );
+
+    engine = new QCodeEngine(client, toolRegistry, config);
+  });
+
+  it('should do something specific and testable', async () => {
+    await vcr.withRecording('descriptive_test_name', async () => {
+      const response = await engine.processQuery('specific user query');
+
+      // Test ACTUAL behavior, not aspirational behavior
+      expect(response.complete).toBe(true);
+      expect(response.toolsExecuted.length).toBe(1); // If engine only supports single calls
+      
+      vcr.recordingLog('✓ Response:', response.response);
+    });
+  });
+});
+```
+
 ## VCR Infrastructure
 
 Our VCR implementation uses:
 - `nock` for HTTP recording/replaying
-- **VCR Helper Class** (`tests/helpers/vcr-helper.ts`) - Encapsulates all complexity
+- **VCR Helper Class** ([tests/helpers/vcr-helper.ts](mdc:tests/helpers/vcr-helper.ts)) - Encapsulates all complexity
 - Automatic environment variable detection
 - Fail-hard error handling with clear instructions
 
@@ -216,6 +357,10 @@ tests/
 ├── integration/              # VCR integration tests
 │   ├── ollama-client.test.ts # Example VCR test file
 │   └── engine.test.ts        # Engine VCR tests
+├── e2e/                      # End-to-end VCR tests  
+│   ├── function-calling.test.ts
+│   ├── cli-*.test.ts
+│   └── workflow-*.test.ts
 └── unit/                     # Regular unit tests (no HTTP)
 ```
 
@@ -356,3 +501,5 @@ The VCR helper provides a **professional, maintainable testing infrastructure** 
 - ✅ **Ensures consistent, reliable tests**
 
 **Use `vcr.withRecording()` for all new VCR tests** - it's the modern, clean approach!
+
+**Remember: When refactoring tests to VCR, NEVER leave them broken. Create all recordings immediately and ensure 100% test pass rate before claiming completion.**
