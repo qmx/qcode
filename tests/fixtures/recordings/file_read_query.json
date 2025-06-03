@@ -12,7 +12,7 @@
         },
         {
           "role": "user",
-          "content": "show me user.ts"
+          "content": "show me package.json"
         }
       ],
       "stream": false,
@@ -120,7 +120,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-03T03:37:17.671018Z",
+      "created_at": "2025-06-03T03:37:11.984977Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -130,7 +130,7 @@
               "name": "internal:files",
               "arguments": {
                 "operation": "read",
-                "path": "user.ts"
+                "path": "package.json"
               }
             }
           }
@@ -138,17 +138,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 688821500,
-      "load_duration": 10723458,
+      "total_duration": 3410687417,
+      "load_duration": 1224840500,
       "prompt_eval_count": 724,
-      "prompt_eval_duration": 113489875,
+      "prompt_eval_duration": 1658173458,
       "eval_count": 25,
-      "eval_duration": 563546292
+      "eval_duration": 521814917
     },
     "rawHeaders": {
-      "content-length": "398",
+      "content-length": "407",
       "content-type": "application/json; charset=utf-8",
-      "date": "Tue, 03 Jun 2025 03:37:17 GMT"
+      "date": "Tue, 03 Jun 2025 03:37:11 GMT"
     },
     "responseIsBinary": false
   }

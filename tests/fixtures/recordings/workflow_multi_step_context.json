@@ -8,17 +8,17 @@
       "messages": [
         {
           "role": "system",
-          "content": "You are QCode, an AI coding assistant. You have access to file operation tools to help users with their coding tasks.\n\nAvailable tools:\n- internal:files: Perform file operations including read, write, list, and search files within the workspace\n\nWhen a user asks about files, use the appropriate tool to help them. Always use function calling when file operations are needed.\n\nFor file paths, assume they are relative to the current workspace unless otherwise specified.\n\nIMPORTANT for the 'files' tool list operation:\n- Use 'path' parameter for the directory to search in (default: current directory)\n- Use 'pattern' parameter for glob patterns like \"*.swift\", \"**/*.ts\", \"*.{js,jsx}\"\n- If the user wants files by extension, use the 'pattern' parameter, NOT the 'path' parameter\n- Example: To find Swift files, use operation=\"list\", pattern=\"**/*.swift\", recursive=true\n"
+          "content": "You are QCode, an AI coding assistant. You have access to file operation tools to help users with their coding tasks.\n\nAvailable tools:\n- internal:files: Perform file operations including read, write, list, and search files within the workspace\n\nWhen a user asks about files, use the appropriate tool to help them. Always use function calling when file operations are needed.\n\nFor file paths, assume they are relative to the current workspace unless otherwise specified.\n\nIMPORTANT for the 'files' tool operations:\n- For list operation: Use 'path' parameter for the directory, 'pattern' for glob patterns like \"*.swift\", \"**/*.ts\"\n- For read operation: Use 'path' parameter for the file path, 'startLine' and 'endLine' for ranges\n- For search operation: Use 'pattern' for text/regex to search, 'path' for directory scope\n\nFor multi-step queries like \"list files and then read the first one\", break this down into steps:\n1. First, call the list function to get files\n2. Then, based on the results, call read function for a specific file\n\nContinue calling functions until the user's request is fully satisfied."
         },
         {
           "role": "user",
-          "content": "show me user.ts"
+          "content": "List TypeScript files in tests/ and then read the first one found"
         }
       ],
       "stream": false,
       "format": "json",
       "options": {
-        "temperature": 0.1
+        "temperature": 0
       },
       "tools": [
         {
@@ -120,7 +120,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-03T03:37:17.671018Z",
+      "created_at": "2025-06-03T04:15:06.378559Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -129,8 +129,10 @@
             "function": {
               "name": "internal:files",
               "arguments": {
-                "operation": "read",
-                "path": "user.ts"
+                "operation": "list",
+                "path": "tests/",
+                "pattern": "**/*.ts",
+                "recursive": "true"
               }
             }
           }
@@ -138,17 +140,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 688821500,
-      "load_duration": 10723458,
-      "prompt_eval_count": 724,
-      "prompt_eval_duration": 113489875,
-      "eval_count": 25,
-      "eval_duration": 563546292
+      "total_duration": 4903299459,
+      "load_duration": 2222442125,
+      "prompt_eval_count": 786,
+      "prompt_eval_duration": 1752174250,
+      "eval_count": 37,
+      "eval_duration": 921518541
     },
     "rawHeaders": {
-      "content-length": "398",
+      "content-length": "440",
       "content-type": "application/json; charset=utf-8",
-      "date": "Tue, 03 Jun 2025 03:37:17 GMT"
+      "date": "Tue, 03 Jun 2025 04:15:06 GMT"
     },
     "responseIsBinary": false
   }

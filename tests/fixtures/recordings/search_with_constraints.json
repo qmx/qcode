@@ -12,7 +12,7 @@
         },
         {
           "role": "user",
-          "content": "show me user.ts"
+          "content": "search for \"nonexistentterm12345\" in all files"
         }
       ],
       "stream": false,
@@ -120,7 +120,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-03T03:37:17.671018Z",
+      "created_at": "2025-06-03T03:59:24.927651Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -129,8 +129,11 @@
             "function": {
               "name": "internal:files",
               "arguments": {
-                "operation": "read",
-                "path": "user.ts"
+                "caseSensitive": "false",
+                "includeContext": "false",
+                "operation": "search",
+                "query": "nonexistentterm12345",
+                "recursive": "true"
               }
             }
           }
@@ -138,17 +141,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 688821500,
-      "load_duration": 10723458,
-      "prompt_eval_count": 724,
-      "prompt_eval_duration": 113489875,
-      "eval_count": 25,
-      "eval_duration": 563546292
+      "total_duration": 1184481875,
+      "load_duration": 10681166,
+      "prompt_eval_count": 732,
+      "prompt_eval_duration": 106747042,
+      "eval_count": 48,
+      "eval_duration": 1065749541
     },
     "rawHeaders": {
-      "content-length": "398",
+      "content-length": "484",
       "content-type": "application/json; charset=utf-8",
-      "date": "Tue, 03 Jun 2025 03:37:17 GMT"
+      "date": "Tue, 03 Jun 2025 03:59:24 GMT"
     },
     "responseIsBinary": false
   }

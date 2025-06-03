@@ -12,7 +12,7 @@
         },
         {
           "role": "user",
-          "content": "show me user.ts"
+          "content": "search for \"FilesTool\" in src directory TypeScript files"
         }
       ],
       "stream": false,
@@ -120,7 +120,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-03T03:37:17.671018Z",
+      "created_at": "2025-06-03T03:59:22.504389Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -129,8 +129,12 @@
             "function": {
               "name": "internal:files",
               "arguments": {
-                "operation": "read",
-                "path": "user.ts"
+                "caseSensitive": false,
+                "operation": "search",
+                "path": "src",
+                "pattern": "**/*.ts",
+                "query": "FilesTool",
+                "recursive": true
               }
             }
           }
@@ -138,17 +142,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 688821500,
-      "load_duration": 10723458,
-      "prompt_eval_count": 724,
-      "prompt_eval_duration": 113489875,
-      "eval_count": 25,
-      "eval_duration": 563546292
+      "total_duration": 1203624125,
+      "load_duration": 11161458,
+      "prompt_eval_count": 731,
+      "prompt_eval_duration": 105654417,
+      "eval_count": 49,
+      "eval_duration": 1085640208
     },
     "rawHeaders": {
-      "content-length": "398",
+      "content-length": "477",
       "content-type": "application/json; charset=utf-8",
-      "date": "Tue, 03 Jun 2025 03:37:17 GMT"
+      "date": "Tue, 03 Jun 2025 03:59:22 GMT"
     },
     "responseIsBinary": false
   }

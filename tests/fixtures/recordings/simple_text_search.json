@@ -12,7 +12,7 @@
         },
         {
           "role": "user",
-          "content": "show me user.ts"
+          "content": "search for the word \"function\" in TypeScript files"
         }
       ],
       "stream": false,
@@ -120,7 +120,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-03T03:37:17.671018Z",
+      "created_at": "2025-06-03T03:59:20.173923Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -129,8 +129,11 @@
             "function": {
               "name": "internal:files",
               "arguments": {
-                "operation": "read",
-                "path": "user.ts"
+                "caseSensitive": "false",
+                "operation": "search",
+                "pattern": "**/*.ts",
+                "query": "function",
+                "recursive": "true"
               }
             }
           }
@@ -138,17 +141,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 688821500,
-      "load_duration": 10723458,
-      "prompt_eval_count": 724,
-      "prompt_eval_duration": 113489875,
-      "eval_count": 25,
-      "eval_duration": 563546292
+      "total_duration": 5886845750,
+      "load_duration": 3234093791,
+      "prompt_eval_count": 730,
+      "prompt_eval_duration": 1678001458,
+      "eval_count": 44,
+      "eval_duration": 963626917
     },
     "rawHeaders": {
-      "content-length": "398",
+      "content-length": "469",
       "content-type": "application/json; charset=utf-8",
-      "date": "Tue, 03 Jun 2025 03:37:17 GMT"
+      "date": "Tue, 03 Jun 2025 03:59:20 GMT"
     },
     "responseIsBinary": false
   }

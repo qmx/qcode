@@ -12,7 +12,7 @@
         },
         {
           "role": "user",
-          "content": "show me user.ts"
+          "content": "List all files in this directory, then show me the contents of package.json"
         }
       ],
       "stream": false,
@@ -120,7 +120,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-03T03:37:17.671018Z",
+      "created_at": "2025-06-03T03:37:14.531548Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -129,8 +129,9 @@
             "function": {
               "name": "internal:files",
               "arguments": {
-                "operation": "read",
-                "path": "user.ts"
+                "operation": "list",
+                "path": ".",
+                "recursive": true
               }
             }
           }
@@ -138,17 +139,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 688821500,
-      "load_duration": 10723458,
-      "prompt_eval_count": 724,
-      "prompt_eval_duration": 113489875,
-      "eval_count": 25,
-      "eval_duration": 563546292
+      "total_duration": 695170625,
+      "load_duration": 11150541,
+      "prompt_eval_count": 735,
+      "prompt_eval_duration": 106482792,
+      "eval_count": 27,
+      "eval_duration": 576419083
     },
     "rawHeaders": {
-      "content-length": "398",
+      "content-length": "409",
       "content-type": "application/json; charset=utf-8",
-      "date": "Tue, 03 Jun 2025 03:37:17 GMT"
+      "date": "Tue, 03 Jun 2025 03:37:14 GMT"
     },
     "responseIsBinary": false
   }

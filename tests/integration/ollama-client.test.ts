@@ -28,7 +28,7 @@ describe('OllamaClient VCR Tests', () => {
 
         expect(Array.isArray(models)).toBe(true);
         expect(models.length).toBeGreaterThan(0);
-        
+
         // All models should be non-empty strings
         models.forEach(model => {
           expect(typeof model).toBe('string');
@@ -47,9 +47,7 @@ describe('OllamaClient VCR Tests', () => {
   describe('Chat Completion', () => {
     it('should handle basic chat completion', async () => {
       await vcr.withRecording('basic_chat', async () => {
-        const response = await client.chat([
-          { role: 'user', content: 'Hello, what is 2+2?' }
-        ]);
+        const response = await client.chat([{ role: 'user', content: 'Hello, what is 2+2?' }]);
 
         expect(response).toBeDefined();
         expect(response.response).toBeDefined();

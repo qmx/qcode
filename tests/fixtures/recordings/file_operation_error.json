@@ -12,7 +12,7 @@
         },
         {
           "role": "user",
-          "content": "show me user.ts"
+          "content": "show me nonexistent-file.txt"
         }
       ],
       "stream": false,
@@ -120,7 +120,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-03T03:37:17.671018Z",
+      "created_at": "2025-06-03T03:37:13.82962Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -130,7 +130,7 @@
               "name": "internal:files",
               "arguments": {
                 "operation": "read",
-                "path": "user.ts"
+                "path": "nonexistent-file.txt"
               }
             }
           }
@@ -138,17 +138,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 688821500,
-      "load_duration": 10723458,
-      "prompt_eval_count": 724,
-      "prompt_eval_duration": 113489875,
-      "eval_count": 25,
-      "eval_duration": 563546292
+      "total_duration": 696417541,
+      "load_duration": 11285750,
+      "prompt_eval_count": 725,
+      "prompt_eval_duration": 105931583,
+      "eval_count": 27,
+      "eval_duration": 578088250
     },
     "rawHeaders": {
-      "content-length": "398",
+      "content-length": "410",
       "content-type": "application/json; charset=utf-8",
-      "date": "Tue, 03 Jun 2025 03:37:17 GMT"
+      "date": "Tue, 03 Jun 2025 03:37:13 GMT"
     },
     "responseIsBinary": false
   }

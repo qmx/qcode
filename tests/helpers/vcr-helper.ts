@@ -70,12 +70,12 @@ export class VCRHelper {
     }
 
     const recordingFile = path.join(this.recordingsPath, `${testName}.json`);
-    
+
     try {
       const recordings = JSON.parse(await fs.readFile(recordingFile, 'utf-8'));
       recordings.forEach((recording: any) => {
         const scope = nock(recording.scope);
-        
+
         // Handle different HTTP methods
         switch (recording.method.toLowerCase()) {
           case 'get':
@@ -101,12 +101,12 @@ export class VCRHelper {
       const errorMessage = error instanceof Error ? error.message : String(error);
       throw new Error(
         `❌ VCR Recording missing for test "${testName}"\n` +
-        `Recording file not found: ${recordingFile}\n\n` +
-        `To fix this:\n` +
-        `1. Run: NOCK_MODE=record npm test -- ${this.testFile}\n` +
-        `2. Ensure Ollama is running: ollama serve\n` +
-        `3. Check that recording was created in ${this.recordingsPath}/\n\n` +
-        `Original error: ${errorMessage}`
+          `Recording file not found: ${recordingFile}\n\n` +
+          `To fix this:\n` +
+          `1. Run: NOCK_MODE=record npm test -- ${this.testFile}\n` +
+          `2. Ensure Ollama is running: ollama serve\n` +
+          `3. Check that recording was created in ${this.recordingsPath}/\n\n` +
+          `Original error: ${errorMessage}`
       );
     }
   }
@@ -136,7 +136,7 @@ export class VCRHelper {
    */
   async withRecording<T>(testName: string, testFn: () => Promise<T>): Promise<T> {
     await this.loadRecording(testName);
-    
+
     try {
       const result = await testFn();
       await this.saveRecording(testName);
@@ -200,9 +200,7 @@ export class VCRHelper {
   async listRecordings(): Promise<string[]> {
     try {
       const files = await fs.readdir(this.recordingsPath);
-      return files
-        .filter(file => file.endsWith('.json'))
-        .map(file => file.replace('.json', ''));
+      return files.filter(file => file.endsWith('.json')).map(file => file.replace('.json', ''));
     } catch {
       return [];
     }
@@ -221,7 +219,7 @@ export function createVCRHelper(testFile: string, recordingsDir?: string): VCRHe
  */
 export function setupVCRTests(testFile: string, recordingsDir?: string): VCRHelper {
   const vcr = createVCRHelper(testFile, recordingsDir);
-  
+
   beforeAll(async () => {
     await vcr.initialize();
   });
@@ -235,4 +233,4 @@ export function setupVCRTests(testFile: string, recordingsDir?: string): VCRHelp
   });
 
   return vcr;
-} 
+}

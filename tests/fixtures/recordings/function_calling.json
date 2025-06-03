@@ -32,15 +32,10 @@
                 "unit": {
                   "type": "string",
                   "description": "Temperature unit (celsius or fahrenheit)",
-                  "enum": [
-                    "celsius",
-                    "fahrenheit"
-                  ]
+                  "enum": ["celsius", "fahrenheit"]
                 }
               },
-              "required": [
-                "location"
-              ]
+              "required": ["location"]
             }
           }
         }
