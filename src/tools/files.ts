@@ -1,6 +1,8 @@
 import { z } from 'zod';
-import { normalize, join, relative, basename } from 'pathe';
+import { normalize, join, relative, basename, dirname } from 'pathe';
 import { promises as fs } from 'fs';
+import { mkdtemp } from 'fs/promises';
+import { tmpdir } from 'os';
 import glob, { Options as GlobOptions } from 'fast-glob';
 import { NamespacedTool, ToolDefinition, ToolResult, QCodeError } from '../types.js';
 import { WorkspaceSecurity } from '../security/workspace.js';
@@ -484,10 +486,136 @@ export class FilesTool implements NamespacedTool {
   }
 
   /**
-   * Write file operation - placeholder for step 1.7.3
+   * Write file operation - Implementation for step 1.7.3
    */
-  private async writeFile(_params: WriteFileParams): Promise<WriteFileResult> {
-    throw new QCodeError('Write file operation not yet implemented', 'NOT_IMPLEMENTED');
+  private async writeFile(params: WriteFileParams): Promise<WriteFileResult> {
+    const { path: filePath, content, encoding = 'utf8', backup = true, createDirs = true } = params;
+
+    try {
+      // Validate the file path with security checks
+      const validatedPath = await this.validatePath(filePath, 'write');
+
+      // Check if file already exists
+      let fileExists = false;
+      let backupPath: string | undefined;
+
+      try {
+        await fs.access(validatedPath);
+        fileExists = true;
+      } catch {
+        // File doesn't exist - this is fine for write operations
+      }
+
+      // Create backup if file exists and backup is requested
+      if (fileExists && backup) {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        backupPath = `${validatedPath}.backup-${timestamp}`;
+        await fs.copyFile(validatedPath, backupPath);
+      }
+
+      // Create parent directories if they don't exist and createDirs is true
+      if (createDirs) {
+        const parentDir = dirname(validatedPath);
+        try {
+          await fs.mkdir(parentDir, { recursive: true });
+        } catch (error) {
+          if (error instanceof Error && 'code' in error && error.code !== 'EEXIST') {
+            throw new QCodeError(
+              `Failed to create parent directory ${parentDir}: ${error.message}`,
+              'DIRECTORY_CREATE_ERROR'
+            );
+          }
+        }
+      }
+
+      // Perform atomic write using temporary file
+      const tempDir = await mkdtemp(join(tmpdir(), 'qcode-write-'));
+      const tempFile = join(tempDir, 'temp-file');
+
+      try {
+        // Write content to temporary file first
+        await fs.writeFile(tempFile, content, { encoding: encoding as BufferEncoding });
+
+        // Atomic move from temp file to target location
+        await fs.rename(tempFile, validatedPath);
+
+        // Clean up temp directory
+        await fs.rmdir(tempDir);
+      } catch (error) {
+        // Clean up on error
+        try {
+          await fs.unlink(tempFile);
+          await fs.rmdir(tempDir);
+        } catch {
+          // Ignore cleanup errors
+        }
+
+        // If backup was created and write failed, restore the original file
+        if (backupPath && fileExists) {
+          try {
+            await fs.copyFile(backupPath, validatedPath);
+            await fs.unlink(backupPath);
+          } catch {
+            // If restore fails, keep the backup
+          }
+        }
+
+        throw new QCodeError(
+          `Failed to write file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          'FILE_WRITE_ERROR'
+        );
+      }
+
+      // Get file size after successful write
+      const stats = await fs.stat(validatedPath);
+
+      const result: WriteFileResult = {
+        path: validatedPath,
+        size: stats.size,
+        created: !fileExists,
+      };
+
+      if (backupPath) {
+        result.backup = backupPath;
+      }
+
+      return result;
+    } catch (error) {
+      if (error instanceof QCodeError) {
+        throw error;
+      }
+
+      // Handle common Node.js file system errors
+      if (error instanceof Error && 'code' in error) {
+        switch (error.code) {
+          case 'ENOENT':
+            throw new QCodeError(
+              `Parent directory does not exist: ${dirname(filePath)}`,
+              'DIRECTORY_NOT_FOUND'
+            );
+          case 'EACCES':
+          case 'EPERM':
+            throw new QCodeError(
+              `Permission denied writing to file: ${filePath}`,
+              'PERMISSION_DENIED'
+            );
+          case 'ENOSPC':
+            throw new QCodeError('No space left on device', 'DISK_FULL');
+          case 'EROFS':
+            throw new QCodeError('File system is read-only', 'READ_ONLY_FILESYSTEM');
+          default:
+            throw new QCodeError(
+              `Failed to write file ${filePath}: ${error.message}`,
+              'FILE_WRITE_ERROR'
+            );
+        }
+      }
+
+      throw new QCodeError(
+        `Failed to write file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        'FILE_WRITE_ERROR'
+      );
+    }
   }
 
   /**

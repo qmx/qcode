@@ -1,7 +1,9 @@
 import { FilesTool } from '../../src/tools/files.js';
 import { WorkspaceSecurity } from '../../src/security/workspace.js';
-import { SecurityConfig } from '../../src/types.js';
+import { getDefaultConfig } from '../../src/config/defaults.js';
 import { promises as fs } from 'fs';
+import { mkdtemp } from 'fs/promises';
+import { tmpdir } from 'os';
 import path from 'path';
 
 describe('FilesTool', () => {
@@ -10,20 +12,10 @@ describe('FilesTool', () => {
   let testFixturesDir: string;
 
   beforeEach(() => {
-    const securityConfig: SecurityConfig = {
-      workspace: {
-        allowedPaths: [process.cwd()],
-        forbiddenPatterns: ['**/.git/**', '**/node_modules/**'],
-        allowOutsideWorkspace: false,
-      },
-      commands: {
-        allowedCommands: [],
-        forbiddenPatterns: [],
-        allowArbitraryCommands: false,
-      },
-    };
+    const securityConfig = getDefaultConfig().security;
 
     workspaceSecurity = new WorkspaceSecurity(securityConfig);
+    workspaceSecurity.addAllowedPath(tmpdir());
     filesTool = new FilesTool(workspaceSecurity);
     testFixturesDir = path.join(process.cwd(), 'tests', 'fixtures', 'test-files');
   });
@@ -426,15 +418,143 @@ describe('FilesTool', () => {
   });
 
   describe('Placeholder Operations', () => {
-    it('should throw NOT_IMPLEMENTED for write operation', async () => {
-      const result = await filesTool.execute({
-        operation: 'write',
-        path: 'test.txt',
-        content: 'test content',
+    describe('Write Operations - Critical Tests', () => {
+      let tempDir: string;
+
+      beforeEach(async () => {
+        tempDir = await mkdtemp(path.join(tmpdir(), 'qcode-test-'));
       });
 
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('not yet implemented');
+      afterEach(async () => {
+        try {
+          await fs.rm(tempDir, { recursive: true });
+        } catch {
+          // Ignore cleanup errors
+        }
+      });
+
+      it('should enforce workspace boundary security validation', async () => {
+        // Test path traversal prevention
+        const result1 = await filesTool.execute({
+          operation: 'write',
+          path: '../outside-workspace.txt',
+          content: 'malicious content',
+        });
+
+        expect(result1.success).toBe(false);
+        expect(result1.error).toContain('Path traversal detected');
+
+        // Test absolute path outside workspace
+        const result2 = await filesTool.execute({
+          operation: 'write',
+          path: '/tmp/outside-workspace.txt',
+          content: 'malicious content',
+        });
+
+        expect(result2.success).toBe(false);
+        expect(result2.error).toMatch(/Path traversal detected|workspace|security/);
+      });
+
+      it('should overwrite existing file with backup functionality', async () => {
+        const testFile = path.join(tempDir, 'overwrite-test.txt');
+        const originalContent = 'original content that should be backed up';
+        const newContent = 'new content that overwrites the original';
+
+        // Create original file in temp directory
+        await fs.writeFile(testFile, originalContent, 'utf8');
+
+        // Overwrite with backup enabled
+        const result = await filesTool.execute({
+          operation: 'write',
+          path: testFile,
+          content: newContent,
+          backup: true,
+        });
+
+        expect(result.success).toBe(true);
+        expect(result.data.created).toBe(false); // File existed
+        expect(result.data.backup).toBeDefined();
+        expect(result.data.backup).toMatch(/\.backup-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}/);
+
+        // Verify new content was written
+        const currentContent = await fs.readFile(testFile, 'utf8');
+        expect(currentContent).toBe(newContent);
+
+        // Verify backup contains original content
+        const backupContent = await fs.readFile(result.data.backup, 'utf8');
+        expect(backupContent).toBe(originalContent);
+      });
+
+      it('should perform atomic write operations preventing corruption', async () => {
+        const testFile = path.join(tempDir, 'atomic-test.txt');
+        const originalContent = 'original content for atomic test';
+        const newContent = 'new content written atomically';
+
+        // Create original file in temp directory
+        await fs.writeFile(testFile, originalContent, 'utf8');
+
+        // Mock a write failure scenario by creating a test that verifies
+        // the file is never in a partial state during write
+        let fileReadsDuringWrite: string[] = [];
+
+        // Start the write operation
+        const writePromise = filesTool.execute({
+          operation: 'write',
+          path: testFile,
+          content: newContent,
+        });
+
+        // Attempt to read the file multiple times during write
+        // In an atomic operation, we should only see original OR new content, never partial
+        const readPromises = Array(5)
+          .fill(null)
+          .map(async (_, i) => {
+            await new Promise(resolve => setTimeout(resolve, i * 2)); // Stagger reads
+            try {
+              const content = await fs.readFile(testFile, 'utf8');
+              fileReadsDuringWrite.push(content);
+            } catch {
+              // File might not exist during atomic operation
+              fileReadsDuringWrite.push('FILE_NOT_FOUND');
+            }
+          });
+
+        // Wait for both write and reads to complete
+        const [writeResult] = await Promise.all([writePromise, ...readPromises]);
+
+        expect(writeResult.success).toBe(true);
+
+        // Verify final content is correct
+        const finalContent = await fs.readFile(testFile, 'utf8');
+        expect(finalContent).toBe(newContent);
+
+        // Verify atomic behavior: all reads should show either original content,
+        // new content, or file not found (during atomic rename), but never partial content
+        fileReadsDuringWrite.forEach(content => {
+          expect([originalContent, newContent, 'FILE_NOT_FOUND']).toContain(content);
+        });
+      });
+
+      it('should create new file in existing directory', async () => {
+        const testFile = path.join(tempDir, 'new-file-test.txt');
+        const content = 'content for new file creation test';
+
+        const result = await filesTool.execute({
+          operation: 'write',
+          path: testFile,
+          content: content,
+        });
+
+        expect(result.success).toBe(true);
+        expect(result.data.created).toBe(true);
+        expect(result.data.path).toBe(testFile);
+        expect(result.data.size).toBe(content.length);
+        expect(result.data.backup).toBeUndefined(); // No backup for new file
+
+        // Verify file was created with correct content
+        const fileContent = await fs.readFile(testFile, 'utf8');
+        expect(fileContent).toBe(content);
+      });
     });
 
     it('should successfully execute list operation', async () => {
