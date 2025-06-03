@@ -407,3 +407,127 @@ export interface OllamaGenerateResponse {
   total_duration?: number;
   [key: string]: any;
 }
+
+/**
+ * Workflow context extends ToolContext with workflow-specific information
+ */
+export interface WorkflowContext extends ToolContext {
+  /** Unique workflow identifier */
+  workflowId: string;
+  /** Parent workflow ID if this is a child workflow */
+  parentWorkflowId?: string;
+  /** Workflow nesting depth */
+  depth: number;
+  /** Maximum allowed workflow depth */
+  maxDepth: number;
+}
+
+/**
+ * Status of a workflow step
+ */
+export type WorkflowStepStatus = 'pending' | 'running' | 'completed' | 'failed' | 'interrupted';
+
+/**
+ * Status of a workflow
+ */
+export type WorkflowStatus = 'initialized' | 'running' | 'completed' | 'failed' | 'interrupted';
+
+/**
+ * A single step in a workflow execution
+ */
+export interface WorkflowStep {
+  /** Unique step identifier */
+  id: string;
+  /** Human-readable step name */
+  name: string;
+  /** Tool name that will be executed */
+  toolName: string;
+  /** Arguments passed to the tool */
+  arguments: Record<string, any>;
+  /** Current step status */
+  status: WorkflowStepStatus;
+  /** Step start time */
+  startTime: Date;
+  /** Step end time (if completed/failed) */
+  endTime?: Date;
+  /** Step execution duration in milliseconds */
+  duration?: number;
+  /** Tool execution result (if completed) */
+  result?: ToolResult;
+  /** Error information (if failed) */
+  error?: QCodeError;
+  /** Step metadata */
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Workflow checkpoint for resumption
+ */
+export interface WorkflowCheckpoint {
+  /** Workflow ID */
+  workflowId: string;
+  /** Checkpoint creation time */
+  createdAt: Date;
+  /** Workflow status at checkpoint */
+  status: WorkflowStatus;
+  /** Completed steps at checkpoint */
+  completedSteps: WorkflowStep[];
+  /** Step results at checkpoint */
+  results: Record<string, ToolResult>;
+  /** Workflow context at checkpoint */
+  context: WorkflowContext;
+  /** Checkpoint metadata */
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Workflow rollback event
+ */
+export interface WorkflowRollback {
+  /** Rollback timestamp */
+  timestamp: Date;
+  /** Reason for rollback */
+  reason: string;
+  /** Number of steps rolled back */
+  stepsRolledBack: number;
+  /** Checkpoint used for rollback */
+  checkpointId?: string;
+}
+
+/**
+ * Workflow execution summary
+ */
+export interface WorkflowSummary {
+  /** Workflow ID */
+  id: string;
+  /** Current workflow status */
+  status: WorkflowStatus;
+  /** Total number of steps */
+  totalSteps: number;
+  /** Number of completed steps */
+  completedSteps: number;
+  /** Number of failed steps */
+  failedSteps: number;
+  /** Total execution duration */
+  duration: number;
+  /** Creation time */
+  createdAt: Date;
+  /** Completion time (if finished) */
+  completedAt?: Date;
+  /** All errors encountered */
+  errors: QCodeError[];
+  /** Workflow metadata */
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Workflow memory usage information
+ */
+export interface WorkflowMemoryUsage {
+  /** Number of steps in memory */
+  stepsCount: number;
+  /** Estimated size of stored results in bytes */
+  resultsSize: number;
+  /** Estimated total memory usage in bytes */
+  totalSize: number;
+}

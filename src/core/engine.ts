@@ -1,6 +1,7 @@
 import { OllamaClient, OllamaResponse } from './client.js';
 import { ToolRegistry } from './registry.js';
 import { Config, QCodeError, ToolContext, ToolResult } from '../types.js';
+import { WorkflowState, WorkflowContext } from './workflow-state.js';
 
 /**
  * Query processing intent detected from user input
@@ -46,6 +47,8 @@ export interface EngineResponse {
   complete: boolean;
   /** Any errors that occurred */
   errors?: QCodeError[];
+  /** Workflow summary if workflow was used */
+  workflowSummary?: any;
 }
 
 /**
@@ -72,6 +75,10 @@ export interface EngineOptions {
   queryTimeout?: number;
   /** Whether to include debug information */
   debug?: boolean;
+  /** Whether to enable workflow state management */
+  enableWorkflowState?: boolean;
+  /** Maximum workflow depth */
+  maxWorkflowDepth?: number;
 }
 
 /**
@@ -82,6 +89,7 @@ export interface EngineOptions {
  * - User queries and intent detection
  * - LLM communication and function calling
  * - Tool registry and execution
+ * - Workflow state management
  * - Response formatting and streaming
  */
 export class QCodeEngine {
@@ -90,6 +98,7 @@ export class QCodeEngine {
   private config: Config;
   private options: EngineOptions;
   private executionCounter = 0;
+  private activeWorkflows: Map<string, WorkflowState> = new Map();
 
   constructor(
     ollamaClient: OllamaClient,
@@ -105,6 +114,8 @@ export class QCodeEngine {
       maxToolExecutions: 10,
       queryTimeout: 60000, // 60 seconds
       debug: false,
+      enableWorkflowState: true, // Enable by default
+      maxWorkflowDepth: 5,
       ...options,
     };
   }
@@ -406,7 +417,7 @@ For more specific help, describe what you'd like to do with your code.
   }
 
   /**
-   * Process query using LLM function calling (Phase 1.8.2 implementation)
+   * Process with LLM function calling, supporting multi-step workflows
    */
   private async processWithLLMFunctionCalling(
     query: string,
@@ -420,6 +431,22 @@ For more specific help, describe what you'd like to do with your code.
     const toolsExecuted: string[] = [];
     const toolResults: ToolResult[] = [];
     const errors: QCodeError[] = [];
+    const currentQuery = query;
+    let iterationCount = 0;
+    const maxIterations = this.options.maxToolExecutions || 10;
+
+    // Initialize workflow state if enabled
+    let workflowState: WorkflowState | undefined;
+    if (this.options.enableWorkflowState) {
+      const workflowContext: WorkflowContext = {
+        ...context,
+        workflowId: `workflow-${context.executionId}`,
+        depth: 0,
+        maxDepth: this.options.maxWorkflowDepth || 5,
+      };
+      workflowState = new WorkflowState(workflowContext.workflowId, workflowContext);
+      this.activeWorkflows.set(workflowContext.workflowId, workflowState);
+    }
 
     try {
       // Get available tools for function calling
@@ -432,8 +459,12 @@ For more specific help, describe what you'd like to do with your code.
         );
       }
 
-      // Create system message for function calling
-      const systemMessage = `You are QCode, an AI coding assistant. You have access to file operation tools to help users with their coding tasks.
+      // Build conversation history for multi-step workflows
+      const conversationHistory: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> =
+        [
+          {
+            role: 'system' as const,
+            content: `You are QCode, an AI coding assistant. You have access to file operation tools to help users with their coding tasks.
 
 Available tools:
 ${availableTools.map(tool => `- ${tool.function.name}: ${tool.function.description}`).join('\n')}
@@ -442,91 +473,151 @@ When a user asks about files, use the appropriate tool to help them. Always use 
 
 For file paths, assume they are relative to the current workspace unless otherwise specified.
 
-IMPORTANT for the 'files' tool list operation:
-- Use 'path' parameter for the directory to search in (default: current directory)
-- Use 'pattern' parameter for glob patterns like "*.swift", "**/*.ts", "*.{js,jsx}"
-- If the user wants files by extension, use the 'pattern' parameter, NOT the 'path' parameter
-- Example: To find Swift files, use operation="list", pattern="**/*.swift", recursive=true
-`;
+IMPORTANT for the 'files' tool operations:
+- For list operation: Use 'path' parameter for the directory, 'pattern' for glob patterns like "*.swift", "**/*.ts"
+- For read operation: Use 'path' parameter for the file path, 'startLine' and 'endLine' for ranges
+- For search operation: Use 'pattern' for text/regex to search, 'path' for directory scope
 
-      // Create function call request
-      const functionCallRequest = {
-        model: this.config.ollama.model,
-        messages: [
-          { role: 'system' as const, content: systemMessage },
-          { role: 'user' as const, content: query },
-        ],
-        tools: availableTools,
-        format: 'json',
-        temperature: this.config.ollama.temperature,
-      };
+For multi-step queries like "list files and then read the first one", break this down into steps:
+1. First, call the list function to get files
+2. Then, based on the results, call read function for a specific file
 
-      // Make function call to LLM
-      const llmResponse = await this.ollamaClient.functionCall(functionCallRequest);
+Continue calling functions until the user's request is fully satisfied.`,
+          },
+          {
+            role: 'user' as const,
+            content: currentQuery,
+          },
+        ];
 
-      // Parse function calls from response
-      const functionCalls = this.parseFunctionCalls(llmResponse);
+      // Multi-step workflow loop
+      while (iterationCount < maxIterations) {
+        iterationCount++;
 
-      if (functionCalls.length === 0) {
-        // No function calls found, return LLM response as-is
-        return {
-          response:
-            llmResponse.response ||
-            "I understand your request, but I wasn't able to determine which file operation to perform. Could you be more specific?",
-          toolsExecuted: [],
-          toolResults: [],
+        // Create function call request
+        const functionCallRequest = {
+          model: this.config.ollama.model,
+          messages: conversationHistory,
+          tools: availableTools,
+          format: 'json',
+          temperature: this.config.ollama.temperature,
         };
-      }
 
-      // Execute function calls and collect formatted responses
-      const responseSegments: string[] = [];
+        // Make function call to LLM
+        const llmResponse = await this.ollamaClient.functionCall(functionCallRequest);
 
-      for (const functionCall of functionCalls) {
-        try {
-          // Execute the tool
-          const toolResult = await this.toolRegistry.executeTool(
-            functionCall.toolName,
-            functionCall.arguments,
-            context
-          );
+        // Parse function calls from response
+        const functionCalls = this.parseFunctionCalls(llmResponse);
 
-          toolsExecuted.push(functionCall.toolName);
-          toolResults.push(toolResult);
-
-          if (toolResult.success) {
-            // Format successful result for user display
-            const formattedResult = this.formatToolResult(functionCall.toolName, toolResult);
-            responseSegments.push(formattedResult);
-          } else {
-            errors.push(
-              new QCodeError(`Tool execution failed: ${toolResult.error}`, 'TOOL_EXECUTION_ERROR', {
-                toolName: functionCall.toolName,
-                arguments: functionCall.arguments,
-              })
-            );
-            responseSegments.push(
-              `\nError executing ${functionCall.toolName}: ${toolResult.error}`
-            );
-          }
-        } catch (error) {
-          const qcodeError =
-            error instanceof QCodeError
-              ? error
-              : new QCodeError(
-                  `Tool execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-                  'TOOL_EXECUTION_ERROR',
-                  { toolName: functionCall.toolName }
-                );
-
-          errors.push(qcodeError);
-          responseSegments.push(
-            `\nError executing ${functionCall.toolName}: ${qcodeError.message}`
-          );
+        if (functionCalls.length === 0) {
+          // No more function calls, we're done
+          break;
         }
+
+        // Execute function calls and collect results
+        const stepResults: string[] = [];
+        let stepHadErrors = false;
+
+        for (const functionCall of functionCalls) {
+          try {
+            // Start workflow step if tracking
+            let stepId: string | undefined;
+            if (workflowState) {
+              stepId = await workflowState.startStep(
+                `Execute ${functionCall.toolName}`,
+                functionCall.toolName,
+                functionCall.arguments
+              );
+            }
+
+            // Execute the tool
+            const toolResult = await this.toolRegistry.executeTool(
+              functionCall.toolName,
+              functionCall.arguments,
+              context
+            );
+
+            toolsExecuted.push(functionCall.toolName);
+            toolResults.push(toolResult);
+
+            // Complete workflow step if tracking
+            if (workflowState && stepId) {
+              await workflowState.completeStep(stepId, toolResult);
+            }
+
+            if (toolResult.success) {
+              // Format successful result for user display and conversation history
+              const formattedResult = this.formatToolResult(functionCall.toolName, toolResult);
+              stepResults.push(formattedResult);
+            } else {
+              stepHadErrors = true;
+              const errorMsg = `Tool execution failed: ${toolResult.error}`;
+              errors.push(
+                new QCodeError(errorMsg, 'TOOL_EXECUTION_ERROR', {
+                  toolName: functionCall.toolName,
+                  arguments: functionCall.arguments,
+                })
+              );
+              stepResults.push(`Error executing ${functionCall.toolName}: ${toolResult.error}`);
+
+              // Fail workflow step if tracking
+              if (workflowState && stepId) {
+                await workflowState.failStep(
+                  stepId,
+                  new QCodeError(errorMsg, 'TOOL_EXECUTION_ERROR')
+                );
+              }
+            }
+          } catch (error) {
+            stepHadErrors = true;
+            const qcodeError =
+              error instanceof QCodeError
+                ? error
+                : new QCodeError(
+                    `Tool execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                    'TOOL_EXECUTION_ERROR',
+                    { toolName: functionCall.toolName }
+                  );
+
+            errors.push(qcodeError);
+            stepResults.push(`Error executing ${functionCall.toolName}: ${qcodeError.message}`);
+          }
+        }
+
+        // Add the results to conversation history for next iteration
+        const stepResultsText = stepResults.join('\n');
+        conversationHistory.push({
+          role: 'assistant' as const,
+          content: stepResultsText,
+        });
+
+        // Check if this looks like a multi-step query that needs continuation
+        const needsContinuation = this.shouldContinueWorkflow(
+          query,
+          conversationHistory,
+          stepHadErrors,
+          iterationCount
+        );
+
+        if (!needsContinuation) {
+          // We're done, return the final response
+          break;
+        }
+
+        // Add a prompt to continue if needed
+        conversationHistory.push({
+          role: 'user' as const,
+          content: 'Continue with the next step if needed to fully answer the original question.',
+        });
       }
 
-      // Join all response segments
-      const finalResponse = responseSegments.join('\n').trim() || 'Tool execution completed.';
+      // Generate final response by combining all step results
+      const allResults = conversationHistory
+        .filter(msg => msg.role === 'assistant')
+        .map(msg => msg.content)
+        .join('\n\n');
+
+      const finalResponse = allResults.trim() || 'Tool execution completed.';
 
       return {
         response: finalResponse,
@@ -535,6 +626,13 @@ IMPORTANT for the 'files' tool list operation:
         ...(errors.length > 0 && { errors }),
       };
     } catch (error) {
+      // Interrupt workflow if tracking
+      if (workflowState) {
+        await workflowState.interrupt(
+          `Processing error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
+
       const qcodeError =
         error instanceof QCodeError
           ? error
@@ -549,7 +647,91 @@ IMPORTANT for the 'files' tool list operation:
         toolResults,
         errors: [qcodeError],
       };
+    } finally {
+      // Cleanup workflow
+      if (workflowState) {
+        await workflowState.cleanup();
+        this.activeWorkflows.delete(workflowState.getId());
+      }
     }
+  }
+
+  /**
+   * Determine if workflow should continue based on query complexity and current state
+   */
+  private shouldContinueWorkflow(
+    originalQuery: string,
+    conversationHistory: Array<{ role: string; content: string }>,
+    hadErrors: boolean,
+    iterationCount: number
+  ): boolean {
+    // Don't continue if we had errors in this iteration
+    if (hadErrors) {
+      return false;
+    }
+
+    // Don't continue if we've hit iteration limit
+    if (iterationCount >= (this.options.maxToolExecutions || 10)) {
+      return false;
+    }
+
+    // Check if the original query suggests multiple steps
+    const queryLower = originalQuery.toLowerCase();
+    const hasMultipleSteps =
+      queryLower.includes(' and ') ||
+      queryLower.includes(' then ') ||
+      queryLower.includes('first') ||
+      queryLower.includes('analyze') ||
+      queryLower.includes('read the') ||
+      (queryLower.includes('list') && queryLower.includes('read'));
+
+    // Don't continue if query doesn't suggest multiple steps
+    if (!hasMultipleSteps) {
+      return false;
+    }
+
+    // Check if we've already executed a list operation and should follow with read
+    const hasListOperation = conversationHistory.some(
+      msg =>
+        msg.role === 'assistant' &&
+        (msg.content.includes('files found') ||
+          msg.content.includes('.ts') ||
+          msg.content.includes('.js') ||
+          msg.content.includes('📄') ||
+          msg.content.includes('📂'))
+    );
+
+    const hasReadOperation = conversationHistory.some(
+      msg =>
+        msg.role === 'assistant' &&
+        (msg.content.includes('```') ||
+          msg.content.includes('export') ||
+          msg.content.includes('class') ||
+          msg.content.includes('function') ||
+          msg.content.length > 500)
+    );
+
+    // Continue if we have multiple steps indicated and haven't completed read after list
+    if (hasListOperation && !hasReadOperation) {
+      return true;
+    }
+
+    // Also continue if query explicitly requests analysis and we haven't done it yet
+    if (
+      queryLower.includes('analyz') &&
+      !conversationHistory.some(
+        msg =>
+          msg.role === 'assistant' &&
+          (msg.content.toLowerCase().includes('class') ||
+            msg.content.toLowerCase().includes('method') ||
+            msg.content.toLowerCase().includes('function'))
+      )
+    ) {
+      return true;
+    }
+
+    // Otherwise, stop here
+    return false;
   }
 
   /**
