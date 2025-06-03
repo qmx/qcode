@@ -10,6 +10,7 @@ import { ToolRegistry } from '../../src/core/registry.js';
 import { Config, QCodeError } from '../../src/types.js';
 import { getDefaultConfig } from '../../src/config/defaults.js';
 import { FilesTool } from '../../src/tools/files.js';
+import { TEST_WORKSPACE } from '../setup.js';
 import nock from 'nock';
 import fs from 'fs/promises';
 import path from 'path';
@@ -41,9 +42,9 @@ describe('QCodeEngine - VCR Tests', () => {
     }
 
     // Setup real configuration and clients
-    config = getDefaultConfig();
+    config = getDefaultConfig(TEST_WORKSPACE);
     ollamaClient = new OllamaClient(config.ollama);
-    toolRegistry = new ToolRegistry(config.security);
+    toolRegistry = new ToolRegistry(config.security, TEST_WORKSPACE);
 
     // Register the FilesTool
     const filesTool = new FilesTool(toolRegistry['_security']); // Access the internal security instance
@@ -54,7 +55,9 @@ describe('QCodeEngine - VCR Tests', () => {
     );
 
     // Create engine instance with real components
-    engine = new QCodeEngine(ollamaClient, toolRegistry, config);
+    engine = new QCodeEngine(ollamaClient, toolRegistry, config, {
+      workingDirectory: TEST_WORKSPACE,
+    });
   });
 
   afterEach(async () => {
@@ -95,7 +98,9 @@ describe('QCodeEngine - VCR Tests', () => {
     });
 
     it('should use factory function to create engine', () => {
-      const factoryEngine = createQCodeEngine(ollamaClient, toolRegistry, config);
+      const factoryEngine = createQCodeEngine(ollamaClient, toolRegistry, config, {
+        workingDirectory: TEST_WORKSPACE,
+      });
       expect(factoryEngine).toBeInstanceOf(QCodeEngine);
     });
   });
@@ -216,7 +221,7 @@ describe('QCodeEngine - VCR Tests', () => {
   describe('Error Handling', () => {
     it('should handle internal processing errors gracefully', async () => {
       // Create a new engine with a broken tool registry to simulate errors
-      const brokenToolRegistry = new ToolRegistry(config.security);
+      const brokenToolRegistry = new ToolRegistry(config.security, TEST_WORKSPACE);
 
       // Override listTools to throw an error
       const originalListTools = brokenToolRegistry.listTools;
@@ -224,7 +229,9 @@ describe('QCodeEngine - VCR Tests', () => {
         throw new Error('Registry error');
       };
 
-      const brokenEngine = new QCodeEngine(ollamaClient, brokenToolRegistry, config);
+      const brokenEngine = new QCodeEngine(ollamaClient, brokenToolRegistry, config, {
+        workingDirectory: TEST_WORKSPACE,
+      });
       const response = await brokenEngine.processQuery('help');
 
       expect(response.complete).toBe(false);
@@ -242,12 +249,14 @@ describe('QCodeEngine - VCR Tests', () => {
     it('should preserve QCodeError instances', async () => {
       const originalError = new QCodeError('Test error', 'TEST_ERROR', { test: true });
 
-      const brokenToolRegistry = new ToolRegistry(config.security);
+      const brokenToolRegistry = new ToolRegistry(config.security, TEST_WORKSPACE);
       brokenToolRegistry.listTools = () => {
         throw originalError;
       };
 
-      const brokenEngine = new QCodeEngine(ollamaClient, brokenToolRegistry, config);
+      const brokenEngine = new QCodeEngine(ollamaClient, brokenToolRegistry, config, {
+        workingDirectory: TEST_WORKSPACE,
+      });
       const response = await brokenEngine.processQuery('help');
 
       expect(response.errors).toBeDefined();

@@ -1,31 +1,39 @@
 import { FilesTool } from '../../src/tools/files.js';
 import { WorkspaceSecurity } from '../../src/security/workspace.js';
 import { SecurityConfig } from '../../src/types.js';
+import { TEST_WORKSPACE } from '../setup.js';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { tmpdir } from 'os';
 
 describe('FilesTool - Search Operation (Section 1.7.5)', () => {
   let filesTool: FilesTool;
   let workspaceSecurity: WorkspaceSecurity;
   let testFixturesDir: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Create security config
     const securityConfig: SecurityConfig = {
       workspace: {
-        allowedPaths: [process.cwd()],
-        forbiddenPatterns: ['**/.git/**', '**/node_modules/**'],
+        allowedPaths: [tmpdir()],
+        forbiddenPatterns: ['*.secret', '*.private'],
         allowOutsideWorkspace: false,
       },
       commands: {
-        allowedCommands: [],
-        forbiddenPatterns: [],
+        allowedCommands: ['echo', 'ls'],
+        forbiddenPatterns: ['rm', 'del'],
         allowArbitraryCommands: false,
       },
     };
 
-    workspaceSecurity = new WorkspaceSecurity(securityConfig);
-    filesTool = new FilesTool(workspaceSecurity);
+    workspaceSecurity = new WorkspaceSecurity(securityConfig, TEST_WORKSPACE);
+
+    // Add test fixtures directory to allowed paths
     testFixturesDir = path.join(process.cwd(), 'tests', 'fixtures', 'test-files');
+    workspaceSecurity.addAllowedPath(testFixturesDir);
+    workspaceSecurity.addAllowedPath(path.join(process.cwd(), 'tests'));
+
+    filesTool = new FilesTool(workspaceSecurity);
   });
 
   describe('Search Parameter Validation', () => {
@@ -359,11 +367,15 @@ describe('FilesTool - Search Operation (Section 1.7.5)', () => {
     });
 
     it('should handle searches in larger directory trees', async () => {
+      // Add src directory to allowed paths for this test
+      const srcPath = path.join(process.cwd(), 'src');
+      workspaceSecurity.addAllowedPath(srcPath);
+
       // Search in src directory (should contain TypeScript files)
       const result = await filesTool.execute({
         operation: 'search',
         query: 'function',
-        path: path.join(process.cwd(), 'src'),
+        path: srcPath,
         pattern: '**/*.ts',
         maxResults: 10,
       });

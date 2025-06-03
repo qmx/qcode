@@ -48,10 +48,10 @@ describe('Workflow Context Passing E2E', () => {
     };
 
     const ollamaClient = new OllamaClient(config.ollama);
-    const workspaceSecurity = new WorkspaceSecurity(config.security);
-    const toolRegistry = new ToolRegistry(config.security);
+    const workspaceSecurity = new WorkspaceSecurity(config.security, config.workingDirectory);
+    const toolRegistry = new ToolRegistry(config.security, config.workingDirectory);
 
-    // Register internal file operations tool
+    // Register file tool
     const filesTool = new FilesTool(workspaceSecurity);
     toolRegistry.registerInternalTool(
       'files',
@@ -59,7 +59,12 @@ describe('Workflow Context Passing E2E', () => {
       filesTool.execute.bind(filesTool)
     );
 
-    engine = new QCodeEngine(ollamaClient, toolRegistry, config);
+    // Initialize QCode engine with proper options
+    engine = new QCodeEngine(ollamaClient, toolRegistry, config, {
+      workingDirectory: config.workingDirectory,
+      enableStreaming: false,
+      debug: false,
+    });
   });
 
   it('should verify context preservation across multiple tool calls', async () => {

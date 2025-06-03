@@ -18,7 +18,7 @@ describe('QCode Function Calling E2E Tests', () => {
   let client: OllamaClient;
   const vcr = setupVCRTests(__filename);
 
-  const TEST_WORKSPACE = join(process.cwd(), 'test-workspace');
+  const TEST_WORKSPACE = join(process.cwd(), 'tests', 'fixtures', 'projects', 'test-workspace');
 
   beforeAll(async () => {
     // Create test workspace directory and basic files
@@ -55,18 +55,17 @@ This is a test project for QCode e2e testing.
 - \`npm run build\` - Build project
 `;
     await fs.writeFile(join(TEST_WORKSPACE, 'README.md'), readmeContent);
-  });
 
-  beforeEach(() => {
-    // Change working directory to test workspace for consistent file operations
-    process.chdir(TEST_WORKSPACE);
-
+    // Initialize configuration and components
     const config = getDefaultConfig();
     client = new OllamaClient(config.ollama);
 
     // Initialize components with proper constructor arguments
-    const workspaceSecurity = new WorkspaceSecurity(config.security);
-    const toolRegistry = new ToolRegistry(config.security);
+    const workspaceSecurity = new WorkspaceSecurity(config.security, TEST_WORKSPACE);
+    // Add the test workspace to allowed paths
+    workspaceSecurity.addAllowedPath(TEST_WORKSPACE);
+
+    const toolRegistry = new ToolRegistry(config.security, TEST_WORKSPACE);
     const filesTool = new FilesTool(workspaceSecurity);
 
     // Register file tool properly with all required arguments
@@ -77,7 +76,11 @@ This is a test project for QCode e2e testing.
     );
 
     // Initialize engine
-    engine = new QCodeEngine(client, toolRegistry, config);
+    engine = new QCodeEngine(client, toolRegistry, config, {
+      workingDirectory: TEST_WORKSPACE,
+      enableStreaming: false,
+      debug: false,
+    });
   });
 
   describe('File Read Function Calling', () => {
@@ -138,16 +141,15 @@ This is a test project for QCode e2e testing.
         expect(response.response).toBeDefined();
         expect(typeof response.response).toBe('string');
 
-        // Current engine implementation only supports single function calls
-        // LLM interprets this as a file listing request (the first part of the query)
+        // Multi-step workflow should execute multiple operations
         expect(response.response).toContain('package.json');
-        expect(response.response).toContain('README.md');
+        expect(response.response).toContain('test-project'); // From package.json content
 
-        // Should have executed exactly one tool call (not multiple)
-        expect(response.toolsExecuted.length).toBe(1);
-        expect(response.toolsExecuted[0]).toBe('internal:files');
+        // Should have executed multiple tool calls for multi-step query
+        expect(response.toolsExecuted.length).toBeGreaterThan(1);
+        expect(response.toolsExecuted).toContain('internal:files');
 
-        vcr.recordingLog('✓ Single-step workflow response:', response.response);
+        vcr.recordingLog('✓ Multi-step workflow response:', response.response);
       });
     });
   });

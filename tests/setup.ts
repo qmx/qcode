@@ -3,13 +3,19 @@
  * This file runs before all tests to configure the test environment
  */
 
-// Set up global test timeout
-jest.setTimeout(10000);
+import path from 'path';
+
+// Set up global test timeout (increased for e2e tests with Ollama client initialization)
+jest.setTimeout(30000);
 
 // Set up environment variables for testing
 process.env.NODE_ENV = 'test';
 process.env.QCODE_CONFIG_PATH = '';
 process.env.QCODE_WORKSPACE = '';
+
+// Test workspace constants
+export const TEST_WORKSPACE = path.resolve(__dirname, 'fixtures', 'projects', 'test-workspace');
+export const TEST_PROJECT_ROOT = path.resolve(__dirname, '..');
 
 // Global test utilities
 beforeEach(() => {

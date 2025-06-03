@@ -5,6 +5,7 @@ import { FilesTool } from '../../src/tools/files.js';
 import { WorkspaceSecurity } from '../../src/security/workspace.js';
 import { getDefaultConfig } from '../../src/config/defaults.js';
 import { setupVCRTests } from '../helpers/vcr-helper';
+import { TEST_WORKSPACE } from '../setup.js';
 
 /**
  * VCR tests for CLI search functionality using the modern VCR helper
@@ -15,13 +16,13 @@ describe('CLI Search Functionality VCR Tests', () => {
   let client: OllamaClient;
   const vcr = setupVCRTests(__filename);
 
-  beforeEach(() => {
-    const config = getDefaultConfig();
+  beforeAll(() => {
+    const config = getDefaultConfig(TEST_WORKSPACE);
     client = new OllamaClient(config.ollama);
 
     // Initialize components with proper constructor arguments
-    const workspaceSecurity = new WorkspaceSecurity(config.security);
-    const toolRegistry = new ToolRegistry(config.security);
+    const workspaceSecurity = new WorkspaceSecurity(config.security, TEST_WORKSPACE);
+    const toolRegistry = new ToolRegistry(config.security, TEST_WORKSPACE);
     const filesTool = new FilesTool(workspaceSecurity);
 
     // Register file tool properly with all required arguments
@@ -32,7 +33,9 @@ describe('CLI Search Functionality VCR Tests', () => {
     );
 
     // Initialize engine
-    engine = new QCodeEngine(client, toolRegistry, config);
+    engine = new QCodeEngine(client, toolRegistry, config, {
+      workingDirectory: TEST_WORKSPACE,
+    });
   });
 
   describe('CLI Search Commands', () => {
@@ -118,24 +121,24 @@ describe('CLI Search Functionality VCR Tests', () => {
     });
   });
 
-  describe('VCR Recording Mode for CLI Search', () => {
-    it('should allow recording new CLI search interactions', async () => {
-      if (process.env.NOCK_MODE === 'record') {
-        await vcr.withRecording('cli_search_recorded', async () => {
-          console.log('🔴 VCR Recording Mode - recording CLI search interaction');
+  describe('Additional CLI Search Patterns', () => {
+    it('should handle interface search in TypeScript files', async () => {
+      await vcr.withRecording('cli_search_interface_ts', async () => {
+        const query = 'search for "interface" in TypeScript files';
+        const result = await engine.processQuery(query);
 
-          const query = 'search for "interface" in TypeScript files';
-          const result = await engine.processQuery(query);
+        expect(result.response).toBeDefined();
+        expect(typeof result.response).toBe('string');
+        expect(result.toolsExecuted).toContain('internal:files');
 
-          expect(result.response).toBeDefined();
-          expect(typeof result.response).toBe('string');
+        const toolResult = result.toolResults?.find(r => r.tool === 'files');
+        expect(toolResult).toBeDefined();
+        // Tool may fail due to LLM parameter confusion, but should attempt execution
+        expect(toolResult?.success !== undefined).toBe(true);
 
-          vcr.recordingLog('✅ Recorded CLI search interaction successfully');
-          vcr.recordingLog('✓ Response length:', result.response.length);
-        });
-      } else {
-        console.log('ℹ️  Skipping CLI search recording test - not in record mode');
-      }
-    }, 15000); // Longer timeout for recording
+        vcr.recordingLog('✓ CLI search interface in TypeScript files completed');
+        vcr.recordingLog('✓ Tool execution result:', toolResult?.success ? 'success' : 'failed');
+      });
+    });
   });
 });

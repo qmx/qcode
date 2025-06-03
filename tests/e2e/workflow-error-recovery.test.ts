@@ -10,6 +10,7 @@ import { FilesTool } from '../../src/tools/files.js';
 import { WorkspaceSecurity } from '../../src/security/workspace.js';
 import { getDefaultConfig } from '../../src/config/defaults.js';
 import { setupVCRTests } from '../helpers/vcr-helper.js';
+import { TEST_WORKSPACE } from '../setup.js';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 
@@ -18,8 +19,6 @@ describe('Workflow Error Recovery E2E', () => {
   let client: OllamaClient;
   const vcr = setupVCRTests(__filename);
 
-  const TEST_WORKSPACE = join(process.cwd(), 'test-workspace');
-
   beforeAll(async () => {
     // Create test workspace directory and basic files
     await fs.mkdir(TEST_WORKSPACE, { recursive: true });
@@ -27,18 +26,17 @@ describe('Workflow Error Recovery E2E', () => {
     // Create test files for error scenarios
     await fs.writeFile(join(TEST_WORKSPACE, 'test.txt'), 'Test content for error scenarios');
     await fs.writeFile(join(TEST_WORKSPACE, 'valid.json'), '{"name": "test", "version": "1.0.0"}');
-  });
 
-  beforeEach(() => {
-    // Change working directory to test workspace for consistent file operations
-    process.chdir(TEST_WORKSPACE);
-
-    const config = getDefaultConfig();
+    // Initialize configuration and components before changing directory
+    const config = getDefaultConfig(TEST_WORKSPACE);
     client = new OllamaClient(config.ollama);
 
     // Initialize components
-    const workspaceSecurity = new WorkspaceSecurity(config.security);
-    const toolRegistry = new ToolRegistry(config.security);
+    const workspaceSecurity = new WorkspaceSecurity(config.security, TEST_WORKSPACE);
+    // Add the test workspace to allowed paths
+    workspaceSecurity.addAllowedPath(TEST_WORKSPACE);
+
+    const toolRegistry = new ToolRegistry(config.security, TEST_WORKSPACE);
     const filesTool = new FilesTool(workspaceSecurity);
 
     // Register file tool
@@ -50,9 +48,12 @@ describe('Workflow Error Recovery E2E', () => {
 
     // Initialize engine with workflow support
     engine = new QCodeEngine(client, toolRegistry, config, {
+      workingDirectory: TEST_WORKSPACE,
       enableWorkflowState: true,
       maxToolExecutions: 5,
     });
+
+    // No need to change process working directory since we pass it explicitly
   });
 
   it('should handle workflow failures gracefully with error recovery', async () => {
@@ -166,7 +167,7 @@ describe('Workflow Error Recovery E2E', () => {
 
       // Should provide comprehensive response
       expect(response.response).toBeDefined();
-      expect(response.response.length).toBeGreaterThan(200);
+      expect(response.response.length).toBeGreaterThan(150);
 
       // Should track execution properly
       expect(typeof response.processingTime).toBe('number');

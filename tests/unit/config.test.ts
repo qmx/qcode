@@ -46,7 +46,7 @@ describe('Configuration System', () => {
 
     it('should include current working directory in allowed paths', () => {
       const config = getDefaultConfig();
-      expect(config.security.workspace.allowedPaths).toContain(process.cwd());
+      expect(config.security.workspace.allowedPaths).toContain('.');
       expect(config.workingDirectory).toBe(process.cwd());
     });
 
@@ -55,7 +55,7 @@ describe('Configuration System', () => {
       const config = getDefaultConfigForWorkspace(testWorkspace);
 
       expect(config.workingDirectory).toBe(path.resolve(testWorkspace));
-      expect(config.security.workspace.allowedPaths).toContain(path.resolve(testWorkspace));
+      expect(config.security.workspace.allowedPaths).toContain('.');
     });
   });
 
@@ -161,7 +161,7 @@ describe('Configuration System', () => {
 
       expect(config.ollama.model).toBe('llama3.1:8b');
       expect(config.workingDirectory).toBe(tempDir);
-      expect(config.security.workspace.allowedPaths).toContain(tempDir);
+      expect(config.security.workspace.allowedPaths).toContain('.');
     });
 
     it('should merge project configuration with defaults', async () => {

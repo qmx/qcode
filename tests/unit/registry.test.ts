@@ -1,5 +1,6 @@
 import { ToolRegistry, createToolRegistry } from '../../src/core/registry.js';
 import { SecurityConfig, ToolDefinition, MCPServerInfo, ToolContext } from '../../src/types.js';
+import { TEST_WORKSPACE } from '../setup.js';
 
 describe('ToolRegistry', () => {
   let registry: ToolRegistry;
@@ -19,9 +20,9 @@ describe('ToolRegistry', () => {
         allowArbitraryCommands: false,
       },
     };
-    registry = createToolRegistry(securityConfig);
+    registry = createToolRegistry(securityConfig, TEST_WORKSPACE);
     testContext = {
-      workingDirectory: '/test',
+      workingDirectory: TEST_WORKSPACE,
       security: securityConfig,
       registry: null, // Will be set by actual usage
       query: 'test query',

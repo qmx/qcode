@@ -1,6 +1,7 @@
 import { FilesTool } from '../../src/tools/files.js';
 import { WorkspaceSecurity } from '../../src/security/workspace.js';
 import { getDefaultConfig } from '../../src/config/defaults.js';
+import { TEST_WORKSPACE } from '../setup.js';
 import { promises as fs } from 'fs';
 import { mkdtemp } from 'fs/promises';
 import { tmpdir } from 'os';
@@ -12,12 +13,17 @@ describe('FilesTool', () => {
   let testFixturesDir: string;
 
   beforeEach(() => {
-    const securityConfig = getDefaultConfig().security;
+    const securityConfig = getDefaultConfig(TEST_WORKSPACE).security;
 
-    workspaceSecurity = new WorkspaceSecurity(securityConfig);
+    workspaceSecurity = new WorkspaceSecurity(securityConfig, TEST_WORKSPACE);
     workspaceSecurity.addAllowedPath(tmpdir());
-    filesTool = new FilesTool(workspaceSecurity);
+
+    // Add test fixtures directory to allowed paths
     testFixturesDir = path.join(process.cwd(), 'tests', 'fixtures', 'test-files');
+    workspaceSecurity.addAllowedPath(testFixturesDir);
+    workspaceSecurity.addAllowedPath(path.join(process.cwd(), 'tests'));
+
+    filesTool = new FilesTool(workspaceSecurity);
   });
 
   describe('Basic Structure', () => {

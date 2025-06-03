@@ -1,20 +1,37 @@
 import { FilesTool } from '../../src/tools/files.js';
 import { WorkspaceSecurity } from '../../src/security/workspace.js';
 import { SecurityConfig } from '../../src/types.js';
-import { promises as fs } from 'fs';
-import { join } from 'pathe';
+import { TEST_WORKSPACE } from '../setup.js';
+import { join } from 'path';
 import { tmpdir } from 'os';
-import { randomBytes } from 'crypto';
+import fs from 'fs/promises';
 
 describe('FilesTool - List Operation', () => {
   let filesTool: FilesTool;
   let workspaceSecurity: WorkspaceSecurity;
-  let testWorkspace: string;
+  let tempDir: string;
 
   beforeEach(async () => {
-    // Create a unique temporary directory for each test
-    testWorkspace = join(tmpdir(), `qcode-test-${randomBytes(8).toString('hex')}`);
-    await fs.mkdir(testWorkspace, { recursive: true });
+    // Create a temporary directory for test files
+    tempDir = await fs.mkdtemp(join(tmpdir(), 'qcode-files-list-test-'));
+
+    // Set up workspace security with the temp directory
+    const securityConfig: SecurityConfig = {
+      workspace: {
+        allowedPaths: [tempDir],
+        forbiddenPatterns: ['*.secret', '*.private'],
+        allowOutsideWorkspace: false,
+      },
+      commands: {
+        allowedCommands: ['echo', 'ls'],
+        forbiddenPatterns: ['rm', 'del'],
+        allowArbitraryCommands: false,
+      },
+    };
+
+    workspaceSecurity = new WorkspaceSecurity(securityConfig, TEST_WORKSPACE);
+    workspaceSecurity.addAllowedPath(tempDir);
+    filesTool = new FilesTool(workspaceSecurity);
 
     // Create test project structure
     const testFiles = {
@@ -33,34 +50,17 @@ describe('FilesTool - List Operation', () => {
 
     // Create all test files and directories
     for (const [filePath, content] of Object.entries(testFiles)) {
-      const fullPath = join(testWorkspace, filePath);
+      const fullPath = join(tempDir, filePath);
       const dirPath = join(fullPath, '..');
       await fs.mkdir(dirPath, { recursive: true });
       await fs.writeFile(fullPath, content, 'utf8');
     }
-
-    // Create SecurityConfig with the test workspace
-    const securityConfig: SecurityConfig = {
-      workspace: {
-        allowedPaths: [testWorkspace],
-        forbiddenPatterns: ['**/.git/**', '**/node_modules/**'],
-        allowOutsideWorkspace: false,
-      },
-      commands: {
-        allowedCommands: [],
-        forbiddenPatterns: [],
-        allowArbitraryCommands: false,
-      },
-    };
-
-    workspaceSecurity = new WorkspaceSecurity(securityConfig);
-    filesTool = new FilesTool(workspaceSecurity);
   });
 
   afterEach(async () => {
     // Clean up test workspace
-    if (testWorkspace) {
-      await fs.rm(testWorkspace, { recursive: true, force: true });
+    if (tempDir) {
+      await fs.rm(tempDir, { recursive: true, force: true });
     }
   });
 
@@ -68,7 +68,7 @@ describe('FilesTool - List Operation', () => {
     it('should list files in root directory', async () => {
       const result = await filesTool.execute({
         operation: 'list',
-        path: testWorkspace,
+        path: tempDir,
       });
 
       expect(result.success).toBe(true);
@@ -97,7 +97,7 @@ describe('FilesTool - List Operation', () => {
     it('should list files in subdirectory', async () => {
       const result = await filesTool.execute({
         operation: 'list',
-        path: join(testWorkspace, 'src'),
+        path: join(tempDir, 'src'),
       });
 
       expect(result.success).toBe(true);
@@ -116,7 +116,7 @@ describe('FilesTool - List Operation', () => {
     it('should list directories', async () => {
       const result = await filesTool.execute({
         operation: 'list',
-        path: testWorkspace,
+        path: tempDir,
       });
 
       expect(result.success).toBe(true);
@@ -136,7 +136,7 @@ describe('FilesTool - List Operation', () => {
     it('should list files recursively when recursive=true', async () => {
       const result = await filesTool.execute({
         operation: 'list',
-        path: testWorkspace,
+        path: tempDir,
         recursive: true,
       });
 
@@ -168,7 +168,7 @@ describe('FilesTool - List Operation', () => {
     it('should not list files recursively when recursive=false', async () => {
       const result = await filesTool.execute({
         operation: 'list',
-        path: testWorkspace,
+        path: tempDir,
         recursive: false,
       });
 
@@ -193,7 +193,7 @@ describe('FilesTool - List Operation', () => {
     it('should exclude hidden files by default', async () => {
       const result = await filesTool.execute({
         operation: 'list',
-        path: testWorkspace,
+        path: tempDir,
       });
 
       expect(result.success).toBe(true);
@@ -209,7 +209,7 @@ describe('FilesTool - List Operation', () => {
     it('should include hidden files when includeHidden=true', async () => {
       const result = await filesTool.execute({
         operation: 'list',
-        path: testWorkspace,
+        path: tempDir,
         includeHidden: true,
       });
 
@@ -237,7 +237,7 @@ describe('FilesTool - List Operation', () => {
     it('should filter files using glob patterns', async () => {
       const result = await filesTool.execute({
         operation: 'list',
-        path: testWorkspace,
+        path: tempDir,
         pattern: '**/*.ts',
         recursive: true,
       });
@@ -272,7 +272,7 @@ describe('FilesTool - List Operation', () => {
     it('should support multiple file extensions in pattern', async () => {
       const result = await filesTool.execute({
         operation: 'list',
-        path: testWorkspace,
+        path: tempDir,
         pattern: '**/*.{ts,tsx,md}',
         recursive: true,
       });
@@ -300,7 +300,7 @@ describe('FilesTool - List Operation', () => {
     it('should support directory-specific patterns', async () => {
       const result = await filesTool.execute({
         operation: 'list',
-        path: testWorkspace,
+        path: tempDir,
         pattern: 'src/**/*.ts',
         recursive: true,
       });
@@ -333,7 +333,7 @@ describe('FilesTool - List Operation', () => {
     it('should include basic metadata by default', async () => {
       const result = await filesTool.execute({
         operation: 'list',
-        path: testWorkspace,
+        path: tempDir,
       });
 
       expect(result.success).toBe(true);
@@ -358,7 +358,7 @@ describe('FilesTool - List Operation', () => {
     it('should include extended metadata when includeMetadata=true', async () => {
       const result = await filesTool.execute({
         operation: 'list',
-        path: testWorkspace,
+        path: tempDir,
         includeMetadata: true,
       });
 
@@ -384,7 +384,7 @@ describe('FilesTool - List Operation', () => {
     it('should return error for non-existent directory', async () => {
       const result = await filesTool.execute({
         operation: 'list',
-        path: join(testWorkspace, 'non-existent-directory'),
+        path: join(tempDir, 'non-existent-directory'),
       });
 
       expect(result.success).toBe(false);
@@ -403,7 +403,7 @@ describe('FilesTool - List Operation', () => {
 
     it('should handle permission denied errors gracefully', async () => {
       // Create a directory with restricted permissions
-      const restrictedDir = join(testWorkspace, 'restricted');
+      const restrictedDir = join(tempDir, 'restricted');
       await fs.mkdir(restrictedDir);
       await fs.chmod(restrictedDir, 0o000);
 
@@ -426,7 +426,7 @@ describe('FilesTool - List Operation', () => {
     it('should return properly formatted result', async () => {
       const result = await filesTool.execute({
         operation: 'list',
-        path: join(testWorkspace, 'src'),
+        path: join(tempDir, 'src'),
         pattern: '*.ts',
       });
 
@@ -445,7 +445,7 @@ describe('FilesTool - List Operation', () => {
 
     it('should handle empty directories', async () => {
       // Create an empty directory
-      const emptyDir = join(testWorkspace, 'empty');
+      const emptyDir = join(tempDir, 'empty');
       await fs.mkdir(emptyDir);
 
       const result = await filesTool.execute({
@@ -465,7 +465,7 @@ describe('FilesTool - List Operation', () => {
   describe('Performance', () => {
     it('should handle large directory structures efficiently', async () => {
       // Create a larger directory structure
-      const largeDir = join(testWorkspace, 'large');
+      const largeDir = join(tempDir, 'large');
       await fs.mkdir(largeDir);
 
       // Create 100 files in the directory
