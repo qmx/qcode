@@ -1,0 +1,13 @@
+{
+  "name": "test-project",
+  "version": "1.0.0",
+  "description": "Test project for QCode e2e testing",
+  "scripts": {
+    "test": "echo \"test script\"",
+    "build": "echo \"build script\""
+  },
+  "dependencies": {
+    "typescript": "^5.0.0",
+    "jest": "^29.0.0"
+  }
+}
