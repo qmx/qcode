@@ -9,107 +9,115 @@ alwaysApply: false
 
 VCR (Video Cassette Recorder) testing allows us to record real HTTP interactions with external services (like Ollama) and replay them deterministically in tests. This provides the benefits of integration testing with real APIs while maintaining test reliability and speed.
 
+## Canonical Example
+
+**📋 See the complete working example:** [tests/integration/ollama-client.test.ts](mdc:tests/integration/ollama-client.test.ts)
+
+This file demonstrates the modern VCR helper approach with clean, maintainable test code.
+
 ## VCR Infrastructure
 
-Our VCR implementation uses `nock` for HTTP recording/replaying. See the complete example in [tests/integration/ollama-client.test.ts](mdc:tests/integration/ollama-client.test.ts).
+Our VCR implementation uses:
+- `nock` for HTTP recording/replaying
+- **VCR Helper Class** (`tests/helpers/vcr-helper.ts`) - Encapsulates all complexity
+- Automatic environment variable detection
+- Fail-hard error handling with clear instructions
 
 ## Environment Variables
 
 - `NOCK_MODE=record` - Record new interactions with real APIs
 - `NOCK_MODE=replay` (default) - Replay recorded interactions
 
-## VCR Test Structure
+## Modern VCR Pattern (Recommended)
 
-### 1. Test File Setup
+### 1. Test File Setup - Clean & Simple
 
 ```typescript
-import nock from 'nock';
-import fs from 'fs/promises';
-import path from 'path';
+import { OllamaClient } from '../../src/core/client';
+import { getDefaultConfig } from '../../src/config/defaults';
+import { setupVCRTests } from '../helpers/vcr-helper';
 
-describe('Your VCR Test Suite', () => {
-  let recordingsPath: string;
-
-  beforeAll(async () => {
-    recordingsPath = path.join(__dirname, '../fixtures/recordings');
-    await fs.mkdir(recordingsPath, { recursive: true });
-  });
+describe('OllamaClient VCR Tests', () => {
+  let client: OllamaClient;
+  const vcr = setupVCRTests(__filename);
 
   beforeEach(() => {
-    if (process.env.NOCK_MODE === 'record') {
-      // Allow real HTTP and record interactions
-      nock.restore();
-      nock.recorder.rec({
-        output_objects: true,
-        enable_reqheaders_recording: false, // More stable replays
-      });
-    } else {
-      // Block real HTTP requests in replay mode
-      nock.disableNetConnect();
-    }
+    const config = getDefaultConfig();
+    client = new OllamaClient(config.ollama);
   });
 
-  afterEach(async () => {
-    if (process.env.NOCK_MODE === 'record') {
-      nock.recorder.clear();
-    } else {
-      nock.cleanAll();
-    }
+  // Tests go here...
+});
+```
+
+**That's it!** The VCR helper handles all the complexity:
+- ✅ Automatic directory creation
+- ✅ Environment variable detection
+- ✅ Nock setup/teardown
+- ✅ Recording lifecycle management
+
+### 2. Individual Test Pattern - Super Clean
+
+```typescript
+it('should handle some API interaction', async () => {
+  await vcr.withRecording('descriptive_test_name', async () => {
+    // Your actual test code - no VCR boilerplate needed!
+    const result = await client.someAPICall();
+    
+    expect(result).toBeDefined();
+    expect(result.someProperty).toBe('expectedValue');
+    
+    // Optional: Log important data during recording
+    vcr.recordingLog('✓ Response received:', result);
   });
 });
 ```
 
-### 2. Individual Test Pattern
+**Benefits of the new pattern:**
+- 🚀 **90% less boilerplate** - Focus on test logic, not VCR mechanics
+- 🛡️ **Automatic error handling** - Clear error messages if recordings missing
+- 🔧 **Environment encapsulation** - No manual `process.env.NOCK_MODE` checks
+- 📁 **Auto-management** - Recordings saved/loaded automatically
 
-Each VCR test follows this pattern:
+## VCR Helper API
+
+### Core Methods
 
 ```typescript
-it('should handle some API interaction', async () => {
-  const testName = 'descriptive_test_name';
+// Setup for entire test suite (use in describe blocks)
+const vcr = setupVCRTests(__filename);
 
-  if (process.env.NOCK_MODE !== 'record') {
-    // REPLAY MODE: Load and apply recorded interactions
-    const recordingFile = path.join(recordingsPath, `${testName}.json`);
-    try {
-      const recordings = JSON.parse(await fs.readFile(recordingFile, 'utf-8'));
-      recordings.forEach((recording: any) => {
-        const scope = nock(recording.scope);
-        if (recording.method.toLowerCase() === 'get') {
-          scope.get(recording.path).reply(recording.status, recording.response);
-        } else if (recording.method.toLowerCase() === 'post') {
-          scope.post(recording.path).reply(recording.status, recording.response);
-        }
-      });
-    } catch (error) {
-      console.log('No recording found, skipping test in replay mode');
-      return;
-    }
-  }
-
-  // ACTUAL TEST: Make real API calls (record mode) or use mocked responses (replay mode)
-  const result = await yourAPICall();
-
-  // ASSERTIONS: Test the response
-  expect(result).toBeDefined();
-  expect(result.someProperty).toBe('expectedValue');
-
-  if (process.env.NOCK_MODE === 'record') {
-    // RECORD MODE: Save the HTTP interactions
-    const recordings = nock.recorder.play();
-    if (recordings.length > 0) {
-      const recordingFile = path.join(recordingsPath, `${testName}.json`);
-      await fs.writeFile(recordingFile, JSON.stringify(recordings, null, 2));
-      console.log(`Recorded ${recordings.length} HTTP interactions to ${recordingFile}`);
-    }
-    nock.recorder.clear();
-  }
+// Complete test workflow (recommended)
+await vcr.withRecording('test_name', async () => {
+  // Your test code here
 });
+
+// Manual control (advanced usage)
+await vcr.loadRecording('test_name');    // Load recording for replay
+await vcr.saveRecording('test_name');    // Save recording after test
+vcr.recordingLog('Debug info:', data);   // Log only during recording
+
+// Utilities
+const exists = await vcr.hasRecording('test_name');
+const recordings = await vcr.listRecordings();
+await vcr.deleteRecording('test_name');
+```
+
+### Environment Detection
+
+```typescript
+// Check recording mode (encapsulated)
+if (vcr.recording) {
+  console.log('Recording new interactions');
+} else {
+  console.log('Replaying recorded interactions');
+}
 ```
 
 ## Recording New VCR Tests
 
 ### Step 1: Write the Test
-Write your test using the pattern above with a unique `testName`.
+Use the clean `vcr.withRecording()` pattern above.
 
 ### Step 2: Record Real Interactions
 ```bash
@@ -135,84 +143,216 @@ npm test -- tests/your-test-file.test.ts
 ## Best Practices
 
 ### 1. Naming Conventions
-- Use descriptive snake_case test names: `basic_chat_completion`, `function_calling_with_tools`
-- Test names become recording filenames, so make them clear
+- Use descriptive snake_case test names: `basic_chat`, `function_calling`, `list_models`
+- Test names become recording filenames, so make them clear and unique
 
-### 2. Test Isolation
-- Each test should have its own recording file
-- Don't share recordings between different test scenarios
-- Use unique test names across the entire test suite
+### 2. Test Organization
+```typescript
+describe('Model Management', () => {
+  it('should list available models', async () => {
+    await vcr.withRecording('list_models', async () => {
+      // Test code...
+    });
+  });
+});
+
+describe('Chat Completion', () => {
+  it('should handle basic chat', async () => {
+    await vcr.withRecording('basic_chat', async () => {
+      // Test code...
+    });
+  });
+});
+```
 
 ### 3. Recording Management
 - Keep recordings in version control for deterministic CI/CD
-- Re-record when API contracts change
-- Review recordings before committing to avoid sensitive data
+- Re-record when API contracts change: `NOCK_MODE=record npm test`
+- Clean up obsolete recordings when test names change
 
-### 4. Error Handling
-- Always handle missing recordings gracefully in replay mode
-- Use try/catch when loading recording files
-- Skip tests if recordings are missing rather than failing
+### 4. Error Handling - Automatic!
+The VCR helper automatically:
+- ❌ **FAILS HARD** if recordings are missing in replay mode
+- 📝 **Provides clear instructions** for fixing missing recordings
+- 🔍 **Shows exact commands** to re-record tests
 
-### 5. Data Validation
-- Record mode: Log important response data for debugging
-- Replay mode: Assert on realistic response structures
-- Test both success and error scenarios
+Example error message:
+```
+❌ VCR Recording missing for test "basic_chat"
+Recording file not found: /path/to/recordings/basic_chat.json
+
+To fix this:
+1. Run: NOCK_MODE=record npm test -- tests/integration/ollama-client.test.ts
+2. Ensure Ollama is running: ollama serve
+3. Check that recording was created in tests/fixtures/recordings/
+```
+
+### 5. Debugging During Recording
+```typescript
+it('should handle complex interaction', async () => {
+  await vcr.withRecording('complex_test', async () => {
+    const result = await client.complexCall();
+    
+    // These logs only appear in record mode
+    vcr.recordingLog('✓ API response:', result);
+    vcr.recordingLog('✓ Model used:', result.model);
+    
+    expect(result).toBeDefined();
+  });
+});
+```
 
 ## File Organization
 
 ```
 tests/
+├── helpers/
+│   └── vcr-helper.ts         # VCR helper class (reusable)
 ├── fixtures/
 │   └── recordings/           # VCR recordings (JSON files)
-│       ├── basic_chat_completion.json
-│       ├── function_calling_with_tools.json
-│       └── model_availability_check.json
+│       ├── basic_chat.json
+│       ├── function_calling.json
+│       └── list_models.json
 ├── integration/              # VCR integration tests
 │   ├── ollama-client.test.ts # Example VCR test file
 │   └── engine.test.ts        # Engine VCR tests
 └── unit/                     # Regular unit tests (no HTTP)
 ```
 
-## Common Issues
+## Migration from Old VCR Pattern
 
-### Recording Doesn't Work
-- Ensure the external service (Ollama) is running
-- Check that `NOCK_MODE=record` is set
-- Verify recording directory permissions
+### Before (Manual VCR - 50+ lines of boilerplate)
+```typescript
+beforeEach(() => {
+  if (process.env.NOCK_MODE === 'record') {
+    nock.restore();
+    nock.recorder.rec({ /* ... */ });
+  } else {
+    nock.disableNetConnect();
+  }
+});
 
-### Replay Fails
-- Ensure recordings exist for the test
-- Check that test names match recording filenames
-- Verify nock setup matches recording format
+it('should test something', async () => {
+  const testName = 'test_name';
+  
+  if (process.env.NOCK_MODE !== 'record') {
+    const recordingFile = path.join(recordingsPath, `${testName}.json`);
+    try {
+      const recordings = JSON.parse(await fs.readFile(recordingFile, 'utf-8'));
+      // ... 15+ lines of nock setup ...
+    } catch (error) {
+      // ... 10+ lines of error handling ...
+    }
+  }
+  
+  const result = await someAPICall();
+  expect(result).toBeDefined();
+  
+  if (process.env.NOCK_MODE === 'record') {
+    const recordings = nock.recorder.play();
+    // ... 10+ lines of recording save logic ...
+  }
+});
+```
 
-### Flaky Tests
-- Disable request header recording: `enable_reqheaders_recording: false`
-- Use stable test data (avoid timestamps, random IDs)
-- Record in a consistent environment
+### After (VCR Helper - 5 lines total!)
+```typescript
+const vcr = setupVCRTests(__filename);
+
+it('should test something', async () => {
+  await vcr.withRecording('test_name', async () => {
+    const result = await someAPICall();
+    expect(result).toBeDefined();
+  });
+});
+```
+
+## Common Issues - Now Solved!
+
+### ✅ Recording Doesn't Work
+- VCR helper provides clear error messages
+- Automatic directory creation
+- Built-in validation
+
+### ✅ Replay Fails  
+- **FAIL HARD** with helpful instructions
+- Automatic recording file discovery
+- Clear commands to fix issues
+
+### ✅ Flaky Tests
+- Stable defaults built into VCR helper
+- Consistent recording format
+- No manual environment variable handling
+
+## Advanced Usage
+
+### Custom Recording Options
+```typescript
+// Advanced VCR helper usage
+const vcr = createVCRHelper(__filename, '../custom/recordings');
+
+// Custom setup with options
+beforeEach(() => {
+  vcr.setupTest({ 
+    enableRequestHeaders: true,
+    outputObjects: true 
+  });
+});
+```
+
+### Programmatic Recording Management
+```typescript
+// Check if recording exists
+if (await vcr.hasRecording('test_name')) {
+  console.log('Recording available');
+}
+
+// List all recordings
+const recordings = await vcr.listRecordings();
+console.log('Available recordings:', recordings);
+
+// Delete and re-record
+await vcr.deleteRecording('old_test');
+```
 
 ## Example: Engine VCR Tests
 
-For engine tests that need real Ollama interactions, use this pattern:
-
 ```typescript
-// tests/core/engine-vcr.test.ts
+import { QCodeEngine } from '../../src/core/engine';
+import { setupVCRTests } from '../helpers/vcr-helper';
+
 describe('QCodeEngine VCR Tests', () => {
-  // ... VCR setup ...
+  const vcr = setupVCRTests(__filename);
+  let engine: QCodeEngine;
+
+  beforeEach(() => {
+    engine = new QCodeEngine(realOllamaClient, toolRegistry, config);
+  });
 
   it('should process help query with real LLM', async () => {
-    const testName = 'engine_help_query';
-    
-    // ... VCR replay setup ...
-    
-    const engine = new QCodeEngine(realOllamaClient, toolRegistry, config);
-    const response = await engine.processQuery('help');
-    
-    expect(response.complete).toBe(true);
-    expect(response.response).toContain('QCode AI Coding Assistant');
-    
-    // ... VCR recording save ...
+    await vcr.withRecording('engine_help_query', async () => {
+      const response = await engine.processQuery('help');
+      
+      expect(response.complete).toBe(true);
+      expect(response.response).toContain('QCode AI Coding Assistant');
+      
+      vcr.recordingLog('✓ Engine response:', response.response);
+    });
   });
 });
 ```
 
 This ensures our engine tests use real Ollama responses while remaining deterministic and fast in CI/CD.
+
+---
+
+## Summary
+
+The VCR helper provides a **professional, maintainable testing infrastructure** that:
+- 🚀 **Reduces boilerplate by 90%**
+- 🛡️ **Provides automatic error handling**
+- 📁 **Manages recordings automatically** 
+- 🔧 **Encapsulates environment complexity**
+- ✅ **Ensures consistent, reliable tests**
+
+**Use `vcr.withRecording()` for all new VCR tests** - it's the modern, clean approach!

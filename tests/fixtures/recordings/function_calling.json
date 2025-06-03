@@ -8,7 +8,7 @@
       "messages": [
         {
           "role": "user",
-          "content": "What is the weather like in San Francisco? Please use the get_weather function."
+          "content": "What is the weather like in San Francisco?"
         }
       ],
       "stream": false,
@@ -32,10 +32,15 @@
                 "unit": {
                   "type": "string",
                   "description": "Temperature unit (celsius or fahrenheit)",
-                  "enum": ["celsius", "fahrenheit"]
+                  "enum": [
+                    "celsius",
+                    "fahrenheit"
+                  ]
                 }
               },
-              "required": ["location"]
+              "required": [
+                "location"
+              ]
             }
           }
         }
@@ -44,7 +49,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-02T04:53:49.536285Z",
+      "created_at": "2025-06-03T03:12:39.653029Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -62,17 +67,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 2646582916,
-      "load_duration": 11986333,
-      "prompt_eval_count": 204,
-      "prompt_eval_duration": 485982625,
+      "total_duration": 1017119959,
+      "load_duration": 19114542,
+      "prompt_eval_count": 197,
+      "prompt_eval_duration": 494194792,
       "eval_count": 25,
-      "eval_duration": 2147964417
+      "eval_duration": 503206541
     },
     "rawHeaders": {
-      "content-length": "408",
+      "content-length": "407",
       "content-type": "application/json; charset=utf-8",
-      "date": "Mon, 02 Jun 2025 04:53:49 GMT"
+      "date": "Tue, 03 Jun 2025 03:12:39 GMT"
     },
     "responseIsBinary": false
   }
