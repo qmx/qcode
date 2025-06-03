@@ -18,10 +18,14 @@ function isPathInside(filePath: string, directoryPath: string): boolean {
 export class WorkspaceSecurity {
   private config: SecurityConfig;
   private allowedPaths: Set<string>;
+  private readonly workingDirectory: string;
 
-  constructor(config: SecurityConfig) {
+  constructor(config: SecurityConfig, workingDirectory: string) {
     this.config = config;
-    this.allowedPaths = new Set(config.workspace.allowedPaths.map(p => normalize(resolve(p))));
+    this.workingDirectory = normalize(resolve(workingDirectory));
+    this.allowedPaths = new Set(
+      config.workspace.allowedPaths.map(p => normalize(resolve(this.workingDirectory, p)))
+    );
   }
 
   /**
@@ -31,10 +35,10 @@ export class WorkspaceSecurity {
     // First validate the path format
     const normalizedPath = validatePath(filePath);
 
-    // Resolve to absolute path
+    // Resolve to absolute path using the engine's working directory
     const absolutePath = isAbsolute(normalizedPath)
       ? normalizedPath
-      : resolve(process.cwd(), normalizedPath);
+      : resolve(this.workingDirectory, normalizedPath);
 
     const resolvedPath = normalize(absolutePath);
 
@@ -52,6 +56,7 @@ export class WorkspaceSecurity {
             path: filePath,
             resolvedPath,
             allowedPaths: Array.from(this.allowedPaths),
+            workingDirectory: this.workingDirectory,
           }
         );
       }
@@ -66,6 +71,7 @@ export class WorkspaceSecurity {
           path: filePath,
           resolvedPath,
           forbiddenPatterns: this.config.workspace.forbiddenPatterns,
+          workingDirectory: this.workingDirectory,
         }
       );
     }
@@ -242,10 +248,17 @@ export class WorkspaceSecurity {
   }
 
   /**
-   * Adds a new path to the allowed workspace paths
+   * Gets the current working directory for this workspace security instance
+   */
+  getWorkingDirectory(): string {
+    return this.workingDirectory;
+  }
+
+  /**
+   * Adds an allowed path relative to the working directory
    */
   addAllowedPath(newPath: string): void {
-    const normalizedPath = normalize(resolve(newPath));
+    const normalizedPath = normalize(resolve(this.workingDirectory, newPath));
     this.allowedPaths.add(normalizedPath);
   }
 
@@ -253,7 +266,7 @@ export class WorkspaceSecurity {
    * Removes a path from the allowed workspace paths
    */
   removeAllowedPath(pathToRemove: string): boolean {
-    const normalizedPath = normalize(resolve(pathToRemove));
+    const normalizedPath = normalize(resolve(this.workingDirectory, pathToRemove));
     return this.allowedPaths.delete(normalizedPath);
   }
 
@@ -262,7 +275,9 @@ export class WorkspaceSecurity {
    */
   updateConfig(newConfig: SecurityConfig): void {
     this.config = newConfig;
-    this.allowedPaths = new Set(newConfig.workspace.allowedPaths.map(p => normalize(resolve(p))));
+    this.allowedPaths = new Set(
+      newConfig.workspace.allowedPaths.map(p => normalize(resolve(this.workingDirectory, p)))
+    );
   }
 
   /**

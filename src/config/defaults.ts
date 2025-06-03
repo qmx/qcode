@@ -3,11 +3,11 @@ import { Config, SecurityConfig, OllamaConfig, LoggingConfig, PartialConfig } fr
 import { DEFAULT_ALLOWED_COMMANDS } from '../security/commands.js';
 
 /**
- * Default security configuration
+ * Default security configuration - paths will be resolved relative to working directory
  */
 export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
   workspace: {
-    allowedPaths: [process.cwd()],
+    allowedPaths: ['.'], // Current directory relative to working directory
     forbiddenPatterns: [
       '**/node_modules/**',
       '**/.git/**',
@@ -66,29 +66,31 @@ export const DEFAULT_LOGGING_CONFIG: LoggingConfig = {
 };
 
 /**
- * Default application configuration
+ * Default application configuration - working directory must be provided separately
  */
 export const DEFAULT_CONFIG: Config = {
   security: DEFAULT_SECURITY_CONFIG,
   ollama: DEFAULT_OLLAMA_CONFIG,
   mcpServers: {},
   logging: DEFAULT_LOGGING_CONFIG,
-  workingDirectory: process.cwd(),
+  workingDirectory: '', // Will be set explicitly by the caller
   configFiles: [],
 };
 
 /**
- * Gets the default configuration with current working directory
+ * Gets the default configuration with specified working directory
  */
-export function getDefaultConfig(): Config {
+export function getDefaultConfig(workingDirectory?: string): Config {
+  const resolvedWorkingDirectory = workingDirectory || process.cwd();
+
   return {
     ...DEFAULT_CONFIG,
-    workingDirectory: process.cwd(),
+    workingDirectory: resolvedWorkingDirectory,
     security: {
       ...DEFAULT_SECURITY_CONFIG,
       workspace: {
         ...DEFAULT_SECURITY_CONFIG.workspace,
-        allowedPaths: [process.cwd()],
+        allowedPaths: ['.'], // Relative to working directory
       },
     },
   };
@@ -107,7 +109,7 @@ export function getDefaultConfigForWorkspace(workspacePath: string): Config {
       ...DEFAULT_SECURITY_CONFIG,
       workspace: {
         ...DEFAULT_SECURITY_CONFIG.workspace,
-        allowedPaths: [resolvedWorkspace],
+        allowedPaths: ['.'], // Current directory relative to workspace
       },
     },
   };

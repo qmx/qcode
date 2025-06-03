@@ -120,10 +120,13 @@ class QCodeCLI {
       this.ollamaClient = new OllamaClient(this.config.ollama);
 
       // Initialize workspace security
-      this.workspaceSecurity = new WorkspaceSecurity(this.config.security);
+      this.workspaceSecurity = new WorkspaceSecurity(
+        this.config.security,
+        this.config.workingDirectory
+      );
 
       // Initialize tool registry
-      this.toolRegistry = new ToolRegistry(this.config.security);
+      this.toolRegistry = new ToolRegistry(this.config.security, this.config.workingDirectory);
 
       // Register internal FilesTool
       const filesTool = new FilesTool(this.workspaceSecurity);
@@ -135,6 +138,7 @@ class QCodeCLI {
 
       // Initialize QCode engine
       this.engine = new QCodeEngine(this.ollamaClient, this.toolRegistry, this.config, {
+        workingDirectory: this.config.workingDirectory,
         enableStreaming: this.config.ollama.stream,
         debug: this.options.debug || false,
       });

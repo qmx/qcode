@@ -67,6 +67,8 @@ export interface ParsedFunctionCall {
  * Engine configuration options
  */
 export interface EngineOptions {
+  /** Working directory for the engine - REQUIRED */
+  workingDirectory: string;
   /** Whether to enable streaming responses */
   enableStreaming?: boolean;
   /** Maximum number of tool executions per query */
@@ -99,16 +101,21 @@ export class QCodeEngine {
   private options: EngineOptions;
   private executionCounter = 0;
   private activeWorkflows: Map<string, WorkflowState> = new Map();
+  private readonly workingDirectory: string;
 
   constructor(
     ollamaClient: OllamaClient,
     toolRegistry: ToolRegistry,
     config: Config,
-    options: EngineOptions = {}
+    options: EngineOptions
   ) {
     this.ollamaClient = ollamaClient;
     this.toolRegistry = toolRegistry;
     this.config = config;
+
+    // Working directory is now required
+    this.workingDirectory = options.workingDirectory;
+
     this.options = {
       enableStreaming: false,
       maxToolExecutions: 10,
@@ -128,7 +135,7 @@ export class QCodeEngine {
     const executionId = `qcode_${Date.now()}_${++this.executionCounter}`;
 
     const context: QueryContext = {
-      workingDirectory: this.config.workingDirectory,
+      workingDirectory: this.workingDirectory,
       security: this.config.security,
       registry: this.toolRegistry,
       query,
@@ -954,7 +961,7 @@ export function createQCodeEngine(
   ollamaClient: OllamaClient,
   toolRegistry: ToolRegistry,
   config: Config,
-  options?: EngineOptions
+  options: EngineOptions
 ): QCodeEngine {
   return new QCodeEngine(ollamaClient, toolRegistry, config, options);
 }

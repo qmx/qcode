@@ -72,6 +72,7 @@ export class ToolRegistry {
   // Security framework for future validation features
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private _security: WorkspaceSecurity;
+  private readonly workingDirectory: string;
   private executionStats = {
     totalExecutions: 0,
     successfulExecutions: 0,
@@ -79,8 +80,9 @@ export class ToolRegistry {
     totalExecutionTime: 0,
   };
 
-  constructor(securityConfig: SecurityConfig) {
-    this._security = new WorkspaceSecurity(securityConfig);
+  constructor(securityConfig: SecurityConfig, workingDirectory: string) {
+    this.workingDirectory = workingDirectory;
+    this._security = new WorkspaceSecurity(securityConfig, workingDirectory);
   }
 
   /**
@@ -467,10 +469,10 @@ export class ToolRegistry {
   }
 
   /**
-   * Updates the security configuration
+   * Updates the security configuration for this registry
    */
   updateSecurityConfig(securityConfig: SecurityConfig): void {
-    this._security = new WorkspaceSecurity(securityConfig);
+    this._security = new WorkspaceSecurity(securityConfig, this.workingDirectory);
   }
 
   /**
@@ -555,8 +557,11 @@ export class ToolRegistry {
 /**
  * Creates a new tool registry instance
  */
-export function createToolRegistry(securityConfig: SecurityConfig): ToolRegistry {
-  return new ToolRegistry(securityConfig);
+export function createToolRegistry(
+  securityConfig: SecurityConfig,
+  workingDirectory: string
+): ToolRegistry {
+  return new ToolRegistry(securityConfig, workingDirectory);
 }
 
 /**
@@ -567,7 +572,10 @@ let defaultRegistry: ToolRegistry | null = null;
 /**
  * Gets or creates the default tool registry instance
  */
-export function getDefaultRegistry(securityConfig?: SecurityConfig): ToolRegistry {
+export function getDefaultRegistry(
+  securityConfig?: SecurityConfig,
+  workingDirectory?: string
+): ToolRegistry {
   if (!defaultRegistry) {
     if (!securityConfig) {
       throw new QCodeError(
@@ -575,7 +583,7 @@ export function getDefaultRegistry(securityConfig?: SecurityConfig): ToolRegistr
         'MISSING_SECURITY_CONFIG'
       );
     }
-    defaultRegistry = new ToolRegistry(securityConfig);
+    defaultRegistry = new ToolRegistry(securityConfig, workingDirectory || '');
   }
   return defaultRegistry;
 }
