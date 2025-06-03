@@ -16,8 +16,20 @@ import { isAbsolute } from 'path';
 const ReadFileSchema = z.object({
   operation: z.literal('read'),
   path: z.string().min(1, 'File path is required'),
-  startLine: z.coerce.number().int().positive().optional(),
-  endLine: z.coerce.number().int().positive().optional(),
+  startLine: z.coerce
+    .number()
+    .int()
+    .positive()
+    .nullable()
+    .optional()
+    .transform(val => val ?? undefined),
+  endLine: z.coerce
+    .number()
+    .int()
+    .positive()
+    .nullable()
+    .optional()
+    .transform(val => val ?? undefined),
   encoding: z.enum(['utf8', 'utf-8', 'ascii', 'base64', 'hex']).default('utf8').optional(),
 });
 
