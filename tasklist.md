@@ -335,22 +335,249 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 
   - [ ] **1.8.5.2 Sequential Tool Execution Chains**:
 
-    - [ ] LLM-driven multi-step workflows:
-      - [ ] List files → Analyze patterns → Read specific files → Generate summary
-      - [ ] Search for patterns → Read matches → Write analysis report
-      - [ ] Find config files → Read settings → Validate consistency
-    - [ ] Tool result formatting for LLM context:
-      - [ ] Structured summaries for large outputs
-      - [ ] Key findings extraction and highlighting
-      - [ ] Context-aware result truncation
-    - [ ] **Sequential Workflow Tests**:
-      - [ ] `workflow_react_component_analysis.json`: Complete component analysis workflow
-      - [ ] `workflow_project_health_check.json`: Multi-step project analysis
-      - [ ] `workflow_todo_review_and_fix.json`: Find TODOs → analyze → suggest fixes
-      - [ ] **Multi-Step Workflow Validation**:
-        - [ ] List files → Read specific files → Write modifications → Verify changes
-        - [ ] Search patterns → Analyze results → Generate summary report
-        - [ ] Complex glob operations across different project structures
+    - [ ] **1.8.5.2.1 Enhanced LLM Context Management**:
+      
+      **Files to modify:**
+      - `src/core/engine.ts` - Extend `processWithLLMFunctionCalling` method (lines 481-820)
+      - `src/types.ts` - Add new interfaces for structured result formatting
+
+      **Implementation hints:**
+      - Current `formatToolResult()` method (lines 1052-1111) needs expansion for structured summaries
+      - Conversation history building (lines 565-588) needs intelligent context truncation
+      - `shouldContinueWorkflow()` method (lines 825-880) needs smarter pattern detection
+
+      **New interfaces needed in `src/types.ts`:**
+      ```typescript
+      export interface StructuredToolResult {
+        type: 'file_content' | 'file_list' | 'search_results' | 'analysis';
+        summary: string;
+        keyFindings: string[];
+        fullData: any;
+        truncated: boolean;
+        contextForNextStep: Record<string, any>;
+      }
+      
+      export interface ChainContext {
+        originalQuery: string;
+        stepNumber: number;
+        previousResults: StructuredToolResult[];
+        extractedPatterns: Record<string, any>;
+        workingMemory: Record<string, any>;
+      }
+      ```
+
+      **Tasks:**
+      - [ ] Implement intelligent result summarization for large outputs (>2KB)
+      - [ ] Extract key findings automatically (file paths, patterns, errors)
+      - [ ] Context-aware truncation that preserves important information
+      - [ ] Memory management to prevent conversation history explosion
+
+    - [ ] **1.8.5.2.2 LLM-Driven Multi-Step Workflow Patterns**:
+
+      **Files to create/modify:**
+      - `src/core/workflow-orchestrator.ts` - NEW FILE for workflow pattern detection
+      - `src/core/engine.ts` - Extend LLM system prompt with workflow strategies
+      - `tests/e2e/sequential-workflows.test.ts` - NEW FILE for workflow pattern tests
+
+      **Workflow patterns to implement:**
+      
+      **Pattern 1: Project Discovery → Analysis → Summary**
+      ```typescript
+      // List files → Detect patterns → Read key files → Generate summary
+      async executeProjectAnalysisWorkflow(query: string): Promise<WorkflowResult> {
+        // Step 1: List project structure
+        // Step 2: Identify framework/patterns (package.json, tsconfig.json)
+        // Step 3: Read configuration files and entry points
+        // Step 4: Generate structured analysis
+      }
+      ```
+
+      **Pattern 2: Search → Read → Report Generation**
+      ```typescript
+      // Search for patterns → Read matching files → Write analysis report
+      async executeSearchAndAnalysisWorkflow(query: string): Promise<WorkflowResult> {
+        // Step 1: Search for TODO/FIXME/pattern
+        // Step 2: Read files with matches
+        // Step 3: Analyze context and generate recommendations
+        // Step 4: Optionally write summary report
+      }
+      ```
+
+      **Pattern 3: Configuration Validation Chain**
+      ```typescript
+      // Find config files → Read settings → Validate consistency
+      async executeConfigValidationWorkflow(query: string): Promise<WorkflowResult> {
+        // Step 1: Find all configuration files (.json, .yaml, .env)
+        // Step 2: Read and parse configuration values
+        // Step 3: Cross-reference and validate consistency
+        // Step 4: Report inconsistencies and recommendations
+      }
+      ```
+
+      **Tasks:**
+      - [ ] Implement pattern detection in `src/core/workflow-orchestrator.ts`
+      - [ ] Create workflow execution strategies with step dependencies
+      - [ ] Add conditional logic for step execution based on intermediate results
+      - [ ] Implement rollback/retry mechanisms for failed steps
+
+    - [ ] **1.8.5.2.3 Enhanced System Prompt for Multi-Step Reasoning**:
+
+      **Files to modify:**
+      - `src/core/engine.ts` - Update LLM system prompt (lines 565-588)
+
+      **Current system prompt enhancement needed:**
+      ```typescript
+      // Replace existing system prompt with multi-step strategy
+      const enhancedSystemPrompt = `You are QCode, an AI coding assistant with advanced workflow capabilities.
+
+      WORKFLOW STRATEGIES:
+      For complex queries, break them into logical steps:
+
+      1. PROJECT UNDERSTANDING:
+         - Always start with project structure analysis
+         - Look for package.json, tsconfig.json, README files
+         - Identify framework and architecture patterns
+         
+      2. SEQUENTIAL EXECUTION:
+         - List relevant files first, then read specific ones
+         - Search for patterns before analyzing code
+         - Read configuration files to understand project setup
+         
+      3. ANALYSIS CHAINING:
+         - Use results from previous steps to inform next actions
+         - Maintain context about project type and structure
+         - Focus on files most relevant to the user's query
+
+      CONTEXT MANAGEMENT:
+      - Summarize large outputs for conversation context
+      - Extract key findings and pass them forward
+      - Track file relationships and dependencies
+      
+      EXECUTION PATTERNS:
+      - "Analyze project" = list → identify patterns → read key files → summarize
+      - "Find issues" = search patterns → read matches → analyze context
+      - "Review changes" = list recent files → read changes → assess impact`;
+      ```
+
+      **Tasks:**
+      - [ ] Design context-aware prompting strategies
+      - [ ] Add workflow pattern detection keywords
+      - [ ] Implement step-by-step reasoning guidance
+      - [ ] Add context preservation instructions
+
+    - [ ] **1.8.5.2.4 Tool Result Formatting for LLM Context**:
+
+      **Files to modify:**
+      - `src/core/engine.ts` - Replace `formatToolResult()` method (lines 1052-1069)
+      - `src/tools/files.ts` - Enhance result objects with metadata
+
+      **Current issues to fix:**
+      - Results over 2KB flood conversation context
+      - File lists with 50+ files overwhelm LLM
+      - Search results lose important context in formatting
+      
+      **Enhanced formatting strategy:**
+      ```typescript
+      private formatToolResultForLLMContext(
+        toolName: string, 
+        result: ToolResult,
+        stepContext: ChainContext
+      ): string {
+        // Different formatting based on step position and result size
+        if (stepContext.stepNumber === 1 && result.data?.files?.length > 10) {
+          return this.formatProjectOverview(result);
+        }
+        
+        if (result.data?.content?.length > 2000) {
+          return this.formatContentSummary(result);
+        }
+        
+        return this.formatFullResult(result);
+      }
+      ```
+
+      **Tasks:**
+      - [ ] Implement structured summaries for large file lists (>20 items)
+      - [ ] Extract key findings from search results automatically
+      - [ ] Context-aware result truncation based on query intent
+      - [ ] Smart highlighting of relevant information for next steps
+
+    - [ ] **1.8.5.2.5 Comprehensive Sequential Workflow Tests**:
+
+      **Files to create:**
+      - `tests/e2e/sequential-workflows.test.ts` - NEW comprehensive test suite
+      - `tests/fixtures/recordings/workflow_*.json` - NEW VCR recordings
+
+      **Test scenarios to implement:**
+      
+      **VCR Test: React Component Analysis Workflow**
+      ```typescript
+      // Query: "Find all React components and analyze their props usage"
+      // Step 1: List *.jsx, *.tsx files → identify React components
+      // Step 2: Read component files → extract props interfaces
+      // Step 3: Generate summary of prop patterns and recommendations
+      ```
+
+      **VCR Test: Project Health Check Workflow**
+      ```typescript
+      // Query: "Analyze project structure and find potential issues"
+      // Step 1: List project structure → identify project type
+      // Step 2: Read package.json, tsconfig → check configuration
+      // Step 3: Search for TODO/FIXME → find pending issues
+      // Step 4: Generate comprehensive health report
+      ```
+
+      **VCR Test: API Documentation Workflow**
+      ```typescript
+      // Query: "Document all API endpoints in this Express app"
+      // Step 1: List files matching server patterns → find route files
+      // Step 2: Search for app.get, app.post patterns → extract endpoints
+      // Step 3: Read route handler files → analyze endpoint details
+      // Step 4: Generate API documentation summary
+      ```
+
+      **Tasks:**
+      - [ ] Create realistic project fixtures (React app, Express API, monorepo)
+      - [ ] Record LLM interactions for complex multi-step workflows
+      - [ ] Test error recovery when intermediate steps fail
+      - [ ] Validate context preservation across 5+ step workflows
+      - [ ] Measure performance and memory usage for complex chains
+      - [ ] Complex glob operations across different project structures
+
+    - [ ] **1.8.5.2.6 Memory Management and Performance Optimization**:
+
+      **Files to modify:**
+      - `src/core/engine.ts` - Add conversation history management
+      - `src/core/workflow-state.ts` - Enhance memory cleanup (lines 301-318)
+
+      **Performance considerations:**
+      - Conversation history grows exponentially with tool results
+      - Large file contents consume LLM context window
+      - Memory leaks from uncleaned workflow states
+
+      **Optimization strategies:**
+      ```typescript
+      class ConversationMemoryManager {
+        private maxHistorySize = 8000; // characters
+        private maxSteps = 10;
+        
+        compressHistory(history: ConversationMessage[]): ConversationMessage[] {
+          // Keep system prompt + user query + last 3 assistant messages
+          // Summarize older steps to preserve key findings
+        }
+        
+        extractKeyContext(result: ToolResult): KeyContext {
+          // Extract file paths, patterns, errors for future reference
+          // Discard verbose content while preserving actionable information
+        }
+      }
+      ```
+
+      **Tasks:**
+      - [ ] Implement sliding window conversation history
+      - [ ] Add automatic context compression for long workflows
+      - [ ] Monitor memory usage during multi-step execution
+      - [ ] Implement cleanup hooks for abandoned workflows
 
   - [ ] **1.8.5.3 Complex Query Understanding (MANDATORY - BROKEN DOWN)**:
 
