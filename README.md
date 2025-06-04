@@ -76,6 +76,32 @@ qcode "search for TODO comments, read the files, and suggest fixes"
 qcode "find all API routes and analyze their patterns"
 ```
 
+### 🧠 Enhanced Context Management
+
+QCode features intelligent context management that preserves key information across multi-step workflows while avoiding context explosion:
+
+```bash
+# Intelligent file analysis with context preservation
+qcode "find all TypeScript files in src/core, then read the engine.ts file and show me its key components"
+
+# Smart summarization for large files (automatically truncates >30KB files)
+qcode "list all files in src/tools directory and then read the files tool to understand its structure"
+
+# Context-aware search with intelligent result grouping
+qcode "search for 'class' in src/core directory and analyze the main classes"
+
+# Multi-step workflows with preserved context
+qcode "search for import statements in src/core directory then analyze the file structure"
+```
+
+**Key Features:**
+
+- **Intelligent Summarization**: Large files (>2KB) are automatically summarized with key findings extracted
+- **Context Preservation**: Important information is preserved across workflow steps while discarding verbose content
+- **Smart Truncation**: File content is intelligently truncated for LLM context while maintaining readability
+- **Workflow Memory**: Multi-step operations maintain context of previous results for better decision making
+- **Structured Results**: Tool outputs are formatted with summaries, key findings, and actionable insights
+
 ### 🔧 Development Assistance
 
 ```bash
