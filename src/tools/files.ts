@@ -7,6 +7,9 @@ import glob, { Options as GlobOptions } from 'fast-glob';
 import { NamespacedTool, ToolDefinition, ToolResult, QCodeError } from '../types.js';
 import { WorkspaceSecurity } from '../security/workspace.js';
 import { isAbsolute } from 'path';
+import { safeLogger } from '../utils/logger.js';
+
+const logger = safeLogger();
 
 /**
  * Zod schemas for file operation parameters
@@ -257,49 +260,88 @@ export class FilesTool implements NamespacedTool {
    * Execute file operation with optional context
    */
   public async execute(args: Record<string, any>, context?: any): Promise<ToolResult> {
-    const startTime = Date.now();
+    const debugEnabled = context?.debug || false;
+
+    if (debugEnabled) {
+      logger.debug(`🔍 [DEBUG FILES] Execute called with args: ${JSON.stringify(args, null, 2)}`);
+      logger.debug(`🔍 [DEBUG FILES] Context: ${JSON.stringify(context, null, 2)}`);
+    }
 
     try {
-      // Validate and parse arguments
+      // Validate and parse operation parameters
       const params = FileOperationSchema.parse(args);
 
-      // Execute the appropriate operation
-      let data: any;
+      if (debugEnabled) {
+        logger.debug(`🔍 [DEBUG FILES] Parsed params: ${JSON.stringify(params, null, 2)}`);
+      }
+
+      // Route to appropriate operation handler
+      let result: any;
       switch (params.operation) {
         case 'read':
-          data = await this.readFile(params, context);
+          if (debugEnabled) {
+            logger.debug(`🔍 [DEBUG FILES] Executing read operation`);
+          }
+          result = await this.readFile(params, context);
           break;
+
         case 'write':
-          data = await this.writeFile(params);
+          if (debugEnabled) {
+            logger.debug(`🔍 [DEBUG FILES] Executing write operation`);
+          }
+          result = await this.writeFile(params);
           break;
+
         case 'list':
-          data = await this.listFiles(params, context);
+          if (debugEnabled) {
+            logger.debug(`🔍 [DEBUG FILES] Executing list operation`);
+          }
+          result = await this.listFiles(params, context);
           break;
+
         case 'search':
-          data = await this.searchFiles(params);
+          if (debugEnabled) {
+            logger.debug(`🔍 [DEBUG FILES] Executing search operation`);
+          }
+          result = await this.searchFiles(params);
           break;
-        default: {
-          // TypeScript exhaustiveness check - this should never be reached
-          const exhaustiveCheck: never = params;
+
+        default:
           throw new QCodeError(
-            `Unknown operation: ${(exhaustiveCheck as { operation: string }).operation}`,
+            `Unsupported operation: ${(params as any).operation}`,
             'INVALID_OPERATION'
           );
-        }
+      }
+
+      if (debugEnabled) {
+        logger.debug(`🔍 [DEBUG FILES] Operation result: ${JSON.stringify(result, null, 2)}`);
       }
 
       return {
         success: true,
-        data,
-        duration: Date.now() - startTime,
+        data: result,
+        duration: 0, // We'll implement timing later
         tool: this.name,
         namespace: this.namespace,
       };
     } catch (error) {
+      if (debugEnabled) {
+        logger.debug(
+          `🔍 [DEBUG FILES] Error in execute: ${error instanceof Error ? error.stack : JSON.stringify(error)}`
+        );
+      }
+
+      const errorMessage =
+        error instanceof QCodeError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : 'Unknown error occurred';
+
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        duration: Date.now() - startTime,
+        error: errorMessage,
+        duration: 0, // We'll implement timing later
         tool: this.name,
         namespace: this.namespace,
       };
@@ -634,6 +676,7 @@ export class FilesTool implements NamespacedTool {
    * List files operation - implementation for step 1.7.4
    */
   private async listFiles(params: ListFilesParams, context?: any): Promise<ListFilesResult> {
+    const debugEnabled = context?.debug || false;
     const {
       path = '.',
       pattern,
@@ -642,18 +685,40 @@ export class FilesTool implements NamespacedTool {
       includeMetadata = false,
     } = params;
 
+    if (debugEnabled) {
+      logger.debug(
+        `🔍 [DEBUG FILES LIST] Starting listFiles with params: ${JSON.stringify(params, null, 2)}`
+      );
+      logger.debug(`🔍 [DEBUG FILES LIST] Context: ${JSON.stringify(context, null, 2)}`);
+    }
+
     try {
       let basePath = path;
       let searchPattern = pattern;
 
+      if (debugEnabled) {
+        logger.debug(
+          `🔍 [DEBUG FILES LIST] Initial basePath: ${basePath}, searchPattern: ${searchPattern}`
+        );
+      }
+
       // Resolve base path using context working directory if available and path is relative
       if (context?.workingDirectory && !isAbsolute(basePath)) {
         basePath = join(context.workingDirectory, basePath);
+        if (debugEnabled) {
+          logger.debug(
+            `🔍 [DEBUG FILES LIST] Resolved basePath with context workingDirectory: ${basePath}`
+          );
+        }
       }
 
       // Smart glob pattern detection: if path contains glob characters and no separate pattern is provided
       const globChars = ['*', '?', '[', ']', '{', '}'];
       const hasGlobChars = globChars.some(char => path.includes(char));
+
+      if (debugEnabled) {
+        logger.debug(`🔍 [DEBUG FILES LIST] Has glob chars: ${hasGlobChars}`);
+      }
 
       if (hasGlobChars && !pattern) {
         // The path itself is a glob pattern - use it as the pattern and extract base directory
@@ -683,13 +748,33 @@ export class FilesTool implements NamespacedTool {
         if (context?.workingDirectory && !isAbsolute(basePath)) {
           basePath = join(context.workingDirectory, basePath);
         }
+
+        if (debugEnabled) {
+          logger.debug(
+            `🔍 [DEBUG FILES LIST] Extracted from glob - basePath: ${basePath}, searchPattern: ${searchPattern}`
+          );
+        }
       }
 
       // Validate the base directory path
       let validatedPath: string;
       try {
+        if (debugEnabled) {
+          logger.debug(`🔍 [DEBUG FILES LIST] Validating path: ${basePath}`);
+        }
+
         validatedPath = await this.validatePath(basePath, 'read');
+
+        if (debugEnabled) {
+          logger.debug(`🔍 [DEBUG FILES LIST] Path validated: ${validatedPath}`);
+        }
       } catch (error) {
+        if (debugEnabled) {
+          logger.debug(
+            `🔍 [DEBUG FILES LIST] Path validation error: ${error instanceof Error ? error.stack : JSON.stringify(error)}`
+          );
+        }
+
         if (error instanceof QCodeError) {
           if (error.code === 'PATH_NOT_FOUND') {
             throw new QCodeError(`Directory not found: ${basePath}`, 'DIRECTORY_NOT_FOUND');
@@ -710,15 +795,27 @@ export class FilesTool implements NamespacedTool {
       // Check if the path exists and is a directory
       const stats = await fs.stat(validatedPath);
       if (!stats.isDirectory()) {
+        if (debugEnabled) {
+          logger.debug(`🔍 [DEBUG FILES LIST] Path is not a directory: ${validatedPath}`);
+        }
+
         throw new QCodeError(`Path is not a directory: ${basePath}`, 'NOT_A_DIRECTORY', {
           path: basePath,
           validatedPath,
         });
       }
 
+      if (debugEnabled) {
+        logger.debug(`🔍 [DEBUG FILES LIST] Directory confirmed: ${validatedPath}`);
+      }
+
       let allFiles: string[] = [];
 
       if (searchPattern) {
+        if (debugEnabled) {
+          logger.debug(`🔍 [DEBUG FILES LIST] Using glob pattern: ${searchPattern}`);
+        }
+
         // Use fast-glob for pattern matching
         const globOptions: GlobOptions = {
           cwd: validatedPath,
@@ -726,25 +823,56 @@ export class FilesTool implements NamespacedTool {
           dot: includeHidden,
         };
 
-        // Add depth control for recursion using 'deep' option
-        if (!recursive) {
+        // Handle depth control for recursion
+        // If pattern contains '**', it should be recursive regardless of the recursive parameter
+        // If pattern doesn't contain '**' but recursive is true, allow deep search
+        // If pattern doesn't contain '**' and recursive is false, limit depth
+        const isPatternRecursive = searchPattern.includes('**');
+        if (!isPatternRecursive && !recursive) {
           globOptions.deep = 1;
+        }
+        // If isPatternRecursive is true or recursive is true, don't set deep (unlimited depth)
+
+        if (debugEnabled) {
+          logger.debug(
+            `🔍 [DEBUG FILES LIST] Glob options: ${JSON.stringify(globOptions, null, 2)}`
+          );
         }
 
         try {
           allFiles = await glob(searchPattern, globOptions);
+
+          if (debugEnabled) {
+            logger.debug(`🔍 [DEBUG FILES LIST] Glob result: ${allFiles.length} files found`);
+            logger.debug(`🔍 [DEBUG FILES LIST] Files: ${JSON.stringify(allFiles, null, 2)}`);
+          }
         } catch (globError) {
+          if (debugEnabled) {
+            logger.debug(
+              `🔍 [DEBUG FILES LIST] Glob error: ${globError instanceof Error ? globError.stack : JSON.stringify(globError)}`
+            );
+          }
+
           throw new QCodeError(
             `Error processing glob pattern "${searchPattern}": ${globError instanceof Error ? globError.message : 'Unknown error'}`,
             'GLOB_ERROR'
           );
         }
       } else {
+        if (debugEnabled) {
+          logger.debug(`🔍 [DEBUG FILES LIST] No pattern - listing directory contents directly`);
+        }
+
         // No pattern - list directory contents directly
         if (recursive) {
           allFiles = await this.getAllFilesRecursive(validatedPath, includeHidden);
         } else {
           allFiles = await this.getDirectoryContents(validatedPath, includeHidden);
+        }
+
+        if (debugEnabled) {
+          logger.debug(`🔍 [DEBUG FILES LIST] Directory contents: ${allFiles.length} files found`);
+          logger.debug(`🔍 [DEBUG FILES LIST] Files: ${JSON.stringify(allFiles, null, 2)}`);
         }
       }
 
@@ -787,6 +915,11 @@ export class FilesTool implements NamespacedTool {
           return metadata;
         } catch (error) {
           // Skip files that can't be accessed
+          if (debugEnabled) {
+            logger.debug(
+              `🔍 [DEBUG FILES LIST] Skipping file due to error: ${filePath}, error: ${error instanceof Error ? error.message : 'Unknown'}`
+            );
+          }
           return null;
         }
       });
@@ -796,6 +929,10 @@ export class FilesTool implements NamespacedTool {
       const files = fileMetadataResults.filter(
         (metadata): metadata is FileMetadata => metadata !== null
       );
+
+      if (debugEnabled) {
+        logger.debug(`🔍 [DEBUG FILES LIST] Final file metadata: ${files.length} valid files`);
+      }
 
       // Sort files: directories first, then files, both alphabetically
       files.sort((a, b) => {
@@ -814,8 +951,18 @@ export class FilesTool implements NamespacedTool {
         result.pattern = searchPattern;
       }
 
+      if (debugEnabled) {
+        logger.debug(`🔍 [DEBUG FILES LIST] Final result: ${JSON.stringify(result, null, 2)}`);
+      }
+
       return result;
     } catch (error) {
+      if (debugEnabled) {
+        logger.debug(
+          `🔍 [DEBUG FILES LIST] Exception in listFiles: ${error instanceof Error ? error.stack : JSON.stringify(error)}`
+        );
+      }
+
       if (error instanceof QCodeError) {
         throw error;
       }

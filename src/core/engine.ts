@@ -2,6 +2,7 @@ import { OllamaClient, OllamaResponse } from './client.js';
 import { ToolRegistry } from './registry.js';
 import { Config, QCodeError, ToolContext, ToolResult } from '../types.js';
 import { WorkflowState, WorkflowContext } from './workflow-state.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Query processing intent detected from user input
@@ -29,6 +30,8 @@ export interface QueryContext extends ToolContext {
   startTime: number;
   /** Unique execution ID */
   executionId: string;
+  /** Debug flag */
+  debug?: boolean;
 }
 
 /**
@@ -134,6 +137,13 @@ export class QCodeEngine {
     const startTime = Date.now();
     const executionId = `qcode_${Date.now()}_${++this.executionCounter}`;
 
+    if (this.options.debug) {
+      logger.debug(`🔍 [DEBUG ENGINE] Starting processQuery: "${query}"`);
+      logger.debug(`🔍 [DEBUG ENGINE] Execution ID: ${executionId}`);
+      logger.debug(`🔍 [DEBUG ENGINE] Working directory: ${this.workingDirectory}`);
+      logger.debug(`🔍 [DEBUG ENGINE] Engine options: ${JSON.stringify(this.options, null, 2)}`);
+    }
+
     const context: QueryContext = {
       workingDirectory: this.workingDirectory,
       security: this.config.security,
@@ -143,6 +153,8 @@ export class QCodeEngine {
       // Additional QueryContext properties
       startTime,
       executionId,
+      // Add debug flag to context
+      debug: this.options.debug || false,
     };
 
     const toolsExecuted: string[] = [];
@@ -153,26 +165,54 @@ export class QCodeEngine {
       // Phase 1: Basic query processing
       this.validateQuery(query);
 
+      if (this.options.debug) {
+        logger.debug(`🔍 [DEBUG ENGINE] Query validated successfully`);
+      }
+
       // Phase 2: Intent detection (simple for now)
       const intent = await this.detectIntent(query);
       context.intent = intent;
+
+      if (this.options.debug) {
+        logger.debug(`🔍 [DEBUG ENGINE] Intent detected: ${JSON.stringify(intent, null, 2)}`);
+      }
 
       // Phase 3: Process with LLM function calling for file operations
       let response: string;
 
       if (intent.type === 'file_operation') {
+        if (this.options.debug) {
+          logger.debug(`🔍 [DEBUG ENGINE] Processing as file operation with LLM function calling`);
+        }
+
         const llmResponse = await this.processWithLLMFunctionCalling(query, context);
         response = llmResponse.response;
         toolsExecuted.push(...llmResponse.toolsExecuted);
         toolResults.push(...llmResponse.toolResults);
         errors.push(...(llmResponse.errors || []));
+
+        if (this.options.debug) {
+          logger.debug(
+            `🔍 [DEBUG ENGINE] LLM function calling response: ${JSON.stringify(llmResponse, null, 2)}`
+          );
+        }
       } else {
+        if (this.options.debug) {
+          logger.debug(`🔍 [DEBUG ENGINE] Processing with simple intent-based response`);
+        }
+
         // Fallback to simple responses for non-file operations
         const ollamaResponse = await this.processWithIntent(query, context);
         response = ollamaResponse.response;
+
+        if (this.options.debug) {
+          logger.debug(
+            `🔍 [DEBUG ENGINE] Intent-based response: ${JSON.stringify(ollamaResponse, null, 2)}`
+          );
+        }
       }
 
-      return {
+      const result = {
         response,
         toolsExecuted,
         toolResults,
@@ -180,7 +220,19 @@ export class QCodeEngine {
         complete: true,
         ...(errors.length > 0 && { errors }),
       };
+
+      if (this.options.debug) {
+        logger.debug(`🔍 [DEBUG ENGINE] Final result: ${JSON.stringify(result, null, 2)}`);
+      }
+
+      return result;
     } catch (error) {
+      if (this.options.debug) {
+        logger.debug(
+          `🔍 [DEBUG ENGINE] Error in processQuery: ${error instanceof Error ? error.stack : JSON.stringify(error)}`
+        );
+      }
+
       const qcodeError =
         error instanceof QCodeError
           ? error
@@ -435,12 +487,21 @@ For more specific help, describe what you'd like to do with your code.
     toolResults: ToolResult[];
     errors?: QCodeError[];
   }> {
+    if (this.options.debug) {
+      logger.debug(`🔍 [DEBUG LLM] Starting LLM function calling for query: "${query}"`);
+      logger.debug(`🔍 [DEBUG LLM] Context: ${JSON.stringify(context, null, 2)}`);
+    }
+
     const toolsExecuted: string[] = [];
     const toolResults: ToolResult[] = [];
     const errors: QCodeError[] = [];
     const currentQuery = query;
     let iterationCount = 0;
     const maxIterations = this.options.maxToolExecutions || 10;
+
+    if (this.options.debug) {
+      logger.debug(`🔍 [DEBUG LLM] Max iterations: ${maxIterations}`);
+    }
 
     // Initialize workflow state if enabled
     let workflowState: WorkflowState | undefined;
@@ -453,11 +514,19 @@ For more specific help, describe what you'd like to do with your code.
       };
       workflowState = new WorkflowState(workflowContext.workflowId, workflowContext);
       this.activeWorkflows.set(workflowContext.workflowId, workflowState);
+
+      if (this.options.debug) {
+        logger.debug(`🔍 [DEBUG LLM] Workflow state initialized: ${workflowContext.workflowId}`);
+      }
     }
 
     try {
       // Get available tools for function calling
       const availableTools = this.toolRegistry.getToolsForOllama('internal');
+
+      if (this.options.debug) {
+        logger.debug(`🔍 [DEBUG LLM] Available tools: ${JSON.stringify(availableTools, null, 2)}`);
+      }
 
       if (availableTools.length === 0) {
         throw new QCodeError(
@@ -483,7 +552,17 @@ For file paths, assume they are relative to the current workspace unless otherwi
 IMPORTANT for the 'files' tool operations:
 - For list operation: Use 'path' parameter for the directory, 'pattern' for glob patterns like "*.swift", "**/*.ts"
 - For read operation: Use 'path' parameter for the file path, 'startLine' and 'endLine' for ranges
-- For search operation: Use 'pattern' for text/regex to search, 'path' for directory scope
+- For search operation: Use 'query' parameter for text/regex to search, 'pattern' parameter for file filtering (optional), 'path' for directory scope
+
+STRATEGY for finding main functions or understanding project structure:
+1. First, list files in the current directory to understand the project type (look for package.json, tsconfig.json, etc.)
+2. Based on the project type, look for appropriate file patterns:
+   - TypeScript/JavaScript projects: "**/*.ts", "**/*.js"
+   - Python projects: "**/*.py"
+   - Other projects: list all files first
+3. When looking for "main function", search for common entry points:
+   - index.ts, index.js, main.ts, main.js, cli.ts, app.ts
+   - Or search for "main" or "function main" in the codebase
 
 For multi-step queries like "list files and then read the first one", break this down into steps:
 1. First, call the list function to get files
@@ -497,9 +576,19 @@ Continue calling functions until the user's request is fully satisfied.`,
           },
         ];
 
+      if (this.options.debug) {
+        logger.debug(
+          `🔍 [DEBUG LLM] Initial conversation history: ${JSON.stringify(conversationHistory, null, 2)}`
+        );
+      }
+
       // Multi-step workflow loop
       while (iterationCount < maxIterations) {
         iterationCount++;
+
+        if (this.options.debug) {
+          logger.debug(`🔍 [DEBUG LLM] Starting iteration ${iterationCount}/${maxIterations}`);
+        }
 
         // Create function call request
         const functionCallRequest = {
@@ -510,13 +599,32 @@ Continue calling functions until the user's request is fully satisfied.`,
           temperature: this.config.ollama.temperature,
         };
 
+        if (this.options.debug) {
+          logger.debug(
+            `🔍 [DEBUG LLM] Function call request: ${JSON.stringify(functionCallRequest, null, 2)}`
+          );
+        }
+
         // Make function call to LLM
         const llmResponse = await this.ollamaClient.functionCall(functionCallRequest);
+
+        if (this.options.debug) {
+          logger.debug(`🔍 [DEBUG LLM] LLM response: ${JSON.stringify(llmResponse, null, 2)}`);
+        }
 
         // Parse function calls from response
         const functionCalls = this.parseFunctionCalls(llmResponse);
 
+        if (this.options.debug) {
+          logger.debug(
+            `🔍 [DEBUG LLM] Parsed function calls: ${JSON.stringify(functionCalls, null, 2)}`
+          );
+        }
+
         if (functionCalls.length === 0) {
+          if (this.options.debug) {
+            logger.debug(`🔍 [DEBUG LLM] No function calls found, breaking loop`);
+          }
           // No more function calls, we're done
           break;
         }
@@ -526,6 +634,12 @@ Continue calling functions until the user's request is fully satisfied.`,
         let stepHadErrors = false;
 
         for (const functionCall of functionCalls) {
+          if (this.options.debug) {
+            logger.debug(
+              `🔍 [DEBUG LLM] Executing function call: ${JSON.stringify(functionCall, null, 2)}`
+            );
+          }
+
           try {
             // Start workflow step if tracking
             let stepId: string | undefined;
@@ -535,6 +649,10 @@ Continue calling functions until the user's request is fully satisfied.`,
                 functionCall.toolName,
                 functionCall.arguments
               );
+
+              if (this.options.debug) {
+                logger.debug(`🔍 [DEBUG LLM] Workflow step started: ${stepId}`);
+              }
             }
 
             // Execute the tool
@@ -543,6 +661,10 @@ Continue calling functions until the user's request is fully satisfied.`,
               functionCall.arguments,
               context
             );
+
+            if (this.options.debug) {
+              logger.debug(`🔍 [DEBUG LLM] Tool result: ${JSON.stringify(toolResult, null, 2)}`);
+            }
 
             toolsExecuted.push(functionCall.toolName);
             toolResults.push(toolResult);
@@ -555,6 +677,11 @@ Continue calling functions until the user's request is fully satisfied.`,
             if (toolResult.success) {
               // Format successful result for user display and conversation history
               const formattedResult = this.formatToolResult(functionCall.toolName, toolResult);
+
+              if (this.options.debug) {
+                logger.debug(`🔍 [DEBUG LLM] Formatted tool result: ${formattedResult}`);
+              }
+
               stepResults.push(formattedResult);
             } else {
               stepHadErrors = true;
@@ -566,6 +693,10 @@ Continue calling functions until the user's request is fully satisfied.`,
                 })
               );
               stepResults.push(`Error executing ${functionCall.toolName}: ${toolResult.error}`);
+
+              if (this.options.debug) {
+                logger.debug(`🔍 [DEBUG LLM] Tool execution failed: ${errorMsg}`);
+              }
 
               // Fail workflow step if tracking
               if (workflowState && stepId) {
@@ -586,6 +717,12 @@ Continue calling functions until the user's request is fully satisfied.`,
                     { toolName: functionCall.toolName }
                   );
 
+            if (this.options.debug) {
+              logger.debug(
+                `🔍 [DEBUG LLM] Tool execution exception: ${error instanceof Error ? error.stack : JSON.stringify(error)}`
+              );
+            }
+
             errors.push(qcodeError);
             stepResults.push(`Error executing ${functionCall.toolName}: ${qcodeError.message}`);
           }
@@ -593,6 +730,11 @@ Continue calling functions until the user's request is fully satisfied.`,
 
         // Add the results to conversation history for next iteration
         const stepResultsText = stepResults.join('\n');
+
+        if (this.options.debug) {
+          logger.debug(`🔍 [DEBUG LLM] Step results text: ${stepResultsText}`);
+        }
+
         conversationHistory.push({
           role: 'assistant' as const,
           content: stepResultsText,
@@ -605,6 +747,10 @@ Continue calling functions until the user's request is fully satisfied.`,
           stepHadErrors,
           iterationCount
         );
+
+        if (this.options.debug) {
+          logger.debug(`🔍 [DEBUG LLM] Needs continuation: ${needsContinuation}`);
+        }
 
         if (!needsContinuation) {
           // We're done, return the final response
@@ -626,6 +772,10 @@ Continue calling functions until the user's request is fully satisfied.`,
 
       const finalResponse = allResults.trim() || 'Tool execution completed.';
 
+      if (this.options.debug) {
+        logger.debug(`🔍 [DEBUG LLM] Final response: ${finalResponse}`);
+      }
+
       return {
         response: finalResponse,
         toolsExecuted,
@@ -633,6 +783,12 @@ Continue calling functions until the user's request is fully satisfied.`,
         ...(errors.length > 0 && { errors }),
       };
     } catch (error) {
+      if (this.options.debug) {
+        logger.debug(
+          `🔍 [DEBUG LLM] Exception in processWithLLMFunctionCalling: ${error instanceof Error ? error.stack : JSON.stringify(error)}`
+        );
+      }
+
       // Interrupt workflow if tracking
       if (workflowState) {
         await workflowState.interrupt(

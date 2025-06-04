@@ -16,6 +16,7 @@ import { ToolRegistry } from './core/registry.js';
 import { QCodeEngine } from './core/engine.js';
 import { FilesTool } from './tools/files.js';
 import { WorkspaceSecurity } from './security/workspace.js';
+import { initializeLogger } from './utils/logger.js';
 
 /**
  * CLI options interface
@@ -77,6 +78,9 @@ class QCodeCLI {
       // Load configuration with CLI overrides
       const configResult = await loadConfigWithOverrides(workingDirectory, cliOverrides);
       this.config = configResult.config;
+
+      // Initialize logger with the loaded configuration
+      initializeLogger(this.config.logging);
 
       // Display configuration warnings if in verbose mode
       if (options.verbose && configResult.warnings.length > 0) {
@@ -171,6 +175,16 @@ class QCodeCLI {
     try {
       console.log(chalk.blue('🤖 QCode AI Coding Assistant'));
 
+      if (this.options.debug) {
+        console.log(chalk.gray('🔍 [DEBUG] Starting query processing...'));
+        console.log(chalk.gray(`🔍 [DEBUG] Query: "${query}"`));
+        console.log(chalk.gray(`🔍 [DEBUG] Working directory: ${this.config.workingDirectory}`));
+        console.log(
+          chalk.gray(`🔍 [DEBUG] Config loaded: ${JSON.stringify(this.config, null, 2)}`)
+        );
+        console.log(chalk.gray(`🔍 [DEBUG] CLI options: ${JSON.stringify(this.options, null, 2)}`));
+      }
+
       if (this.options.verbose) {
         console.log(chalk.gray(`📂 Working directory: ${this.config.workingDirectory}`));
         console.log(chalk.gray(`🧠 Model: ${this.config.ollama.model}`));
@@ -188,11 +202,25 @@ class QCodeCLI {
           throw new QCodeError('Engine not initialized', 'ENGINE_NOT_INITIALIZED');
         }
 
+        if (this.options.debug) {
+          console.log(chalk.gray('🔍 [DEBUG] Calling engine.processQuery()...'));
+        }
+
         const result = await this.engine.processQuery(query);
+
+        if (this.options.debug) {
+          console.log(chalk.gray('🔍 [DEBUG] Engine result received:'));
+          console.log(chalk.gray(JSON.stringify(result, null, 2)));
+        }
+
         this.stopSpinner(spinner, '✅ Query processed successfully');
         this.displayQueryResult(result);
       } catch (error) {
         this.stopSpinner(spinner, '❌ Query processing failed');
+        if (this.options.debug) {
+          console.log(chalk.gray('🔍 [DEBUG] Query processing error:'));
+          console.log(chalk.gray(error instanceof Error ? error.stack : JSON.stringify(error)));
+        }
         throw error;
       }
     } catch (error) {

@@ -9,6 +9,9 @@ import {
   MCPServerInfo,
   ValidationResult,
 } from '../types.js';
+import { safeLogger } from '../utils/logger.js';
+
+const logger = safeLogger();
 
 /**
  * Tool execution context with additional registry information
@@ -138,16 +141,20 @@ export class ToolRegistry {
   /**
    * Registers tools from an MCP server
    */
-  registerMCPServer(serverInfo: MCPServerInfo): void {
+  async registerMCPServer(serverInfo: MCPServerInfo): Promise<void> {
     // Validate server info
     if (!serverInfo.id || !serverInfo.name) {
-      throw new QCodeError('Invalid MCP server info: missing id or name', 'INVALID_MCP_SERVER', {
-        serverInfo,
-      });
+      throw new QCodeError('MCP server must have id and name', 'INVALID_MCP_CONFIG');
     }
 
-    // eslint-disable-next-line no-console
-    console.log(`Registering MCP server: ${serverInfo.name} (${serverInfo.id})`);
+    if (this.mcpServers.has(serverInfo.id)) {
+      throw new QCodeError(
+        `MCP server with id '${serverInfo.id}' already registered`,
+        'DUPLICATE_MCP_SERVER'
+      );
+    }
+
+    logger.info(`Registering MCP server: ${serverInfo.name} (${serverInfo.id})`);
 
     // Store server info
     this.mcpServers.set(serverInfo.id, serverInfo);
@@ -167,8 +174,7 @@ export class ToolRegistry {
         );
       } catch (error) {
         // Log the error but continue registering other tools
-        // eslint-disable-next-line no-console
-        console.warn(
+        logger.warn(
           `Failed to register MCP tool ${toolDef.name} from server ${serverInfo.id}:`,
           error
         );
