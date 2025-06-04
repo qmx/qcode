@@ -337,40 +337,184 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 
     - [ ] **1.8.5.2.1 Enhanced LLM Context Management**:
       
-      **Files to modify:**
-      - `src/core/engine.ts` - Extend `processWithLLMFunctionCalling` method (lines 481-820)
-      - `src/types.ts` - Add new interfaces for structured result formatting
+      **Current Context Management Issues:**
+      
+      The current `processWithLLMFunctionCalling` method (lines 481-820) uses a simple array to build conversation history (lines 565-575) without intelligent truncation. Results are formatted through `formatToolResult()` (lines 1052-1115) which outputs full content regardless of size, causing conversation context to explode exponentially in multi-step workflows.
 
-      **Implementation hints:**
-      - Current `formatToolResult()` method (lines 1052-1111) needs expansion for structured summaries
-      - Conversation history building (lines 565-588) needs intelligent context truncation
-      - `shouldContinueWorkflow()` method (lines 825-880) needs smarter pattern detection
+      **Current Flow Analysis:**
+      - Conversation history is built as simple message array in `conversationHistory` (lines 565-575)
+      - Tool results are added via `stepResults.push(formattedResult)` (line 697) with no size consideration
+      - Full result text is joined and pushed to conversation with `stepResults.join('\n')` (line 731)
+      - Large file contents (>2KB) flood LLM context without summarization
+      - Context window fills rapidly, degrading LLM performance in complex workflows
+
+      **Files to modify:**
+      - `src/core/engine.ts` - Replace conversation building (lines 565-575) and result formatting (lines 1052-1115)
+      - `src/types.ts` - Add new interfaces for intelligent context management
+
+      **Architecture Strategy:**
+      
+      **Phase 1: Structured Tool Results**
+      Create intelligent result objects that separate display content from LLM context. Current `formatToolResult()` method creates user-friendly strings but loses semantic structure needed for smart context management.
+
+      **Phase 2: Context-Aware Conversation Building**
+      Replace the simple array appending in `conversationHistory.push()` (line 734) with intelligent memory management that preserves key findings while discarding verbose content.
+
+      **Phase 3: Multi-Step Context Preservation**
+      Enhance `shouldContinueWorkflow()` method (lines 825-880) to make decisions based on structured context rather than string matching on conversation content.
 
       **New interfaces needed in `src/types.ts`:**
       ```typescript
+      // Structured tool result for intelligent context management
       export interface StructuredToolResult {
-        type: 'file_content' | 'file_list' | 'search_results' | 'analysis';
+        // Tool execution metadata
+        toolName: string;
+        success: boolean;
+        duration: number;
+        
+        // Result categorization for smart formatting
+        type: 'file_content' | 'file_list' | 'search_results' | 'analysis' | 'error';
+        
+        // Human-readable summary for conversation context (max 500 chars)
         summary: string;
+        
+        // Key extracted information for workflow decisions
         keyFindings: string[];
+        
+        // Full raw data for detailed analysis when needed
         fullData: any;
+        
+        // Size management flags
         truncated: boolean;
+        originalSize?: number;
+        
+        // Context for next workflow step
         contextForNextStep: Record<string, any>;
+        
+        // File-specific extracted metadata
+        filePaths?: string[];
+        patterns?: string[];
+        errors?: string[];
       }
-      
-      export interface ChainContext {
+
+      // Enhanced conversation memory management
+      export interface ConversationMemory {
+        // Original user intent
         originalQuery: string;
+        
+        // Current workflow position
         stepNumber: number;
+        maxSteps: number;
+        
+        // Structured results from previous steps
         previousResults: StructuredToolResult[];
+        
+        // Extracted patterns and decisions
         extractedPatterns: Record<string, any>;
+        
+        // Working memory for cross-step context
         workingMemory: Record<string, any>;
+        
+        // Conversation size management
+        totalContextSize: number;
+        maxContextSize: number;
+      }
+
+      // Context-aware message formatting
+      export interface ContextMessage {
+        role: 'system' | 'user' | 'assistant';
+        content: string;
+        metadata?: {
+          toolResults?: StructuredToolResult[];
+          stepNumber?: number;
+          contextSize?: number;
+          truncated?: boolean;
+        };
       }
       ```
 
+      **Implementation Strategy:**
+
+      **1. Replace formatToolResult() Method (lines 1052-1115)**
+      
+      Current method creates monolithic strings. Replace with:
+      ```typescript
+      private createStructuredResult(
+        toolName: string, 
+        result: ToolResult, 
+        stepContext: ConversationMemory
+      ): StructuredToolResult {
+        // Analyze result type and extract key information
+        // Create intelligent summaries based on content size
+        // Extract actionable data for next steps
+      }
+      
+      private formatResultForConversation(
+        structuredResult: StructuredToolResult,
+        stepContext: ConversationMemory
+      ): string {
+        // Size-aware formatting for LLM context
+        // Preserve important information while discarding verbose content
+        // Adapt formatting based on step position in workflow
+      }
+      ```
+
+      **2. Enhance Conversation Building (lines 731-734)**
+      
+      Replace simple string concatenation with intelligent memory management:
+      ```typescript
+      private buildContextAwareConversation(
+        conversationMemory: ConversationMemory,
+        newResults: StructuredToolResult[]
+      ): ContextMessage[] {
+        // Sliding window context management
+        // Key findings extraction and preservation
+        // Size-based truncation with semantic awareness
+      }
+      ```
+
+      **3. Upgrade shouldContinueWorkflow() (lines 825-880)**
+      
+      Current method uses string matching on conversation content. Replace with structured decision making:
+      ```typescript
+      private shouldContinueWorkflow(
+        memory: ConversationMemory,
+        hadErrors: boolean,
+        iterationCount: number
+      ): boolean {
+        // Analyze structured results instead of string content
+        // Make decisions based on extracted patterns
+        // Consider workflow completeness vs. context size
+      }
+      ```
+
+      **Specific Implementation Areas:**
+
+      **File Result Summarization:**
+      - Large file contents (>2KB): Extract file type, key functions/classes, structure
+      - File lists (>20 items): Group by type, highlight main entry points
+      - Search results: Preserve match context, patterns, and file paths
+
+      **Context Size Management:**
+      - Monitor total conversation character count
+      - Implement sliding window: keep system prompt + user query + last 3-5 structured responses
+      - Preserve key findings in `workingMemory` for cross-step reference
+
+      **Memory Extraction Patterns:**
+      - Extract file paths for future reference
+      - Identify project patterns (framework, structure, key files)
+      - Track error patterns and recovery strategies
+      - Preserve cross-file relationships and dependencies
+
       **Tasks:**
-      - [ ] Implement intelligent result summarization for large outputs (>2KB)
-      - [ ] Extract key findings automatically (file paths, patterns, errors)
-      - [ ] Context-aware truncation that preserves important information
-      - [ ] Memory management to prevent conversation history explosion
+      - [ ] Create `StructuredToolResult` interface and conversion methods
+      - [ ] Replace `formatToolResult()` with structured result creation
+      - [ ] Implement conversation memory management with size limits
+      - [ ] Add context-aware decision making to workflow continuation
+      - [ ] Create extractors for key findings (file paths, patterns, errors)
+      - [ ] Implement sliding window conversation history (max 8KB context)
+      - [ ] Add memory cleanup and working memory persistence
+      - [ ] Test context preservation across 5+ step workflows
 
     - [ ] **1.8.5.2.2 LLM-Driven Multi-Step Workflow Patterns**:
 
