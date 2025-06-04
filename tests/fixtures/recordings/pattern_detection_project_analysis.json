@@ -1,0 +1,48 @@
+[
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are an expert at analyzing user queries and mapping them to appropriate workflow patterns. Always respond with valid JSON."
+        },
+        {
+          "role": "user",
+          "content": "Analyze this user query and determine which workflow patterns are most relevant:\n\nQUERY: \"analyze this project structure and tell me about the architecture\"\n\nNo project context available\n\nAVAILABLE PATTERNS:\n- project_analysis: Project Discovery & Architecture Analysis - Comprehensive project structure and framework detection\n- api_mapping: API Endpoint Discovery & Documentation - Systematic discovery and documentation of API endpoints\n- quality_analysis: Code Quality Assessment & Issue Detection - Systematic discovery and analysis of code quality issues\n- file_exploration: File System Exploration & Analysis - General file system exploration and content analysis\n\nRULE-BASED ANALYSIS FOUND:\n- Project Discovery & Architecture Analysis: 68.6% confidence\n\nPlease analyze the query intent and provide pattern relevance scores (0-100) for each pattern.\nConsider:\n1. Query semantics and user intent\n2. Project context if available  \n3. Complexity and scope of the request\n4. Most appropriate workflow sequence\n\nRespond in JSON format:\n{\n  \"patterns\": [\n    {\"id\": \"pattern_id\", \"confidence\": 85, \"reasoning\": \"why this pattern fits\"}\n  ],\n  \"query_analysis\": \"overall analysis of user intent\"\n}"
+        }
+      ],
+      "stream": false,
+      "options": {
+        "temperature": 0.1
+      },
+      "format": "json"
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-04T04:52:35.862044Z",
+      "message": {
+        "role": "assistant",
+        "content": "{\n  \"patterns\": [\n    {\n      \"id\": \"project_analysis\",\n      \"confidence\": 90,\n      \"reasoning\": \"The query explicitly asks for project structure and architecture analysis, which aligns with the Project Discovery & Architecture Analysis pattern. The high confidence score is due to the specific mention of 'analyze this project structure' in the query.\"\n    },\n    {\n      \"id\": \"file_exploration\",\n      \"confidence\": 5,\n      \"reasoning\": \"Although file system exploration and analysis are related to project structure, the query does not specifically ask for content analysis or file-level details. This pattern is less relevant due to its broader scope compared to project-specific analysis.\"\n    },\n    {\n      \"id\": \"quality_analysis\",\n      \"confidence\": 2,\n      \"reasoning\": \"The query does not mention code quality issues or any specific concerns related to code assessment, making this pattern relatively irrelevant in the context of the provided query.\"\n    },\n    {\n      \"id\": \"api_mapping\",\n      \"confidence\": 1,\n      \"reasoning\": \"API endpoint discovery and documentation are unrelated to project structure analysis, making this pattern the least relevant among the available options.\"\n    }\n  ],\n  \"query_analysis\": \"The user intends to understand the overall architecture of a project, likely for planning, maintenance, or optimization purposes. The query lacks specific context, but the language used suggests a high-level analysis is required.\"\n}"
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 10103675584,
+      "load_duration": 2982966750,
+      "prompt_eval_count": 276,
+      "prompt_eval_duration": 677202291,
+      "eval_count": 297,
+      "eval_duration": 6437401084
+    },
+    "rawHeaders": {
+      "content-length": "1845",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Wed, 04 Jun 2025 04:52:35 GMT"
+    },
+    "responseIsBinary": false
+  }
+]
