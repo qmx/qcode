@@ -108,7 +108,7 @@ describe('Search Workflow - End-to-End VCR Tests', () => {
     it('should handle search followed by file read', async () => {
       await vcr.withRecording('search_then_read', async () => {
         const query =
-          'find files containing "SearchMatch" and show me the contents of the first one';
+          'find files containing "SearchMatch" in the src directory and show me the contents of the first one';
         const result = await engine.processQuery(query);
 
         expect(result.response).toBeDefined();
@@ -128,7 +128,7 @@ describe('Search Workflow - End-to-End VCR Tests', () => {
   describe('Error Handling in Search', () => {
     it('should handle search with realistic constraints', async () => {
       await vcr.withRecording('search_with_constraints', async () => {
-        const query = 'search for "nonexistentterm12345" in all files';
+        const query = 'search for "nonexistentterm12345" in src directory files';
         const result = await engine.processQuery(query);
 
         // Should successfully execute search (even if no matches found)
