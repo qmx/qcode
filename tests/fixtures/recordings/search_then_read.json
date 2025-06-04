@@ -8,11 +8,11 @@
       "messages": [
         {
           "role": "system",
-          "content": "You are QCode, an AI coding assistant. You have access to file operation tools to help users with their coding tasks.\n\nAvailable tools:\n- internal:files: Perform file operations including read, write, list, and search files within the workspace\n\nWhen a user asks about files, use the appropriate tool to help them. Always use function calling when file operations are needed.\n\nFor file paths, assume they are relative to the current workspace unless otherwise specified.\n\nIMPORTANT for the 'files' tool operations:\n- For list operation: Use 'path' parameter for the directory, 'pattern' for glob patterns like \"*.swift\", \"**/*.ts\"\n- For read operation: Use 'path' parameter for the file path, 'startLine' and 'endLine' for ranges\n- For search operation: Use 'pattern' for text/regex to search, 'path' for directory scope\n\nFor multi-step queries like \"list files and then read the first one\", break this down into steps:\n1. First, call the list function to get files\n2. Then, based on the results, call read function for a specific file\n\nContinue calling functions until the user's request is fully satisfied."
+          "content": "You are QCode, a helpful AI coding assistant. You have access to tools to help with file operations and code analysis.\n\nAvailable tools and their purposes:\n- internal.files: Read files, list directory contents, search within files\n\nWhen processing requests:\n1. For simple file reads: use internal.files with \"read\" operation\n2. For directory listings: use internal.files with \"list\" operation  \n3. For finding files by pattern: use internal.files with \"list\" operation with glob patterns like:\n   - TypeScript/JavaScript projects: \"**/*.ts\", \"**/*.js\"\n   - Python projects: \"**/*.py\"\n   - Other projects: list all files first\n4. When looking for \"main function\", search for common entry points:\n   - index.ts, index.js, main.ts, main.js, cli.ts, app.ts\n   - Or search for \"main\" or \"function main\" in the codebase\n\nFor multi-step queries like \"list files and then read the first one\", break this down into steps:\n1. First, call the list function to get files\n2. Then, based on the results, call read function for a specific file\n\nContinue calling functions until the user's request is fully satisfied."
         },
         {
           "role": "user",
-          "content": "find files containing \"SearchMatch\" and show me the contents of the first one"
+          "content": "find files containing \"SearchMatch\" in the src directory and show me the contents of the first one"
         }
       ],
       "stream": false,
@@ -120,7 +120,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-03T12:44:15.744177Z",
+      "created_at": "2025-06-04T03:48:13.679507Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -129,12 +129,10 @@
             "function": {
               "name": "internal:files",
               "arguments": {
-                "includeContext": false,
-                "operation": "search",
-                "path": ".",
-                "pattern": "SearchMatch",
-                "recursive": true,
-                "useRegex": true
+                "operation": "list",
+                "path": "src",
+                "pattern": "**/*.ts",
+                "recursive": "true"
               }
             }
           }
@@ -142,17 +140,181 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 2308320083,
-      "load_duration": 16157708,
-      "prompt_eval_count": 789,
-      "prompt_eval_duration": 1209500583,
-      "eval_count": 46,
-      "eval_duration": 1078890625
+      "total_duration": 1967058209,
+      "load_duration": 14571917,
+      "prompt_eval_count": 804,
+      "prompt_eval_duration": 1124528084,
+      "eval_count": 37,
+      "eval_duration": 825764125
     },
     "rawHeaders": {
-      "content-length": "477",
+      "content-length": "435",
       "content-type": "application/json; charset=utf-8",
-      "date": "Tue, 03 Jun 2025 12:44:15 GMT"
+      "date": "Wed, 04 Jun 2025 03:48:13 GMT"
+    },
+    "responseIsBinary": false
+  },
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant. You have access to tools to help with file operations and code analysis.\n\nAvailable tools and their purposes:\n- internal.files: Read files, list directory contents, search within files\n\nWhen processing requests:\n1. For simple file reads: use internal.files with \"read\" operation\n2. For directory listings: use internal.files with \"list\" operation  \n3. For finding files by pattern: use internal.files with \"list\" operation with glob patterns like:\n   - TypeScript/JavaScript projects: \"**/*.ts\", \"**/*.js\"\n   - Python projects: \"**/*.py\"\n   - Other projects: list all files first\n4. When looking for \"main function\", search for common entry points:\n   - index.ts, index.js, main.ts, main.js, cli.ts, app.ts\n   - Or search for \"main\" or \"function main\" in the codebase\n\nFor multi-step queries like \"list files and then read the first one\", break this down into steps:\n1. First, call the list function to get files\n2. Then, based on the results, call read function for a specific file\n\nContinue calling functions until the user's request is fully satisfied."
+        },
+        {
+          "role": "user",
+          "content": "find files containing \"SearchMatch\" in the src directory and show me the contents of the first one"
+        },
+        {
+          "role": "assistant",
+          "content": "\n📂 **Files in /Users/qmx/dev/qcode/src** (16 items)\n**Summary:** Found 16 items in /Users/qmx/dev/qcode/src. Types: ts\n**Key findings:** 16 .ts files, index.ts"
+        },
+        {
+          "role": "user",
+          "content": "Continue with the next step if needed to fully answer the original question."
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0.1
+      },
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "internal:files",
+            "description": "Perform file operations including read, write, list, and search files within the workspace",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "operation": {
+                  "type": "string",
+                  "enum": ["read", "write", "list", "search"],
+                  "description": "The type of file operation to perform"
+                },
+                "path": {
+                  "type": "string",
+                  "description": "For read/write: file path. For list: directory path to search in (default: current directory)"
+                },
+                "content": {
+                  "type": "string",
+                  "description": "Content to write (for write operation)"
+                },
+                "query": {
+                  "type": "string",
+                  "description": "Search query text or pattern (for search operation)"
+                },
+                "pattern": {
+                  "type": "string",
+                  "description": "Glob pattern to filter files (e.g., \"**/*.ts\", \"*.swift\"). Use this to find files by extension or name pattern."
+                },
+                "startLine": {
+                  "type": "number",
+                  "description": "Starting line number for partial file read (1-indexed)"
+                },
+                "endLine": {
+                  "type": "number",
+                  "description": "Ending line number for partial file read (1-indexed, inclusive)"
+                },
+                "recursive": {
+                  "type": "boolean",
+                  "description": "Whether to search/list recursively in subdirectories",
+                  "default": false
+                },
+                "includeHidden": {
+                  "type": "boolean",
+                  "description": "Whether to include hidden files (starting with .)",
+                  "default": false
+                },
+                "includeMetadata": {
+                  "type": "boolean",
+                  "description": "Whether to include file metadata (size, dates, permissions)",
+                  "default": false
+                },
+                "useRegex": {
+                  "type": "boolean",
+                  "description": "Whether to treat search query as a regular expression",
+                  "default": false
+                },
+                "caseSensitive": {
+                  "type": "boolean",
+                  "description": "Whether search should be case sensitive",
+                  "default": false
+                },
+                "backup": {
+                  "type": "boolean",
+                  "description": "Whether to create backup before overwriting files",
+                  "default": true
+                },
+                "createDirs": {
+                  "type": "boolean",
+                  "description": "Whether to create parent directories if they don't exist",
+                  "default": true
+                },
+                "encoding": {
+                  "type": "string",
+                  "enum": ["utf8", "utf-8", "ascii", "base64", "hex"],
+                  "description": "File encoding for read/write operations",
+                  "default": "utf8"
+                },
+                "maxResults": {
+                  "type": "number",
+                  "description": "Maximum number of search results to return",
+                  "default": 100
+                },
+                "includeContext": {
+                  "type": "boolean",
+                  "description": "Whether to include context lines around search matches",
+                  "default": true
+                }
+              },
+              "required": ["operation"],
+              "additionalProperties": false
+            }
+          }
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-04T03:48:16.202169Z",
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "function": {
+              "name": "internal:files",
+              "arguments": {
+                "encoding": "utf8",
+                "endLine": null,
+                "operation": "read",
+                "path": "/Users/qmx/dev/qcode/src/index.ts",
+                "startLine": 1
+              }
+            }
+          }
+        ]
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 2477397708,
+      "load_duration": 11409375,
+      "prompt_eval_count": 880,
+      "prompt_eval_duration": 1309897208,
+      "eval_count": 52,
+      "eval_duration": 1153836542
+    },
+    "rawHeaders": {
+      "content-length": "474",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Wed, 04 Jun 2025 03:48:16 GMT"
     },
     "responseIsBinary": false
   }

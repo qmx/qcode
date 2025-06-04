@@ -8,7 +8,7 @@
       "messages": [
         {
           "role": "system",
-          "content": "You are QCode, an AI coding assistant. You have access to file operation tools to help users with their coding tasks.\n\nAvailable tools:\n- internal:files: Perform file operations including read, write, list, and search files within the workspace\n\nWhen a user asks about files, use the appropriate tool to help them. Always use function calling when file operations are needed.\n\nFor file paths, assume they are relative to the current workspace unless otherwise specified.\n\nIMPORTANT for the 'files' tool operations:\n- For list operation: Use 'path' parameter for the directory, 'pattern' for glob patterns like \"*.swift\", \"**/*.ts\"\n- For read operation: Use 'path' parameter for the file path, 'startLine' and 'endLine' for ranges\n- For search operation: Use 'pattern' for text/regex to search, 'path' for directory scope\n\nFor multi-step queries like \"list files and then read the first one\", break this down into steps:\n1. First, call the list function to get files\n2. Then, based on the results, call read function for a specific file\n\nContinue calling functions until the user's request is fully satisfied."
+          "content": "You are QCode, a helpful AI coding assistant. You have access to tools to help with file operations and code analysis.\n\nAvailable tools and their purposes:\n- internal.files: Read files, list directory contents, search within files\n\nWhen processing requests:\n1. For simple file reads: use internal.files with \"read\" operation\n2. For directory listings: use internal.files with \"list\" operation  \n3. For finding files by pattern: use internal.files with \"list\" operation with glob patterns like:\n   - TypeScript/JavaScript projects: \"**/*.ts\", \"**/*.js\"\n   - Python projects: \"**/*.py\"\n   - Other projects: list all files first\n4. When looking for \"main function\", search for common entry points:\n   - index.ts, index.js, main.ts, main.js, cli.ts, app.ts\n   - Or search for \"main\" or \"function main\" in the codebase\n\nFor multi-step queries like \"list files and then read the first one\", break this down into steps:\n1. First, call the list function to get files\n2. Then, based on the results, call read function for a specific file\n\nContinue calling functions until the user's request is fully satisfied."
         },
         {
           "role": "user",
@@ -120,7 +120,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-03T22:20:03.630269Z",
+      "created_at": "2025-06-04T03:46:03.368027Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -139,17 +139,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 2283156708,
-      "load_duration": 10673916,
-      "prompt_eval_count": 785,
-      "prompt_eval_duration": 1530892959,
+      "total_duration": 2180504750,
+      "load_duration": 10880541,
+      "prompt_eval_count": 796,
+      "prompt_eval_duration": 1440780833,
       "eval_count": 30,
-      "eval_duration": 740293250
+      "eval_duration": 727670792
     },
     "rawHeaders": {
       "content-length": "416",
       "content-type": "application/json; charset=utf-8",
-      "date": "Tue, 03 Jun 2025 22:20:03 GMT"
+      "date": "Wed, 04 Jun 2025 03:46:03 GMT"
     },
     "responseIsBinary": false
   },
@@ -162,7 +162,7 @@
       "messages": [
         {
           "role": "system",
-          "content": "You are QCode, an AI coding assistant. You have access to file operation tools to help users with their coding tasks.\n\nAvailable tools:\n- internal:files: Perform file operations including read, write, list, and search files within the workspace\n\nWhen a user asks about files, use the appropriate tool to help them. Always use function calling when file operations are needed.\n\nFor file paths, assume they are relative to the current workspace unless otherwise specified.\n\nIMPORTANT for the 'files' tool operations:\n- For list operation: Use 'path' parameter for the directory, 'pattern' for glob patterns like \"*.swift\", \"**/*.ts\"\n- For read operation: Use 'path' parameter for the file path, 'startLine' and 'endLine' for ranges\n- For search operation: Use 'pattern' for text/regex to search, 'path' for directory scope\n\nFor multi-step queries like \"list files and then read the first one\", break this down into steps:\n1. First, call the list function to get files\n2. Then, based on the results, call read function for a specific file\n\nContinue calling functions until the user's request is fully satisfied."
+          "content": "You are QCode, a helpful AI coding assistant. You have access to tools to help with file operations and code analysis.\n\nAvailable tools and their purposes:\n- internal.files: Read files, list directory contents, search within files\n\nWhen processing requests:\n1. For simple file reads: use internal.files with \"read\" operation\n2. For directory listings: use internal.files with \"list\" operation  \n3. For finding files by pattern: use internal.files with \"list\" operation with glob patterns like:\n   - TypeScript/JavaScript projects: \"**/*.ts\", \"**/*.js\"\n   - Python projects: \"**/*.py\"\n   - Other projects: list all files first\n4. When looking for \"main function\", search for common entry points:\n   - index.ts, index.js, main.ts, main.js, cli.ts, app.ts\n   - Or search for \"main\" or \"function main\" in the codebase\n\nFor multi-step queries like \"list files and then read the first one\", break this down into steps:\n1. First, call the list function to get files\n2. Then, based on the results, call read function for a specific file\n\nContinue calling functions until the user's request is fully satisfied."
         },
         {
           "role": "user",
@@ -170,7 +170,7 @@
         },
         {
           "role": "assistant",
-          "content": "\n📂 **Files in /Users/qmx/dev/qcode/src/** (21 items)\n📁 cli\n📁 config\n📁 core\n📁 mcp\n📁 security\n📁 tools\n📁 types\n📄 cli.ts\n📄 core/client.ts\n📄 security/commands.ts\n📄 config/defaults.ts\n📄 core/engine.ts\n📄 tools/files.ts\n📄 index.ts\n📄 config/manager.ts\n📄 security/paths.ts\n📄 core/registry.ts\n📄 types.ts\n📄 config/validation.ts\n📄 core/workflow-state.ts\n📄 security/workspace.ts"
+          "content": "\n📂 **Files in /Users/qmx/dev/qcode/src/** (24 items)\n**Summary:** Found 24 items in /Users/qmx/dev/qcode/src/. Types: cli, config, core\n**Key findings:** 1 .cli files, 1 .config files, 1 .core files, 1 .mcp files, 1 .security files, 1 .tools files, 1 .types files, 1 .utils files"
         },
         {
           "role": "user",
@@ -282,7 +282,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-03T22:20:06.88601Z",
+      "created_at": "2025-06-04T03:46:06.022869Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -291,10 +291,8 @@
             "function": {
               "name": "internal:files",
               "arguments": {
-                "endLine": 10,
                 "operation": "read",
-                "path": "/Users/qmx/dev/qcode/src/cli/cli.ts",
-                "startLine": 1
+                "path": "/Users/qmx/dev/qcode/src/cli/main.ts"
               }
             }
           }
@@ -302,17 +300,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 3251457584,
-      "load_duration": 14369959,
-      "prompt_eval_count": 965,
-      "prompt_eval_duration": 1962211625,
-      "eval_count": 47,
-      "eval_duration": 1272327000
+      "total_duration": 2651277833,
+      "load_duration": 11158167,
+      "prompt_eval_count": 916,
+      "prompt_eval_duration": 1819239750,
+      "eval_count": 33,
+      "eval_duration": 818207792
     },
     "rawHeaders": {
-      "content-length": "455",
+      "content-length": "429",
       "content-type": "application/json; charset=utf-8",
-      "date": "Tue, 03 Jun 2025 22:20:06 GMT"
+      "date": "Wed, 04 Jun 2025 03:46:06 GMT"
     },
     "responseIsBinary": false
   }

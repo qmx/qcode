@@ -8,7 +8,7 @@
       "messages": [
         {
           "role": "system",
-          "content": "You are QCode, an AI coding assistant. You have access to file operation tools to help users with their coding tasks.\n\nAvailable tools:\n- internal:files: Perform file operations including read, write, list, and search files within the workspace\n\nWhen a user asks about files, use the appropriate tool to help them. Always use function calling when file operations are needed.\n\nFor file paths, assume they are relative to the current workspace unless otherwise specified.\n\nIMPORTANT for the 'files' tool operations:\n- For list operation: Use 'path' parameter for the directory, 'pattern' for glob patterns like \"*.swift\", \"**/*.ts\"\n- For read operation: Use 'path' parameter for the file path, 'startLine' and 'endLine' for ranges\n- For search operation: Use 'pattern' for text/regex to search, 'path' for directory scope\n\nFor multi-step queries like \"list files and then read the first one\", break this down into steps:\n1. First, call the list function to get files\n2. Then, based on the results, call read function for a specific file\n\nContinue calling functions until the user's request is fully satisfied."
+          "content": "You are QCode, a helpful AI coding assistant. You have access to tools to help with file operations and code analysis.\n\nAvailable tools and their purposes:\n- internal.files: Read files, list directory contents, search within files\n\nWhen processing requests:\n1. For simple file reads: use internal.files with \"read\" operation\n2. For directory listings: use internal.files with \"list\" operation  \n3. For finding files by pattern: use internal.files with \"list\" operation with glob patterns like:\n   - TypeScript/JavaScript projects: \"**/*.ts\", \"**/*.js\"\n   - Python projects: \"**/*.py\"\n   - Other projects: list all files first\n4. When looking for \"main function\", search for common entry points:\n   - index.ts, index.js, main.ts, main.js, cli.ts, app.ts\n   - Or search for \"main\" or \"function main\" in the codebase\n\nFor multi-step queries like \"list files and then read the first one\", break this down into steps:\n1. First, call the list function to get files\n2. Then, based on the results, call read function for a specific file\n\nContinue calling functions until the user's request is fully satisfied."
         },
         {
           "role": "user",
@@ -120,7 +120,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-03T13:00:36.845044Z",
+      "created_at": "2025-06-04T03:13:53.165181Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -129,11 +129,7 @@
             "function": {
               "name": "internal:files",
               "arguments": {
-                "caseSensitive": true,
-                "includeContext": false,
-                "includeHidden": false,
-                "includeMetadata": false,
-                "maxResults": 0,
+                "caseSensitive": false,
                 "operation": "search",
                 "path": ".",
                 "pattern": "**/*.ts",
@@ -147,17 +143,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 1991114000,
-      "load_duration": 18383125,
-      "prompt_eval_count": 781,
-      "prompt_eval_duration": 145479958,
-      "eval_count": 77,
-      "eval_duration": 1825769834
+      "total_duration": 15884967792,
+      "load_duration": 11980250,
+      "prompt_eval_count": 792,
+      "prompt_eval_duration": 1589406667,
+      "eval_count": 52,
+      "eval_duration": 2957807916
     },
     "rawHeaders": {
-      "content-length": "575",
+      "content-length": "494",
       "content-type": "application/json; charset=utf-8",
-      "date": "Tue, 03 Jun 2025 13:00:36 GMT"
+      "date": "Wed, 04 Jun 2025 03:13:53 GMT"
     },
     "responseIsBinary": false
   }
