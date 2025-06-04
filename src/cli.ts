@@ -483,6 +483,7 @@ program
   .option('-c, --config <path>', 'Path to configuration file')
   .option('-w, --workspace <path>', 'Workspace directory path')
   .option('-d, --debug', 'Enable debug mode')
+  .option('-m, --model <model>', 'Ollama model to use (overrides config)')
   .action(async (options: CLIOptions) => {
     const cli = new QCodeCLI();
 
