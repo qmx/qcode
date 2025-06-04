@@ -316,7 +316,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 
   - [x] **1.8.5.1 Workflow State Management (COMPLETED)**:
 
-    - [x] Implement `src/core/workflow-state.ts`:
+    - [x] Implement `src/core/context-manager.ts` (was `workflow-state.ts`):
       - [x] Track execution context across multiple tool calls
       - [x] Store intermediate results and decisions
       - [x] Handle workflow interruption and resumption
@@ -335,7 +335,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 
   - [ ] **1.8.5.2 Sequential Tool Execution Chains**:
 
-    - [ ] **1.8.5.2.1 Enhanced LLM Context Management**:
+    - [x] **1.8.5.2.1 Enhanced LLM Context Management** (COMPLETED):
 
       **Current Context Management Issues:**
 
@@ -515,16 +515,24 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
       - Track error patterns and recovery strategies
       - Preserve cross-file relationships and dependencies
 
-      **Tasks:**
+      **✅ ALL TASKS COMPLETED:**
 
-      - [ ] Create `StructuredToolResult` interface and conversion methods
-      - [ ] Replace `formatToolResult()` with structured result creation
-      - [ ] Implement conversation memory management with size limits
-      - [ ] Add context-aware decision making to workflow continuation
-      - [ ] Create extractors for key findings (file paths, patterns, errors)
-      - [ ] Implement sliding window conversation history (max 8KB context)
-      - [ ] Add memory cleanup and working memory persistence
-      - [ ] Test context preservation across 5+ step workflows
+      - [x] Create `StructuredToolResult` interface and conversion methods - COMPLETED in `src/types.ts`
+      - [x] Replace `formatToolResult()` with structured result creation - COMPLETED in `src/core/context-manager.ts`
+      - [x] Implement conversation memory management with size limits - COMPLETED with `ConversationMemory` interface
+      - [x] Add context-aware decision making to workflow continuation - COMPLETED in engine integration
+      - [x] Create extractors for key findings (file paths, patterns, errors) - COMPLETED with extraction strategies
+      - [x] Implement sliding window conversation history (max 8KB context) - COMPLETED with compression thresholds
+      - [x] Add memory cleanup and working memory persistence - COMPLETED with `compressConversationMemory()`
+      - [x] Test context preservation across 5+ step workflows - COMPLETED with E2E tests
+
+      **Implementation Status:** ✅ **FULLY COMPLETE**
+
+      - Context Manager implemented in `src/core/context-manager.ts`
+      - Engine integration completed in `src/core/engine.ts`
+      - All interfaces defined in `src/types.ts`
+      - Unit tests passing in `tests/unit/context-manager.test.ts`
+      - E2E tests passing in `tests/e2e/enhanced-context-management.test.ts`
 
     - [ ] **1.8.5.2.2 LLM-Driven Multi-Step Workflow Patterns**:
 
@@ -754,70 +762,70 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
       - [ ] Monitor memory usage during multi-step execution
       - [ ] Implement cleanup hooks for abandoned workflows
 
-  - [ ] **1.8.5.3 Complex Query Understanding (MANDATORY - BROKEN DOWN)**:
+    - [ ] **1.8.5.3 Complex Query Understanding (MANDATORY - BROKEN DOWN)**:
 
-  - [ ] **1.8.5.3.1 Basic Intent Detection**:
+    - [ ] **1.8.5.3.1 Basic Intent Detection**:
 
-    - [ ] Implement query parsing and intent classification
-    - [ ] Detect file operation intents (read, write, list, search)
-    - [ ] Identify project analysis intents (structure, dependencies, patterns)
-    - [ ] Handle ambiguous queries with intelligent defaults
-    - [ ] **Basic Intent Tests**:
-      - [ ] `"show me package.json"` → file read intent
-      - [ ] `"list TypeScript files"` → file list intent with pattern
-      - [ ] `"find TODO comments"` → search intent with pattern
+      - [ ] Implement query parsing and intent classification
+      - [ ] Detect file operation intents (read, write, list, search)
+      - [ ] Identify project analysis intents (structure, dependencies, patterns)
+      - [ ] Handle ambiguous queries with intelligent defaults
+      - [ ] **Basic Intent Tests**:
+        - [ ] `"show me package.json"` → file read intent
+        - [ ] `"list TypeScript files"` → file list intent with pattern
+        - [ ] `"find TODO comments"` → search intent with pattern
 
-  - [ ] **1.8.5.3.2 Query Decomposition**:
+    - [ ] **1.8.5.3.2 Query Decomposition**:
 
-    - [ ] Break complex queries into sequential steps
-    - [ ] Plan multi-step workflows from single user request
-    - [ ] Handle conditional logic based on intermediate results
-    - [ ] **Query Decomposition Tests**:
-      - [ ] `"Find all React components and analyze their props"` → List .jsx files → Read each → Extract props → Summarize
-      - [ ] `"Review recent changes and suggest improvements"` → Search for TODO/FIXME → Read affected files → Generate recommendations
+      - [ ] Break complex queries into sequential steps
+      - [ ] Plan multi-step workflows from single user request
+      - [ ] Handle conditional logic based on intermediate results
+      - [ ] **Query Decomposition Tests**:
+        - [ ] `"Find all React components and analyze their props"` → List .jsx files → Read each → Extract props → Summarize
+        - [ ] `"Review recent changes and suggest improvements"` → Search for TODO/FIXME → Read affected files → Generate recommendations
 
-  - [ ] **1.8.5.3.3 File Editing Workflows (CORE AGENT CAPABILITY)**:
+    - [ ] **1.8.5.3.3 File Editing Workflows (CORE AGENT CAPABILITY)**:
 
-    - [ ] Parse file modification requests into actionable steps
-    - [ ] Implement read → analyze → edit → verify patterns
-    - [ ] Handle backup and rollback for safe editing
-    - [ ] **File Editing Tests** (using CRA and Express fixtures):
-      - [ ] `"Change the h1 in App.js to h2"` → CRA fixture (read → edit → verify)
-      - [ ] `"Add a new import for React hooks in Header.jsx"` → CRA fixture
-      - [ ] `"Update the port in server.ts from 3000 to 8080"` → Express fixture
-      - [ ] `"Add a new script to package.json for building"` → Any fixture
+      - [ ] Parse file modification requests into actionable steps
+      - [ ] Implement read → analyze → edit → verify patterns
+      - [ ] Handle backup and rollback for safe editing
+      - [ ] **File Editing Tests** (using CRA and Express fixtures):
+        - [ ] `"Change the h1 in App.js to h2"` → CRA fixture (read → edit → verify)
+        - [ ] `"Add a new import for React hooks in Header.jsx"` → CRA fixture
+        - [ ] `"Update the port in server.ts from 3000 to 8080"` → Express fixture
+        - [ ] `"Add a new script to package.json for building"` → Any fixture
 
-  - [ ] **1.8.5.3.4 Project Understanding Workflows**:
+    - [ ] **1.8.5.3.4 Project Understanding Workflows**:
 
-    - [ ] Analyze project structure and conventions
-    - [ ] Detect frameworks and build patterns
-    - [ ] Extract component/API/dependency relationships
-    - [ ] **Project Understanding Tests**:
-      - [ ] `"Find all React components and list their props"` → CRA fixture
-      - [ ] `"Show me all API endpoints in this Express app"` → Express fixture
-      - [ ] `"List all packages in this monorepo and their dependencies"` → Monorepo fixture
+      - [ ] Analyze project structure and conventions
+      - [ ] Detect frameworks and build patterns
+      - [ ] Extract component/API/dependency relationships
+      - [ ] **Project Understanding Tests**:
+        - [ ] `"Find all React components and list their props"` → CRA fixture
+        - [ ] `"Show me all API endpoints in this Express app"` → Express fixture
+        - [ ] `"List all packages in this monorepo and their dependencies"` → Monorepo fixture
 
-  - [ ] **1.8.5.3.5 Complex Analysis Workflows**:
+    - [ ] **1.8.5.3.5 Complex Analysis Workflows**:
 
-    - [ ] Multi-file analysis and pattern detection
-    - [ ] Code quality assessment and suggestions
-    - [ ] Cross-file dependency analysis
-    - [ ] **Complex Analysis Tests**:
-      - [ ] `"Find TODO comments, read the files, and suggest fixes"` → All fixtures
-      - [ ] `"Analyze test coverage by finding test files and their targets"` → All fixtures
-      - [ ] `"Review recent changes and identify potential issues"` → Git-enabled fixtures
+      - [ ] Multi-file analysis and pattern detection
+      - [ ] Code quality assessment and suggestions
+      - [ ] Cross-file dependency analysis
+      - [ ] **Complex Analysis Tests**:
+        - [ ] `"Find TODO comments, read the files, and suggest fixes"` → All fixtures
+        - [ ] `"Analyze test coverage by finding test files and their targets"` → All fixtures
+        - [ ] `"Review recent changes and identify potential issues"` → Git-enabled fixtures
 
-  - [ ] **1.8.5.3.6 Query Refinement and Clarification**:
+    - [ ] **1.8.5.3.6 Query Refinement and Clarification**:
 
-    - [ ] Handle unclear or incomplete user requests
-    - [ ] Suggest related actions based on intermediate results
-    - [ ] Context-aware followup questions and recommendations
-    - [ ] **Query Refinement Tests**:
-      - [ ] Handle ambiguous requests with intelligent defaults
-      - [ ] Suggest corrections for malformed queries
-      - [ ] Provide contextual help based on current workspace
+      - [ ] Handle unclear or incomplete user requests
+      - [ ] Suggest related actions based on intermediate results
+      - [ ] Context-aware followup questions and recommendations
+      - [ ] **Query Refinement Tests**:
+        - [ ] Handle ambiguous requests with intelligent defaults
+        - [ ] Suggest corrections for malformed queries
+        - [ ] Provide contextual help based on current workspace
 
-  - [ ] **1.8.5.4 Performance & Reliability (OPTIONAL - NICE TO HAVE)**:
+    - [ ] **1.8.5.4 Performance & Reliability (OPTIONAL - NICE TO HAVE)**:
 
 **Current Status**: Sections 1.8.2-1.8.4 are **complete** - file read and list operations work end-to-end with full CLI integration and comprehensive e2e testing. Section 1.8.5 remains for advanced multi-step workflow orchestration.
 
