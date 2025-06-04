@@ -18,7 +18,7 @@
     "prettier/prettier": "error",
     "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
     "no-unused-vars": "off",
-    "no-console": "warn",
+    "no-console": "error",
     "no-debugger": "error",
     "no-undef": "off",
     "prefer-const": "error",
@@ -26,5 +26,19 @@
     "object-shorthand": "error",
     "prefer-arrow-callback": "error"
   },
+  "overrides": [
+    {
+      "files": ["src/cli.ts"],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["tests/**/*.ts"],
+      "rules": {
+        "no-console": "warn"
+      }
+    }
+  ],
   "ignorePatterns": ["dist/", "node_modules/", "*.js"]
 }
