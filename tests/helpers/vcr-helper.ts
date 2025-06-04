@@ -9,6 +9,7 @@ export interface VCRRecordingOptions {
   enableRequestHeaders?: boolean;
   outputObjects?: boolean;
   logRecordings?: boolean;
+  forceRecord?: boolean; // Override environment variable to force recording mode
 }
 
 export class VCRHelper {
@@ -16,6 +17,7 @@ export class VCRHelper {
   private testFile: string;
   private isRecording: boolean;
   private options: VCRRecordingOptions;
+  private originalRecordingState: boolean; // Track original state for restoration
 
   constructor(
     testFile: string,
@@ -24,7 +26,9 @@ export class VCRHelper {
   ) {
     this.testFile = testFile;
     this.recordingsPath = path.join(path.dirname(testFile), recordingsDir);
-    this.isRecording = process.env.NOCK_MODE === 'record';
+    // Support programmatic override or fall back to environment variable
+    this.isRecording = options.forceRecord ?? process.env.NOCK_MODE === 'record';
+    this.originalRecordingState = this.isRecording;
     this.options = options;
   }
 
@@ -220,6 +224,32 @@ export class VCRHelper {
       return [];
     }
   }
+
+  /**
+   * Enable recording mode programmatically (useful for test iteration)
+   */
+  enableRecording(): void {
+    this.isRecording = true;
+    // Re-setup test if already initialized
+    this.setupTest(this.options);
+  }
+
+  /**
+   * Disable recording mode and switch to replay mode
+   */
+  disableRecording(): void {
+    this.isRecording = false;
+    // Re-setup test if already initialized
+    this.setupTest(this.options);
+  }
+
+  /**
+   * Restore original recording state (useful in afterAll hooks)
+   */
+  restoreRecordingState(): void {
+    this.isRecording = this.originalRecordingState;
+    this.setupTest(this.options);
+  }
 }
 
 /**
@@ -256,4 +286,52 @@ export function setupVCRTests(
   });
 
   return vcr;
+}
+
+/**
+ * Enhanced setup function for Jest describe blocks with programmatic recording control
+ * Perfect for test iteration - start in recording mode, then switch to replay when ready
+ */
+export function setupVCRTestsWithRecording(
+  testFile: string,
+  recordingsDir?: string,
+  options?: VCRRecordingOptions
+): VCRHelper {
+  const enhancedOptions = { ...options, forceRecord: true };
+  return setupVCRTests(testFile, recordingsDir, enhancedOptions);
+}
+
+/**
+ * Setup function that starts in recording mode for test development,
+ * with easy methods to switch to replay mode when tests are stable
+ */
+export function setupIterativeVCRTests(
+  testFile: string,
+  recordingsDir?: string,
+  options?: VCRRecordingOptions
+): VCRHelper {
+  const vcr = setupVCRTestsWithRecording(testFile, recordingsDir, options);
+
+  // Add helper methods to the returned VCR instance
+  const originalVcr = vcr;
+
+  return Object.assign(originalVcr, {
+    /**
+     * Switch to replay mode when your tests are working correctly
+     * Call this in a beforeAll or beforeEach hook when ready
+     */
+    switchToReplay(): void {
+      originalVcr.disableRecording();
+      console.log('🎬 VCR: Switched to replay mode - using recorded interactions');
+    },
+
+    /**
+     * Switch back to recording mode for further iteration
+     * Useful when you need to modify tests or re-record interactions
+     */
+    switchToRecord(): void {
+      originalVcr.enableRecording();
+      console.log('📼 VCR: Switched to recording mode - will record live interactions');
+    },
+  });
 }
