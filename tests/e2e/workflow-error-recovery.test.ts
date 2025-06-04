@@ -11,8 +11,6 @@ import { WorkspaceSecurity } from '../../src/security/workspace.js';
 import { getDefaultConfig } from '../../src/config/defaults.js';
 import { setupVCRTests } from '../helpers/vcr-helper.js';
 import { TEST_WORKSPACE } from '../setup.js';
-import { promises as fs } from 'fs';
-import { join } from 'path';
 
 describe('Workflow Error Recovery E2E', () => {
   let engine: QCodeEngine;
@@ -20,23 +18,19 @@ describe('Workflow Error Recovery E2E', () => {
   const vcr = setupVCRTests(__filename);
 
   beforeAll(async () => {
-    // Create test workspace directory and basic files
-    await fs.mkdir(TEST_WORKSPACE, { recursive: true });
-
-    // Create test files for error scenarios
-    await fs.writeFile(join(TEST_WORKSPACE, 'test.txt'), 'Test content for error scenarios');
-    await fs.writeFile(join(TEST_WORKSPACE, 'valid.json'), '{"name": "test", "version": "1.0.0"}');
+    // Use existing static fixture directory (already has test.txt and valid.json)
+    const testWorkspace = TEST_WORKSPACE;
 
     // Initialize configuration and components before changing directory
-    const config = getDefaultConfig(TEST_WORKSPACE);
+    const config = getDefaultConfig(testWorkspace);
     client = new OllamaClient(config.ollama);
 
     // Initialize components
-    const workspaceSecurity = new WorkspaceSecurity(config.security, TEST_WORKSPACE);
+    const workspaceSecurity = new WorkspaceSecurity(config.security, testWorkspace);
     // Add the test workspace to allowed paths
-    workspaceSecurity.addAllowedPath(TEST_WORKSPACE);
+    workspaceSecurity.addAllowedPath(testWorkspace);
 
-    const toolRegistry = new ToolRegistry(config.security, TEST_WORKSPACE);
+    const toolRegistry = new ToolRegistry(config.security, testWorkspace);
     const filesTool = new FilesTool(workspaceSecurity);
 
     // Register file tool
@@ -48,7 +42,7 @@ describe('Workflow Error Recovery E2E', () => {
 
     // Initialize engine with workflow support
     engine = new QCodeEngine(client, toolRegistry, config, {
-      workingDirectory: TEST_WORKSPACE,
+      workingDirectory: testWorkspace,
       enableWorkflowState: true,
       maxToolExecutions: 5,
     });
