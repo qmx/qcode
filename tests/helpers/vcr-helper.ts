@@ -1,21 +1,31 @@
 import nock from 'nock';
 import fs from 'fs/promises';
 import path from 'path';
+import { safeLogger } from '../../src/utils/logger.js';
+
+const logger = safeLogger();
 
 export interface VCRRecordingOptions {
   enableRequestHeaders?: boolean;
   outputObjects?: boolean;
+  logRecordings?: boolean;
 }
 
 export class VCRHelper {
   private recordingsPath: string;
   private testFile: string;
   private isRecording: boolean;
+  private options: VCRRecordingOptions;
 
-  constructor(testFile: string, recordingsDir: string = '../fixtures/recordings') {
+  constructor(
+    testFile: string,
+    recordingsDir: string = '../fixtures/recordings',
+    options: VCRRecordingOptions = {}
+  ) {
     this.testFile = testFile;
     this.recordingsPath = path.join(path.dirname(testFile), recordingsDir);
     this.isRecording = process.env.NOCK_MODE === 'record';
+    this.options = options;
   }
 
   /**
@@ -123,9 +133,9 @@ export class VCRHelper {
     if (recordings.length > 0) {
       const recordingFile = path.join(this.recordingsPath, `${testName}.json`);
       await fs.writeFile(recordingFile, JSON.stringify(recordings, null, 2));
-      console.log(`📼 Recorded ${recordings.length} HTTP interactions to ${recordingFile}`);
+      logger.info(`📼 Recorded ${recordings.length} HTTP interactions to ${recordingFile}`);
     } else {
-      console.log(`⚠️  No HTTP interactions recorded for test "${testName}"`);
+      logger.warn(`⚠️  No HTTP interactions recorded for test "${testName}"`);
     }
     nock.recorder.clear();
   }
@@ -151,16 +161,20 @@ export class VCRHelper {
    * Log a message only when recording (useful for debugging)
    */
   recordingLog(message: string, ...args: any[]): void {
-    if (this.isRecording) {
-      console.log(message, ...args);
+    if (this.options.logRecordings) {
+      logger.info(message, ...args);
     }
   }
 
   /**
    * Create a VCR helper instance for a test file
    */
-  static forTestFile(testFile: string, recordingsDir?: string): VCRHelper {
-    return new VCRHelper(testFile, recordingsDir);
+  static forTestFile(
+    testFile: string,
+    recordingsDir?: string,
+    options?: VCRRecordingOptions
+  ): VCRHelper {
+    return new VCRHelper(testFile, recordingsDir, options);
   }
 
   /**
@@ -186,11 +200,12 @@ export class VCRHelper {
    * Delete a recording file (useful for re-recording)
    */
   async deleteRecording(testName: string): Promise<void> {
+    const recordingFile = this.getRecordingPath(testName);
     try {
-      await fs.unlink(this.getRecordingPath(testName));
-      console.log(`🗑️  Deleted recording: ${testName}.json`);
+      await fs.unlink(recordingFile);
+      logger.info(`🗑️  Deleted recording: ${testName}.json`);
     } catch (error) {
-      // File doesn't exist, which is fine
+      // File doesn't exist, ignore
     }
   }
 
@@ -210,15 +225,23 @@ export class VCRHelper {
 /**
  * Convenience function to create VCR helper for current test file
  */
-export function createVCRHelper(testFile: string, recordingsDir?: string): VCRHelper {
-  return VCRHelper.forTestFile(testFile, recordingsDir);
+export function createVCRHelper(
+  testFile: string,
+  recordingsDir?: string,
+  options?: VCRRecordingOptions
+): VCRHelper {
+  return VCRHelper.forTestFile(testFile, recordingsDir, options);
 }
 
 /**
  * Setup function for Jest describe blocks
  */
-export function setupVCRTests(testFile: string, recordingsDir?: string): VCRHelper {
-  const vcr = createVCRHelper(testFile, recordingsDir);
+export function setupVCRTests(
+  testFile: string,
+  recordingsDir?: string,
+  options?: VCRRecordingOptions
+): VCRHelper {
+  const vcr = createVCRHelper(testFile, recordingsDir, options);
 
   beforeAll(async () => {
     await vcr.initialize();

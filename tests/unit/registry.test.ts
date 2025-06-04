@@ -194,7 +194,7 @@ describe('ToolRegistry', () => {
       expect(registry.getMCPServer('remove-mcp')).toBeNull();
     });
 
-    it('should handle invalid MCP server info', () => {
+    it('should handle invalid MCP server info', async () => {
       const invalidServerInfo = {
         // Missing required id and name
         transport: 'stdio',
@@ -203,9 +203,9 @@ describe('ToolRegistry', () => {
         tools: [],
       } as unknown as MCPServerInfo;
 
-      expect(() => {
-        registry.registerMCPServer(invalidServerInfo);
-      }).toThrow('Invalid MCP server info: missing id or name');
+      await expect(async () => {
+        await registry.registerMCPServer(invalidServerInfo);
+      }).rejects.toThrow('MCP server must have id and name');
     });
   });
 
