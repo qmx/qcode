@@ -536,296 +536,536 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 
     - [ ] **1.8.5.2.2 LLM-Driven Multi-Step Workflow Patterns**:
 
-      **Files to create/modify:**
+      **ARCHITECTURAL CONTEXT & CURRENT STATE ANALYSIS:**
 
-      - `src/core/workflow-orchestrator.ts` - NEW FILE for workflow pattern detection
-      - `src/core/engine.ts` - Extend LLM system prompt with workflow strategies
-      - `tests/e2e/sequential-workflows.test.ts` - NEW FILE for workflow pattern tests
+      **Current Infrastructure Available (FROM EXISTING CODEBASE):**
 
-      **Workflow patterns to implement:**
+      - ✅ **ContextManager** (`src/core/context-manager.ts`): Advanced result processing with 6 extraction strategies
+        - File content analysis with class/function/export extraction
+        - File list processing with extension grouping and important file detection
+        - Search result analysis with pattern matching and file grouping
+        - Error handling with context preservation
+        - Memory management with compression thresholds (8KB limit, 2KB per result)
+        - Next-step context creation for workflow planning
 
-      **Pattern 1: Project Discovery → Analysis → Summary**
+      - ✅ **QCodeEngine Multi-Step Loop** (`src/core/engine.ts`, lines 575-820): Functional foundation
+        - LLM function calling with structured tool execution
+        - Conversation history management with result integration
+        - Workflow state tracking via `WorkflowState` integration
+        - `shouldContinueWorkflow()` logic for intelligent termination (lines 861-964)
+        - Error recovery and structured result propagation
+
+      - ✅ **Current System Prompt** (lines 540-564): Basic but functional
+        - Simple multi-step guidance for list → read workflows
+        - Basic pattern recognition for common project structures
+        - **LIMITATION**: Lacks sophisticated workflow pattern recognition
+
+      **GAP ANALYSIS - WHAT'S MISSING FOR 1.8.5.2.2:**
+
+      **🚧 Missing: Intelligent Workflow Pattern Detection**
+      - Current `detectIntent()` (lines 358-414) uses simple keyword matching
+      - No sophisticated query decomposition into sequential steps
+      - No framework/project-type aware workflow selection
+      - No conditional branching based on intermediate results
+
+      **🚧 Missing: LLM-Driven Workflow Orchestration**
+      - Current workflow continuation is rule-based (`shouldContinueWorkflow()`)
+      - No LLM-guided step planning based on discovered project context
+      - No dynamic workflow adaptation based on intermediate findings
+      - No intelligent error recovery with alternative workflow paths
+
+      **🚧 Missing: Project-Context Aware Orchestration**
+      - No framework detection (React, Express, monorepo) driving workflow selection
+      - No adaptive prompting based on project structure discoveries
+      - No workflow specialization for different development scenarios
+
+      **IMPLEMENTATION STRATEGY - FILES TO CREATE/MODIFY:**
+
+      **1. NEW FILE: `src/core/workflow-orchestrator.ts` - WORKFLOW PATTERN ENGINE**
 
       ```typescript
-      // List files → Detect patterns → Read key files → Generate summary
-      async executeProjectAnalysisWorkflow(query: string): Promise<WorkflowResult> {
-        // Step 1: List project structure
-        // Step 2: Identify framework/patterns (package.json, tsconfig.json)
-        // Step 3: Read configuration files and entry points
-        // Step 4: Generate structured analysis
+      /**
+       * Intelligent workflow pattern detection and execution orchestrator
+       */
+      export interface WorkflowPattern {
+        /** Unique pattern identifier */
+        id: string;
+        /** Human-readable pattern name */
+        name: string;
+        /** Pattern description for LLM context */
+        description: string;
+        /** Query detection criteria */
+        triggers: WorkflowTrigger[];
+        /** Execution strategy */
+        strategy: WorkflowExecutionStrategy;
+        /** Expected tool sequence */
+        toolSequence: string[];
+        /** Success criteria */
+        completionCriteria: WorkflowCompletionCriteria;
       }
-      ```
 
-      **Pattern 2: Search → Read → Report Generation**
-
-      ```typescript
-      // Search for patterns → Read matching files → Write analysis report
-      async executeSearchAndAnalysisWorkflow(query: string): Promise<WorkflowResult> {
-        // Step 1: Search for TODO/FIXME/pattern
-        // Step 2: Read files with matches
-        // Step 3: Analyze context and generate recommendations
-        // Step 4: Optionally write summary report
+      export interface WorkflowTrigger {
+        /** Type of trigger (keywords, intent, context) */
+        type: 'keywords' | 'intent' | 'project_context' | 'composite';
+        /** Trigger-specific matching criteria */
+        criteria: {
+          keywords?: string[];
+          intentTypes?: string[];
+          projectPatterns?: string[];
+          contextRequirements?: Record<string, any>;
+        };
+        /** Confidence weight (0-1) */
+        weight: number;
       }
-      ```
 
-      **Pattern 3: Configuration Validation Chain**
-
-      ```typescript
-      // Find config files → Read settings → Validate consistency
-      async executeConfigValidationWorkflow(query: string): Promise<WorkflowResult> {
-        // Step 1: Find all configuration files (.json, .yaml, .env)
-        // Step 2: Read and parse configuration values
-        // Step 3: Cross-reference and validate consistency
-        // Step 4: Report inconsistencies and recommendations
+      export interface WorkflowExecutionStrategy {
+        /** Execution mode */
+        mode: 'sequential' | 'conditional' | 'adaptive' | 'parallel';
+        /** Step planning approach */
+        planning: 'static' | 'dynamic' | 'llm_guided';
+        /** Error recovery strategy */
+        errorRecovery: 'abort' | 'retry' | 'alternative_path' | 'continue';
+        /** Context propagation rules */
+        contextPropagation: ContextPropagationRule[];
       }
-      ```
 
-      **Tasks:**
+      export interface WorkflowCompletionCriteria {
+        /** Minimum steps required */
+        minSteps: number;
+        /** Maximum steps allowed */
+        maxSteps: number;
+        /** Required information gathering */
+        requiredFindings: string[];
+        /** Success indicators */
+        successIndicators: string[];
+        /** Quality thresholds */
+        qualityThresholds: Record<string, number>;
+      }
 
-      - [ ] Implement pattern detection in `src/core/workflow-orchestrator.ts`
-      - [ ] Create workflow execution strategies with step dependencies
-      - [ ] Add conditional logic for step execution based on intermediate results
-      - [ ] Implement rollback/retry mechanisms for failed steps
+      export class WorkflowOrchestrator {
+        private patterns: Map<string, WorkflowPattern>;
+        private contextManager: ContextManager;
+        private executionHistory: WorkflowExecution[];
 
-    - [ ] **1.8.5.2.3 Enhanced System Prompt for Multi-Step Reasoning**:
-
-      **Files to modify:**
-
-      - `src/core/engine.ts` - Update LLM system prompt (lines 565-588)
-
-      **Current system prompt enhancement needed:**
-
-      ```typescript
-      // Replace existing system prompt with multi-step strategy
-      const enhancedSystemPrompt = `You are QCode, an AI coding assistant with advanced workflow capabilities.
-      
-      WORKFLOW STRATEGIES:
-      For complex queries, break them into logical steps:
-      
-      1. PROJECT UNDERSTANDING:
-         - Always start with project structure analysis
-         - Look for package.json, tsconfig.json, README files
-         - Identify framework and architecture patterns
-         
-      2. SEQUENTIAL EXECUTION:
-         - List relevant files first, then read specific ones
-         - Search for patterns before analyzing code
-         - Read configuration files to understand project setup
-         
-      3. ANALYSIS CHAINING:
-         - Use results from previous steps to inform next actions
-         - Maintain context about project type and structure
-         - Focus on files most relevant to the user's query
-      
-      CONTEXT MANAGEMENT:
-      - Summarize large outputs for conversation context
-      - Extract key findings and pass them forward
-      - Track file relationships and dependencies
-      
-      EXECUTION PATTERNS:
-      - "Analyze project" = list → identify patterns → read key files → summarize
-      - "Find issues" = search patterns → read matches → analyze context
-      - "Review changes" = list recent files → read changes → assess impact`;
-      ```
-
-      **Tasks:**
-
-      - [ ] Design context-aware prompting strategies
-      - [ ] Add workflow pattern detection keywords
-      - [ ] Implement step-by-step reasoning guidance
-      - [ ] Add context preservation instructions
-
-    - [ ] **1.8.5.2.4 Tool Result Formatting for LLM Context**:
-
-      **Files to modify:**
-
-      - `src/core/engine.ts` - Replace `formatToolResult()` method (lines 1052-1069)
-      - `src/tools/files.ts` - Enhance result objects with metadata
-
-      **Current issues to fix:**
-
-      - Results over 2KB flood conversation context
-      - File lists with 50+ files overwhelm LLM
-      - Search results lose important context in formatting
-
-      **Enhanced formatting strategy:**
-
-      ```typescript
-      private formatToolResultForLLMContext(
-        toolName: string,
-        result: ToolResult,
-        stepContext: ChainContext
-      ): string {
-        // Different formatting based on step position and result size
-        if (stepContext.stepNumber === 1 && result.data?.files?.length > 10) {
-          return this.formatProjectOverview(result);
+        constructor(contextManager: ContextManager) {
+          this.contextManager = contextManager;
+          this.patterns = new Map();
+          this.initializeBuiltInPatterns();
         }
 
-        if (result.data?.content?.length > 2000) {
-          return this.formatContentSummary(result);
+        /**
+         * Detect workflow pattern from user query and current context
+         */
+        async detectWorkflowPattern(
+          query: string,
+          projectContext?: ProjectContext
+        ): Promise<WorkflowPatternMatch[]> {
+          // Multi-layered pattern detection
+          // 1. Keyword-based pattern matching
+          // 2. Intent classification using LLM
+          // 3. Project context analysis
+          // 4. Composite scoring and ranking
         }
 
-        return this.formatFullResult(result);
-      }
-      ```
-
-      **Tasks:**
-
-      - [ ] Implement structured summaries for large file lists (>20 items)
-      - [ ] Extract key findings from search results automatically
-      - [ ] Context-aware result truncation based on query intent
-      - [ ] Smart highlighting of relevant information for next steps
-
-    - [ ] **1.8.5.2.5 Comprehensive Sequential Workflow Tests**:
-
-      **Files to create:**
-
-      - `tests/e2e/sequential-workflows.test.ts` - NEW comprehensive test suite
-      - `tests/fixtures/recordings/workflow_*.json` - NEW VCR recordings
-
-      **Test scenarios to implement:**
-
-      **VCR Test: React Component Analysis Workflow**
-
-      ```typescript
-      // Query: "Find all React components and analyze their props usage"
-      // Step 1: List *.jsx, *.tsx files → identify React components
-      // Step 2: Read component files → extract props interfaces
-      // Step 3: Generate summary of prop patterns and recommendations
-      ```
-
-      **VCR Test: Project Health Check Workflow**
-
-      ```typescript
-      // Query: "Analyze project structure and find potential issues"
-      // Step 1: List project structure → identify project type
-      // Step 2: Read package.json, tsconfig → check configuration
-      // Step 3: Search for TODO/FIXME → find pending issues
-      // Step 4: Generate comprehensive health report
-      ```
-
-      **VCR Test: API Documentation Workflow**
-
-      ```typescript
-      // Query: "Document all API endpoints in this Express app"
-      // Step 1: List files matching server patterns → find route files
-      // Step 2: Search for app.get, app.post patterns → extract endpoints
-      // Step 3: Read route handler files → analyze endpoint details
-      // Step 4: Generate API documentation summary
-      ```
-
-      **Tasks:**
-
-      - [ ] Create realistic project fixtures (React app, Express API, monorepo)
-      - [ ] Record LLM interactions for complex multi-step workflows
-      - [ ] Test error recovery when intermediate steps fail
-      - [ ] Validate context preservation across 5+ step workflows
-      - [ ] Measure performance and memory usage for complex chains
-      - [ ] Complex glob operations across different project structures
-
-    - [ ] **1.8.5.2.6 Memory Management and Performance Optimization**:
-
-      **Files to modify:**
-
-      - `src/core/engine.ts` - Add conversation history management
-      - `src/core/workflow-state.ts` - Enhance memory cleanup (lines 301-318)
-
-      **Performance considerations:**
-
-      - Conversation history grows exponentially with tool results
-      - Large file contents consume LLM context window
-      - Memory leaks from uncleaned workflow states
-
-      **Optimization strategies:**
-
-      ```typescript
-      class ConversationMemoryManager {
-        private maxHistorySize = 8000; // characters
-        private maxSteps = 10;
-
-        compressHistory(history: ConversationMessage[]): ConversationMessage[] {
-          // Keep system prompt + user query + last 3 assistant messages
-          // Summarize older steps to preserve key findings
+        /**
+         * Plan workflow execution steps based on detected pattern
+         */
+        async planWorkflowExecution(
+          pattern: WorkflowPattern,
+          query: string,
+          context: ConversationMemory
+        ): Promise<WorkflowExecutionPlan> {
+          // Intelligent step planning based on:
+          // - Pattern template
+          // - Current project context
+          // - Available tools
+          // - Previous execution history
         }
 
-        extractKeyContext(result: ToolResult): KeyContext {
-          // Extract file paths, patterns, errors for future reference
-          // Discard verbose content while preserving actionable information
+        /**
+         * Execute workflow with dynamic adaptation
+         */
+        async executeWorkflow(
+          plan: WorkflowExecutionPlan,
+          engine: QCodeEngine
+        ): Promise<WorkflowExecutionResult> {
+          // Execute with continuous adaptation:
+          // - Monitor intermediate results
+          // - Adapt subsequent steps based on findings
+          // - Handle errors with alternative paths
+          // - Optimize context usage
+        }
+
+        private initializeBuiltInPatterns(): void {
+          // Register comprehensive patterns (see detailed patterns below)
         }
       }
       ```
 
-      **Tasks:**
+      **2. EXTEND: `src/core/engine.ts` - ENHANCED SYSTEM PROMPT & INTEGRATION**
 
-      - [ ] Implement sliding window conversation history
-      - [ ] Add automatic context compression for long workflows
-      - [ ] Monitor memory usage during multi-step execution
-      - [ ] Implement cleanup hooks for abandoned workflows
+      **Current System Prompt Enhancement (lines 540-564):**
 
-    - [ ] **1.8.5.3 Complex Query Understanding (MANDATORY - BROKEN DOWN)**:
+      Replace basic prompt with sophisticated workflow guidance:
 
-    - [ ] **1.8.5.3.1 Basic Intent Detection**:
+      ```typescript
+      // ENHANCED SYSTEM PROMPT WITH WORKFLOW INTELLIGENCE
+      const enhancedSystemPrompt = `You are QCode, an AI coding assistant with advanced multi-step workflow capabilities.
 
-      - [ ] Implement query parsing and intent classification
-      - [ ] Detect file operation intents (read, write, list, search)
-      - [ ] Identify project analysis intents (structure, dependencies, patterns)
-      - [ ] Handle ambiguous queries with intelligent defaults
-      - [ ] **Basic Intent Tests**:
-        - [ ] `"show me package.json"` → file read intent
-        - [ ] `"list TypeScript files"` → file list intent with pattern
-        - [ ] `"find TODO comments"` → search intent with pattern
+      WORKFLOW ORCHESTRATION PRINCIPLES:
+      You excel at decomposing complex queries into intelligent step sequences. Always consider:
 
-    - [ ] **1.8.5.3.2 Query Decomposition**:
+      1. PROJECT UNDERSTANDING WORKFLOWS:
+         - Start with structure analysis: list files → identify framework → read key configs
+         - Detect project type: React (jsx/tsx + package.json), Express (server.js + routes), monorepo (workspaces)
+         - Extract patterns: dependencies, build tools, architecture conventions
 
-      - [ ] Break complex queries into sequential steps
-      - [ ] Plan multi-step workflows from single user request
-      - [ ] Handle conditional logic based on intermediate results
-      - [ ] **Query Decomposition Tests**:
-        - [ ] `"Find all React components and analyze their props"` → List .jsx files → Read each → Extract props → Summarize
-        - [ ] `"Review recent changes and suggest improvements"` → Search for TODO/FIXME → Read affected files → Generate recommendations
+      2. ANALYSIS WORKFLOWS:
+         - Search-driven analysis: search patterns → read matching files → extract insights → summarize
+         - Cross-file analysis: list related files → read sequentially → build relationship map
+         - Quality assessment: find issues → read context → suggest improvements
 
-    - [ ] **1.8.5.3.3 File Editing Workflows (CORE AGENT CAPABILITY)**:
+      3. ADAPTIVE EXECUTION:
+         - Let intermediate results guide next steps
+         - If you find package.json with React deps → focus on component analysis
+         - If you discover Express routes → prioritize API endpoint mapping
+         - If you see TODO/FIXME → read surrounding context for actionable suggestions
 
-      - [ ] Parse file modification requests into actionable steps
-      - [ ] Implement read → analyze → edit → verify patterns
-      - [ ] Handle backup and rollback for safe editing
-      - [ ] **File Editing Tests** (using CRA and Express fixtures):
-        - [ ] `"Change the h1 in App.js to h2"` → CRA fixture (read → edit → verify)
-        - [ ] `"Add a new import for React hooks in Header.jsx"` → CRA fixture
-        - [ ] `"Update the port in server.ts from 3000 to 8080"` → Express fixture
-        - [ ] `"Add a new script to package.json for building"` → Any fixture
+      4. CONTEXT OPTIMIZATION:
+         - Summarize large results for conversation context
+         - Extract key findings to inform subsequent steps
+         - Maintain project understanding across multiple tool calls
 
-    - [ ] **1.8.5.3.4 Project Understanding Workflows**:
+      EXECUTION PATTERNS BY QUERY TYPE:
 
-      - [ ] Analyze project structure and conventions
-      - [ ] Detect frameworks and build patterns
-      - [ ] Extract component/API/dependency relationships
-      - [ ] **Project Understanding Tests**:
-        - [ ] `"Find all React components and list their props"` → CRA fixture
-        - [ ] `"Show me all API endpoints in this Express app"` → Express fixture
-        - [ ] `"List all packages in this monorepo and their dependencies"` → Monorepo fixture
+      "Analyze project" / "Understand codebase":
+      → list files → detect framework → read package.json + tsconfig → read main entry → summarize structure
 
-    - [ ] **1.8.5.3.5 Complex Analysis Workflows**:
+      "Find all [components/endpoints/functions]":
+      → search for patterns → list matching files → read selected files → extract and categorize findings
 
-      - [ ] Multi-file analysis and pattern detection
-      - [ ] Code quality assessment and suggestions
-      - [ ] Cross-file dependency analysis
-      - [ ] **Complex Analysis Tests**:
-        - [ ] `"Find TODO comments, read the files, and suggest fixes"` → All fixtures
-        - [ ] `"Analyze test coverage by finding test files and their targets"` → All fixtures
-        - [ ] `"Review recent changes and identify potential issues"` → Git-enabled fixtures
+      "Review [code/changes/issues]":
+      → search for TODO/FIXME/ERROR → read files with matches → analyze context → provide recommendations
 
-    - [ ] **1.8.5.3.6 Query Refinement and Clarification**:
+      "Document [API/components/features]":
+      → list relevant files → read for structure → extract public interfaces → generate documentation
 
-      - [ ] Handle unclear or incomplete user requests
-      - [ ] Suggest related actions based on intermediate results
-      - [ ] Context-aware followup questions and recommendations
-      - [ ] **Query Refinement Tests**:
-        - [ ] Handle ambiguous requests with intelligent defaults
-        - [ ] Suggest corrections for malformed queries
-        - [ ] Provide contextual help based on current workspace
+      INTELLIGENT ADAPTATION:
+      - React projects: Focus on components/, hooks/, context patterns
+      - Express projects: Focus on routes/, middleware/, models/
+      - Monorepos: Focus on packages/, shared dependencies, cross-package analysis
+      - Library projects: Focus on public APIs, exports, documentation
 
-    - [ ] **1.8.5.4 Performance & Reliability (OPTIONAL - NICE TO HAVE)**:
+      Continue calling functions until you have sufficient information to fully answer the user's request.
+      Adapt your approach based on what you discover about the project structure and type.`;
+      ```
+
+      **Integration Points (in `processWithLLMFunctionCalling()`):**
+
+      ```typescript
+      // BEFORE WORKFLOW LOOP (after line 520):
+      // Initialize workflow orchestrator
+      const workflowOrchestrator = new WorkflowOrchestrator(this.contextManager);
+      
+      // Detect workflow pattern
+      const detectedPatterns = await workflowOrchestrator.detectWorkflowPattern(
+        query, 
+        await this.extractProjectContext(context.workingDirectory)
+      );
+      
+      // Plan execution if high-confidence pattern detected
+      let workflowPlan: WorkflowExecutionPlan | undefined;
+      if (detectedPatterns.length > 0 && detectedPatterns[0].confidence > 0.7) {
+        workflowPlan = await workflowOrchestrator.planWorkflowExecution(
+          detectedPatterns[0].pattern,
+          query,
+          conversationMemory
+        );
+        
+        // Enhance system prompt with workflow-specific guidance
+        systemPrompt += await this.buildWorkflowSpecificPrompt(workflowPlan);
+      }
+
+      // INSIDE WORKFLOW LOOP (after line 730):
+      // Adaptive workflow guidance based on results
+      if (workflowPlan && stepStructuredResults.length > 0) {
+        const adaptedPlan = await workflowOrchestrator.adaptWorkflowPlan(
+          workflowPlan,
+          stepStructuredResults,
+          conversationMemory
+        );
+        
+        // Update LLM context with adaptive guidance
+        if (adaptedPlan.hasChanges) {
+          conversationHistory.push({
+            role: 'system' as const,
+            content: adaptedPlan.adaptationGuidance
+          });
+        }
+      }
+      ```
+
+      **3. NEW FILE: `tests/e2e/workflow-patterns.test.ts` - COMPREHENSIVE PATTERN TESTING**
+
+      **BUILT-IN WORKFLOW PATTERNS TO IMPLEMENT:**
+
+      **Pattern 1: Project Discovery & Architecture Analysis**
+      ```typescript
+      const PROJECT_ANALYSIS_PATTERN: WorkflowPattern = {
+        id: 'project_analysis',
+        name: 'Project Discovery & Architecture Analysis',
+        description: 'Comprehensive project structure and framework detection',
+        triggers: [
+          {
+            type: 'keywords',
+            criteria: { keywords: ['analyze project', 'understand codebase', 'project structure', 'architecture'] },
+            weight: 0.8
+          },
+          {
+            type: 'intent',
+            criteria: { intentTypes: ['project_understanding', 'architecture_analysis'] },
+            weight: 0.9
+          }
+        ],
+        strategy: {
+          mode: 'sequential',
+          planning: 'llm_guided',
+          errorRecovery: 'continue',
+          contextPropagation: [
+            { from: 'file_list', to: 'project_context', extractors: ['framework_detection', 'entry_points'] },
+            { from: 'file_content', to: 'dependency_analysis', extractors: ['package_deps', 'imports'] }
+          ]
+        },
+        toolSequence: ['internal.files.list', 'internal.files.read', 'internal.files.search'],
+        completionCriteria: {
+          minSteps: 3,
+          maxSteps: 8,
+          requiredFindings: ['project_type', 'main_entry', 'dependencies'],
+          successIndicators: ['framework_identified', 'structure_mapped'],
+          qualityThresholds: { 'context_coverage': 0.7, 'finding_relevance': 0.8 }
+        }
+      };
+
+      // Test Execution:
+      // Query: "Analyze this React project and tell me about its structure"
+      // Expected Flow:
+      // 1. list files → detect React (jsx/tsx files, package.json with react deps)
+      // 2. read package.json → extract dependencies, scripts, project metadata
+      // 3. read main entry (src/index.tsx or src/App.tsx) → understand app structure
+      // 4. list src/ → identify components, hooks, utils, styles organization
+      // 5. search for "export default" → find main components and modules
+      // 6. summarize: framework version, architecture patterns, key components
+      ```
+
+      **Pattern 2: Feature Discovery & API Mapping**
+      ```typescript
+      const API_MAPPING_PATTERN: WorkflowPattern = {
+        id: 'api_mapping',
+        name: 'API Endpoint Discovery & Documentation',
+        description: 'Systematic discovery and documentation of API endpoints',
+        triggers: [
+          {
+            type: 'keywords',
+            criteria: { keywords: ['api endpoints', 'routes', 'document api', 'find endpoints'] },
+            weight: 0.9
+          },
+          {
+            type: 'project_context',
+            criteria: { projectPatterns: ['express', 'fastify', 'koa', 'nestjs'] },
+            weight: 0.8
+          }
+        ],
+        strategy: {
+          mode: 'conditional',
+          planning: 'dynamic',
+          errorRecovery: 'alternative_path',
+          contextPropagation: [
+            { from: 'search_results', to: 'endpoint_map', extractors: ['route_patterns', 'http_methods'] },
+            { from: 'file_content', to: 'api_docs', extractors: ['route_handlers', 'middleware'] }
+          ]
+        },
+        toolSequence: ['internal.files.search', 'internal.files.list', 'internal.files.read'],
+        completionCriteria: {
+          minSteps: 4,
+          maxSteps: 10,
+          requiredFindings: ['endpoint_list', 'http_methods', 'route_handlers'],
+          successIndicators: ['complete_api_map', 'documented_params'],
+          qualityThresholds: { 'endpoint_coverage': 0.85, 'documentation_completeness': 0.7 }
+        }
+      };
+
+      // Test Execution:
+      // Query: "Find all API endpoints in this Express app and document them"
+      // Expected Flow:
+      // 1. search "app.get|app.post|app.put|app.delete" → find route definitions
+      // 2. list routes/ or api/ directories → discover route organization
+      // 3. read main server file → understand middleware and route mounting
+      // 4. read individual route files → extract endpoint details, parameters, responses
+      // 5. search for middleware → understand authentication, validation patterns
+      // 6. generate API documentation with endpoints, methods, parameters
+      ```
+
+      **Pattern 3: Code Quality & Issue Analysis**
+      ```typescript
+      const QUALITY_ANALYSIS_PATTERN: WorkflowPattern = {
+        id: 'quality_analysis',
+        name: 'Code Quality Assessment & Issue Detection',
+        description: 'Systematic discovery and analysis of code quality issues',
+        triggers: [
+          {
+            type: 'keywords',
+            criteria: { keywords: ['find issues', 'code quality', 'todos', 'review code', 'find problems'] },
+            weight: 0.8
+          },
+          {
+            type: 'composite',
+            criteria: { 
+              keywords: ['todo', 'fixme', 'hack', 'warning'],
+              contextRequirements: { 'multiple_files': true }
+            },
+            weight: 0.9
+          }
+        ],
+        strategy: {
+          mode: 'adaptive',
+          planning: 'llm_guided',
+          errorRecovery: 'continue',
+          contextPropagation: [
+            { from: 'search_results', to: 'issue_map', extractors: ['issue_patterns', 'severity_indicators'] },
+            { from: 'file_content', to: 'context_analysis', extractors: ['surrounding_code', 'impact_assessment'] }
+          ]
+        },
+        toolSequence: ['internal.files.search', 'internal.files.read', 'internal.files.list'],
+        completionCriteria: {
+          minSteps: 3,
+          maxSteps: 12,
+          requiredFindings: ['issue_list', 'context_analysis', 'recommendations'],
+          successIndicators: ['prioritized_issues', 'actionable_suggestions'],
+          qualityThresholds: { 'issue_relevance': 0.8, 'suggestion_quality': 0.7 }
+        }
+      };
+
+      // Test Execution:
+      // Query: "Find TODO comments and suggest fixes"
+      // Expected Flow:
+      // 1. search "TODO|FIXME|HACK|XXX" → find all issue markers
+      // 2. read files with matches → understand context around each issue
+      // 3. list related files → understand broader code context
+      // 4. analyze patterns → group similar issues, assess impact
+      // 5. generate recommendations → prioritize fixes, suggest solutions
+      ```
+
+      **Pattern 4: Dependency & Security Analysis**
+      ```typescript
+      const DEPENDENCY_ANALYSIS_PATTERN: WorkflowPattern = {
+        id: 'dependency_analysis',
+        name: 'Dependency Analysis & Security Assessment',
+        description: 'Analysis of project dependencies and potential security issues',
+        triggers: [
+          {
+            type: 'keywords',
+            criteria: { keywords: ['dependencies', 'security', 'vulnerabilities', 'packages', 'outdated'] },
+            weight: 0.8
+          },
+          {
+            type: 'project_context',
+            criteria: { projectPatterns: ['package.json', 'requirements.txt', 'Gemfile', 'pom.xml'] },
+            weight: 0.7
+          }
+        ],
+        strategy: {
+          mode: 'sequential',
+          planning: 'static',
+          errorRecovery: 'retry',
+          contextPropagation: [
+            { from: 'file_content', to: 'dependency_map', extractors: ['package_versions', 'dependency_tree'] },
+            { from: 'search_results', to: 'usage_analysis', extractors: ['import_patterns', 'usage_frequency'] }
+          ]
+        },
+        toolSequence: ['internal.files.read', 'internal.files.search', 'internal.files.list'],
+        completionCriteria: {
+          minSteps: 3,
+          maxSteps: 6,
+          requiredFindings: ['dependency_list', 'usage_patterns', 'potential_issues'],
+          successIndicators: ['complete_inventory', 'risk_assessment'],
+          qualityThresholds: { 'dependency_coverage': 0.9, 'analysis_depth': 0.7 }
+        }
+      };
+      ```
+
+      **IMPLEMENTATION TASKS - DETAILED BREAKDOWN:**
+
+      **Phase 1: Core Workflow Orchestrator (Week 1)**
+      - [ ] **1.8.5.2.2.1**: Implement `WorkflowOrchestrator` class with pattern detection engine
+        - Multi-layered pattern matching (keywords + intent + project context)
+        - Confidence scoring and pattern ranking
+        - Built-in pattern library with 6+ comprehensive patterns
+        - Project context extraction from file structure analysis
+
+      - [ ] **1.8.5.2.2.2**: Create workflow execution planning system
+        - Step sequence generation based on pattern templates
+        - Dynamic adaptation based on intermediate results
+        - Context propagation rules for cross-step information sharing
+        - Error recovery strategies with alternative workflow paths
+
+      **Phase 2: Engine Integration & Enhanced Prompting (Week 1-2)**
+      - [ ] **1.8.5.2.2.3**: Integrate orchestrator with `QCodeEngine.processWithLLMFunctionCalling()`
+        - Pre-workflow pattern detection and plan generation
+        - Real-time workflow adaptation based on step results
+        - Enhanced system prompt with workflow-specific guidance
+        - Context-aware conversation management
+
+      - [ ] **1.8.5.2.2.4**: Implement sophisticated system prompt enhancement
+        - Pattern-specific prompting strategies
+        - Project-type aware execution guidance
+        - Adaptive prompting based on discovered context
+        - Result summarization for conversation optimization
+
+      **Phase 3: Comprehensive Testing & Validation (Week 2)**
+      - [ ] **1.8.5.2.2.5**: Create realistic project fixtures for pattern testing
+        - React CRA project with component hierarchy and routing
+        - Express API project with routes, middleware, and models
+        - Monorepo workspace with multiple packages and shared dependencies
+        - Python Flask project for cross-language pattern validation
+
+      - [ ] **1.8.5.2.2.6**: Implement VCR testing for complex workflow scenarios
+        - Record LLM interactions for 10+ realistic workflow scenarios
+        - Test pattern detection accuracy across different project types
+        - Validate workflow adaptation and error recovery mechanisms
+        - Performance testing for multi-step workflows (5-15 steps)
+
+      **Phase 4: Advanced Features & Optimization (Week 2)**
+      - [ ] **1.8.5.2.2.7**: Implement workflow performance optimization
+        - Intelligent context compression for long workflows
+        - Parallel tool execution where appropriate
+        - Memory usage monitoring and cleanup
+        - Workflow execution caching for repeated patterns
+
+      - [ ] **1.8.5.2.2.8**: Add workflow learning and improvement mechanisms
+        - Success/failure pattern tracking
+        - Workflow optimization based on execution history
+        - User feedback integration for pattern refinement
+        - Adaptive pattern weights based on project type success rates
+
+      **INTEGRATION WITH EXISTING SYSTEMS:**
+
+      **ContextManager Integration:**
+      - Leverage existing extraction strategies for enhanced context creation
+      - Extend `ConversationMemory` to include workflow state tracking
+      - Enhance result formatting for workflow-aware conversation management
+      - Utilize context compression for long workflow sequences
+
+      **Engine Integration Points:**
+      - Pre-process queries through workflow pattern detection
+      - Enhance `shouldContinueWorkflow()` with pattern-aware decision making
+      - Integrate workflow planning with existing function calling loop
+      - Extend error handling with workflow-specific recovery strategies
+
+      **Expected Outcomes:**
+      - 50% improvement in multi-step workflow success rates
+      - 30% reduction in unnecessary tool executions through intelligent planning
+      - 80%+ accuracy in project type detection and appropriate workflow selection
+      - Robust handling of 15+ step workflows with maintained context quality
 
 **Current Status**: Sections 1.8.2-1.8.4 are **complete** - file read and list operations work end-to-end with full CLI integration and comprehensive e2e testing. Section 1.8.5 remains for advanced multi-step workflow orchestration.
 
