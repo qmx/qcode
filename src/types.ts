@@ -673,3 +673,224 @@ export interface ContextSizeConfig {
   /** Minimum context size to maintain */
   minContextSize: number;
 }
+
+/**
+ * Workflow orchestrator pattern detection and execution interfaces
+ */
+export interface WorkflowPattern {
+  /** Unique pattern identifier */
+  id: string;
+  /** Human-readable pattern name */
+  name: string;
+  /** Pattern description for LLM context */
+  description: string;
+  /** Query detection criteria */
+  triggers: WorkflowTrigger[];
+  /** Execution strategy */
+  strategy: WorkflowExecutionStrategy;
+  /** Expected tool sequence */
+  toolSequence: string[];
+  /** Success criteria */
+  completionCriteria: WorkflowCompletionCriteria;
+}
+
+/**
+ * Trigger conditions for workflow pattern detection
+ */
+export interface WorkflowTrigger {
+  /** Type of trigger (keywords, intent, context) */
+  type: 'keywords' | 'intent' | 'project_context' | 'composite';
+  /** Trigger-specific matching criteria */
+  criteria: {
+    keywords?: string[];
+    intentTypes?: string[];
+    projectPatterns?: string[];
+    contextRequirements?: Record<string, any>;
+  };
+  /** Confidence weight (0-1) */
+  weight: number;
+}
+
+/**
+ * Workflow execution strategy configuration
+ */
+export interface WorkflowExecutionStrategy {
+  /** Execution mode */
+  mode: 'sequential' | 'conditional' | 'adaptive' | 'parallel';
+  /** Step planning approach */
+  planning: 'static' | 'dynamic' | 'llm_guided';
+  /** Error recovery strategy */
+  errorRecovery: 'abort' | 'retry' | 'alternative_path' | 'continue';
+  /** Context propagation rules */
+  contextPropagation: ContextPropagationRule[];
+}
+
+/**
+ * Rules for propagating context between workflow steps
+ */
+export interface ContextPropagationRule {
+  /** Source result type */
+  from: StructuredToolResult['type'];
+  /** Target context key */
+  to: string;
+  /** Data extraction strategies to apply */
+  extractors: string[];
+}
+
+/**
+ * Criteria for determining workflow completion
+ */
+export interface WorkflowCompletionCriteria {
+  /** Minimum steps required */
+  minSteps: number;
+  /** Maximum steps allowed */
+  maxSteps: number;
+  /** Required information gathering */
+  requiredFindings: string[];
+  /** Success indicators */
+  successIndicators: string[];
+  /** Quality thresholds */
+  qualityThresholds: Record<string, number>;
+}
+
+/**
+ * Result of workflow pattern matching
+ */
+export interface WorkflowPatternMatch {
+  /** The matched pattern */
+  pattern: WorkflowPattern;
+  /** Confidence score (0-1) */
+  confidence: number;
+  /** Matched trigger details */
+  matchedTriggers: WorkflowTriggerMatch[];
+  /** Extracted parameters from query */
+  extractedParameters: Record<string, any>;
+}
+
+/**
+ * Details about a matched trigger
+ */
+export interface WorkflowTriggerMatch {
+  /** The trigger that matched */
+  trigger: WorkflowTrigger;
+  /** Score for this specific trigger */
+  score: number;
+  /** Matched elements (keywords, patterns, etc.) */
+  matchedElements: string[];
+}
+
+/**
+ * Planned workflow execution steps
+ */
+export interface WorkflowExecutionPlan {
+  /** Plan identifier */
+  id: string;
+  /** Pattern this plan is based on */
+  pattern: WorkflowPattern;
+  /** Planned execution steps */
+  steps: PlannedWorkflowStep[];
+  /** Estimated completion criteria */
+  estimatedCompletion: WorkflowCompletionEstimate;
+  /** Plan creation timestamp */
+  createdAt: Date;
+  /** Plan adaptation indicators */
+  adaptable: boolean;
+}
+
+/**
+ * Individual planned workflow step
+ */
+export interface PlannedWorkflowStep {
+  /** Step identifier */
+  id: string;
+  /** Step number in sequence */
+  stepNumber: number;
+  /** Tool to execute */
+  toolName: string;
+  /** Planned arguments (may be dynamic) */
+  plannedArguments: Record<string, any>;
+  /** Conditions for step execution */
+  conditions?: WorkflowStepCondition[];
+  /** Alternative steps if conditions fail */
+  alternatives?: PlannedWorkflowStep[];
+}
+
+/**
+ * Conditions for workflow step execution
+ */
+export interface WorkflowStepCondition {
+  /** Condition type */
+  type: 'result_check' | 'context_requirement' | 'error_threshold';
+  /** Condition parameters */
+  parameters: Record<string, any>;
+  /** Whether condition must be met */
+  required: boolean;
+}
+
+/**
+ * Estimated workflow completion metrics
+ */
+export interface WorkflowCompletionEstimate {
+  /** Estimated number of steps */
+  estimatedSteps: number;
+  /** Estimated execution time (seconds) */
+  estimatedDuration: number;
+  /** Confidence in estimate */
+  confidence: number;
+  /** Key milestones expected */
+  milestones: string[];
+}
+
+/**
+ * Result of workflow execution
+ */
+export interface WorkflowExecutionResult {
+  /** Execution identifier */
+  executionId: string;
+  /** Original pattern used */
+  pattern: WorkflowPattern;
+  /** Final execution status */
+  status: 'completed' | 'failed' | 'partial' | 'interrupted';
+  /** All executed steps */
+  executedSteps: WorkflowStep[];
+  /** Final aggregated result */
+  finalResult: StructuredToolResult;
+  /** Execution metrics */
+  metrics: WorkflowExecutionMetrics;
+  /** Lessons learned for pattern improvement */
+  feedback: WorkflowFeedback;
+}
+
+/**
+ * Workflow execution metrics
+ */
+export interface WorkflowExecutionMetrics {
+  /** Total execution time */
+  totalDuration: number;
+  /** Number of steps executed */
+  stepsExecuted: number;
+  /** Number of failed steps */
+  failedSteps: number;
+  /** Number of retries performed */
+  retries: number;
+  /** Context usage statistics */
+  contextUsage: {
+    maxSize: number;
+    averageSize: number;
+    compressionEvents: number;
+  };
+}
+
+/**
+ * Feedback for improving workflow patterns
+ */
+export interface WorkflowFeedback {
+  /** Whether pattern detection was accurate */
+  patternAccuracy: number;
+  /** Whether execution plan was effective */
+  planEffectiveness: number;
+  /** User satisfaction (if available) */
+  userSatisfaction?: number;
+  /** Suggested improvements */
+  improvements: string[];
+}
