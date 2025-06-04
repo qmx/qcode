@@ -32,19 +32,35 @@ Don't leave tests in a broken state. If recordings are missing, create them with
 NOCK_MODE=record npm test -- --testPathPattern="your-test-file.test.ts"
 ```
 
-### 3. ✅ Validate ALL Tests Pass Before Claiming Completion
+### 3. ✅ NEVER Manually Delete VCR Recordings
+**🚨 CRITICAL:** Do NOT manually delete recording files with `rm` or similar commands. The VCR helper automatically overwrites existing recordings when in record mode. Manual deletion can break the recording/replay cycle and cause test failures.
+
+**❌ WRONG:**
+```bash
+# DON'T DO THIS - breaks VCR workflow
+rm tests/fixtures/recordings/*.json
+rm tests/fixtures/recordings/file_read_query.json
+```
+
+**✅ CORRECT:**
+```bash
+# VCR helper automatically overwrites in record mode
+NOCK_MODE=record npm test -- your-test-file.test.ts
+```
+
+### 4. ✅ Validate ALL Tests Pass Before Claiming Completion
 Run the full test suite after refactoring. If any tests fail, fix them immediately.
 
-### 4. ✅ Fix Test Assertion Issues Discovered During Recording
+### 5. ✅ Fix Test Assertion Issues Discovered During Recording
 VCR recording may reveal that test expectations don't match actual LLM behavior. Fix assertions to match reality.
 
-### 5. ✅ Ensure Tests Match Actual Implementation Behavior
+### 6. ✅ Ensure Tests Match Actual Implementation Behavior
 **No wishful thinking!** If the engine only supports single function calls, don't test for multi-step workflows.
 
-### 6. ✅ With VCR, Behavior MUST Be Deterministic
+### 7. ✅ With VCR, Behavior MUST Be Deterministic
 **NEVER** write comments like "LLM may choose differently" or "behavior may vary". VCR recordings are deterministic - same input = same output always.
 
-### 7. ✅ Test Descriptions Must Be Honest
+### 8. ✅ Test Descriptions Must Be Honest
 If a test only does single-step workflow, don't call it "complex multi-step workflow". Name tests accurately.
 
 ### Example of BAD vs GOOD Test Refactoring:
@@ -308,8 +324,16 @@ describe('Chat Completion', () => {
 
 ### 3. Recording Management
 - Keep recordings in version control for deterministic CI/CD
+- **🚨 NEVER manually delete recordings** - VCR helper automatically overwrites files in record mode
 - Re-record when API contracts change: `NOCK_MODE=record npm test`
-- Clean up obsolete recordings when test names change
+- Clean up obsolete recordings when test names change by renaming tests, not deleting files
+- The VCR helper handles all file lifecycle management automatically
+
+**Recording Lifecycle:**
+1. **New recordings:** VCR helper creates files automatically in record mode
+2. **Updating recordings:** VCR helper overwrites existing files automatically
+3. **Obsolete recordings:** Remove by changing test names, not by manual file deletion
+4. **Missing recordings:** VCR helper fails with clear instructions to re-record
 
 ### 4. Error Handling - Automatic!
 The VCR helper automatically:
