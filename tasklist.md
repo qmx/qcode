@@ -13,6 +13,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
 ### **🔄 The Intelligence Transformation**
 
 **Without Project Understanding (Generic Assistant):**
+
 ```bash
 qcode "add user authentication"
 # → Generic response: "Here's a basic auth function..."
@@ -21,8 +22,9 @@ qcode "add user authentication"
 ```
 
 **With Deep Project Understanding (True Coding Agent):**
+
 ```bash
-qcode "add user authentication" 
+qcode "add user authentication"
 # → TypeScript: "I see this is a Next.js 13+ app with Prisma and tRPC..."
 # → Ruby: "I see this is a Rails 7 app with Devise. I'll add authentication to your existing ApplicationController pattern..."
 # → Swift: "I see this is a SwiftUI app with MVVM. I'll add authentication using your existing NetworkManager and update the routing..."
@@ -33,7 +35,7 @@ qcode "add user authentication"
 ### **🎯 Why Project Understanding is the Foundation**
 
 1. **Language & Framework Awareness** - Knows if you're using React vs SwiftUI vs Rails vs Django, and understands the patterns of each
-2. **Convention Compliance** - Understands language-specific naming (camelCase vs snake_case vs kebab-case), file organization, and style preferences  
+2. **Convention Compliance** - Understands language-specific naming (camelCase vs snake_case vs kebab-case), file organization, and style preferences
 3. **Context-Driven Intelligence** - "Add error handling" means different things across languages and frameworks
 4. **Ecosystem Pattern Recognition** - Learns your specific approaches within each language's ecosystem
 5. **Cross-Language Impact Analysis** - Understands dependencies and what changing files affects in any codebase
@@ -274,39 +276,46 @@ qcode "add user authentication"
   - [x] **NEW**: Enhanced error codes and messages
   - [x] **NEW**: Context-aware path resolution
 
-#### 1.7.7 **🧠 FOUNDATIONAL: Deep Project Understanding Tool** 
+#### 1.7.7 **🧠 FOUNDATIONAL: Deep Project Understanding Tool**
+
 **Status: MOST CRITICAL - FOUNDATION FOR ALL OTHER CAPABILITIES**
 
 **Why This is Priority #1:**
 Without deep project understanding, every other tool operates blindly. This is what transforms a generic file browser into a project-aware coding partner that understands your specific codebase, patterns, and conventions.
 
-##### **1.7.7.1** 🏗️ **Basic Tool Structure** 
+##### **1.7.7.1** 🏗️ **Basic Tool Structure**
+
 **What we're building**: Foundation tool that enables project analysis through QCode commands
 **Implementation Context**: Follow `FilesTool` pattern in `src/tools/files.ts` with `NamespacedTool` interface
 
 **Implementation Steps:**
+
 - [ ] Create `src/tools/project-intelligence.ts` following `FilesTool` pattern
-- [ ] Implement `ProjectIntelligenceTool` class with `NamespacedTool` interface  
+- [ ] Implement `ProjectIntelligenceTool` class with `NamespacedTool` interface
 - [ ] Define Zod schemas for operations: `analyze`, `understand`, `summarize`
 - [ ] Set up tool definition for Ollama function calling integration
 - [ ] Register in tool registry with namespace `internal.project`
 
 **Tests to Write:**
+
 - [ ] `tests/tools/project-intelligence.test.ts` - Tool registration and schema validation
 - [ ] Test tool definition structure matches `FilesTool` pattern
 - [ ] Test Zod schema validation for all operations
 - [ ] Test namespace registration with `internal.project`
 
 **QCode Commands Enabled:**
+
 - `qcode "analyze my project structure"`
 - `qcode "understand this codebase"`
 - `qcode "summarize the project architecture"`
 
 ##### **1.7.7.2** 📁 **Project Data Collection Pipeline**
+
 **What we're building**: Automated discovery of project files, configurations, and structure
 **Implementation Context**: Use existing `FilesTool` operations with enhanced discovery patterns
 
 **Implementation Steps:**
+
 - [ ] **File structure mapping** - Use existing `FilesTool.listFiles` with recursive patterns
 - [ ] **Key file identification** - Search for manifest files (package.json, Gemfile, requirements.txt, etc.)
 - [ ] **Configuration discovery** - Find build configs, linting rules, test configs
@@ -314,6 +323,7 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Integration with existing `WorkspaceSecurity` for safe file access
 
 **Tests to Write:**
+
 - [ ] `tests/fixtures/recordings/project_data_collection.json` - VCR recording for file discovery
 - [ ] Test manifest file detection across different project types
 - [ ] Test configuration file discovery (tsconfig.json, .eslintrc, etc.)
@@ -321,15 +331,18 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Test workspace security integration
 
 **QCode Commands Enabled:**
+
 - `qcode "find all configuration files"`
 - `qcode "discover project dependencies"`
 - `qcode "map the project structure"`
 
 ##### **1.7.7.3** 📊 **Project Metadata Extraction**
+
 **What we're building**: Parse and structure project information for LLM analysis
 **Implementation Context**: Parse and structure project information following `StructuredToolResult` pattern
 
 **Implementation Steps:**
+
 - [ ] **Raw data extraction** - Parse manifest files, extract dependencies, scripts, entry points
 - [ ] **Code sample collection** - Gather representative code snippets from key files
 - [ ] **Structure mapping** - Document file organization and directory patterns
@@ -337,6 +350,7 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Store structured project data following `StructuredToolResult` pattern
 
 **Tests to Write:**
+
 - [ ] Test data extraction from package.json, Gemfile, requirements.txt, Package.swift
 - [ ] Test script and entry point discovery across project types
 - [ ] Test code sample collection from React, Rails, FastAPI, SwiftUI projects
@@ -344,15 +358,18 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Test data completeness for comprehensive LLM analysis
 
 **QCode Commands Enabled:**
+
 - `qcode "what dependencies does this project use?"`
 - `qcode "what are the available scripts?"`
 - `qcode "show me the project structure"`
 
 ##### **1.7.7.4** 🧠 **LLM Context Builder**
+
 **What we're building**: Format project data for LLM analysis and get structured responses
 **Implementation Context**: Use `OllamaClient.chat()` with JSON format for structured responses
 
 **Implementation Steps:**
+
 - [ ] **Comprehensive project summary** - Feed all collected data to LLM for holistic analysis
 - [ ] **Code pattern extraction** - Let LLM identify patterns from code samples
 - [ ] **Architecture understanding** - LLM analyzes file relationships and project structure
@@ -360,6 +377,7 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Use `OllamaClient.chat()` with JSON format for structured LLM responses
 
 **Tests to Write:**
+
 - [ ] `tests/fixtures/recordings/llm_project_analysis_react.json` - VCR recording for React project analysis
 - [ ] `tests/fixtures/recordings/llm_project_analysis_rails.json` - VCR recording for Rails project analysis
 - [ ] Test LLM analysis quality across React, Express, Rails, FastAPI projects
@@ -367,15 +385,18 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Test error handling for incomplete or ambiguous project data
 
 **QCode Commands Enabled:**
+
 - `qcode "analyze this project using AI"`
 - `qcode "what technologies are being used here?"`
 - `qcode "describe the project architecture"`
 
 ##### **1.7.7.5** 🔍 **Dynamic Architecture Analysis**
+
 **What we're building**: LLM-driven understanding of project architecture and patterns
 **Implementation Context**: LLM-driven project understanding and pattern recognition
 
 **Implementation Steps:**
+
 - [ ] **Intelligent architecture analysis** - LLM examines project structure and identifies architectural patterns
 - [ ] **Pattern recognition** - LLM discovers coding patterns, conventions, and organizational principles
 - [ ] **Convention learning** - LLM understands project-specific styles and naming patterns
@@ -383,6 +404,7 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] **Best practice assessment** - LLM suggests improvements based on discovered patterns
 
 **Tests to Write:**
+
 - [ ] `tests/fixtures/recordings/architecture_analysis_nextjs.json` - Next.js project architecture analysis
 - [ ] `tests/fixtures/recordings/architecture_analysis_rails.json` - Rails project architecture analysis
 - [ ] Test LLM's ability to identify unconventional architectures beyond standard frameworks
@@ -390,15 +412,18 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Test best practice suggestion relevance for different technology stacks
 
 **QCode Commands Enabled:**
+
 - `qcode "what architectural patterns does this project use?"`
 - `qcode "analyze the coding conventions in this project"`
 - `qcode "suggest architectural improvements"`
 
 ##### **1.7.7.6** 🌐 **Cross-Language Intelligence**
+
 **What we're building**: LLM-powered multi-language and ecosystem understanding
 **Implementation Context**: Multi-language and framework ecosystem understanding
 
 **Implementation Steps:**
+
 - [ ] **LLM language detection** - Let LLM identify all programming languages and their usage patterns
 - [ ] **Convention analysis** - LLM discovers language-specific naming and organizational conventions
 - [ ] **Ecosystem understanding** - LLM understands technology relationships and dependencies
@@ -406,6 +431,7 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] **Cross-language pattern recognition** - LLM spots patterns that span multiple languages
 
 **Tests to Write:**
+
 - [ ] `tests/fixtures/projects/polyglot-microservices/` - Multi-language project (TypeScript + Python + Go)
 - [ ] Test LLM's ability to understand TypeScript/React + Python/FastAPI + PostgreSQL stacks
 - [ ] Test convention detection across JavaScript (camelCase) and Python (snake_case) in same project
@@ -413,15 +439,18 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Test cross-language pattern recognition in monorepo with Next.js + Rails + Swift
 
 **QCode Commands Enabled:**
+
 - `qcode "what programming languages and technologies are used?"`
 - `qcode "analyze the conventions across different parts of this project"`
 - `qcode "how do the different technology components work together?"`
 
 ##### **1.7.7.7** 🔬 **Code Analysis Pipeline**
+
 **What we're building**: LLM-powered code pattern analysis and understanding
 **Implementation Context**: Extend `FilesTool.searchFiles` patterns with LLM-enhanced analysis
 
 **Implementation Steps:**
+
 - [ ] **Intelligent code sampling** - Collect representative code samples across the project
 - [ ] **LLM pattern analysis** - Let LLM identify architectural patterns, design principles, and code quality
 - [ ] **Style guide inference** - LLM discovers and documents project-specific coding standards
@@ -429,6 +458,7 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Use `FilesTool.searchFiles` to gather code, let LLM do the analysis
 
 **Tests to Write:**
+
 - [ ] Test intelligent code sampling across different project structures
 - [ ] Test LLM's pattern analysis accuracy and depth
 - [ ] Test style guide inference from diverse code samples
@@ -436,15 +466,18 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Test LLM's ability to spot anti-patterns and technical debt
 
 **QCode Commands Enabled:**
+
 - `qcode "analyze the coding patterns in this project"`
 - `qcode "what are the established conventions here?"`
 - `qcode "how are the different modules organized and connected?"`
 
 ##### **1.7.7.8** 🎯 **Intelligent Code Discovery**
+
 **What we're building**: LLM-powered discovery of project components and structures
 **Implementation Context**: Framework-aware code pattern detection and mapping
 
 **Implementation Steps:**
+
 - [ ] **LLM-driven component discovery** - Let LLM identify and categorize code components based on patterns
 - [ ] **Intelligent endpoint mapping** - LLM discovers API endpoints, routes, and service boundaries
 - [ ] **Data model recognition** - LLM identifies and understands data structures and relationships
@@ -452,6 +485,7 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Integration with existing `search` operation for data gathering, LLM for interpretation
 
 **Tests to Write:**
+
 - [ ] Test LLM's ability to discover React components, Rails controllers, FastAPI endpoints without predefined rules
 - [ ] Test endpoint discovery across Express REST APIs, Rails GraphQL, and FastAPI async endpoints
 - [ ] Test data model recognition in Prisma schemas, ActiveRecord models, and SQLAlchemy classes
@@ -459,16 +493,19 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Test LLM's adaptability to custom architectures beyond standard frameworks
 
 **QCode Commands Enabled:**
+
 - `qcode "find and categorize all the components in this project"`
 - `qcode "map the API endpoints and their relationships"`
 - `qcode "analyze the data models and their connections"`
 - `qcode "understand the testing strategy and structure"`
 
 ##### **1.7.7.9** 🧩 **Domain Understanding**
+
 **What we're building**: Extract business logic and understand project domain
 **Implementation Context**: Business logic and architectural pattern extraction
 
 **Implementation Steps:**
+
 - [ ] **Convention discovery** - LLM learns project conventions from code examples
 - [ ] **Business logic extraction** - LLM extracts domain entities and relationships
 - [ ] **Error pattern analysis** - LLM identifies how errors are handled across codebase
@@ -476,6 +513,7 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] **Technical debt identification** - LLM flags inconsistencies and potential improvements
 
 **Tests to Write:**
+
 - [ ] Test convention discovery accuracy across different projects
 - [ ] Test business logic extraction from domain code
 - [ ] Test error pattern recognition in various error handling approaches
@@ -483,16 +521,19 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Test technical debt identification accuracy
 
 **QCode Commands Enabled:**
+
 - `qcode "what is the main business domain of this project?"`
 - `qcode "how does this project handle errors?"`
 - `qcode "find potential performance issues"`
 - `qcode "identify technical debt in this codebase"`
 
 ##### **1.7.7.10** 💬 **Context-Rich Query Processing**
+
 **What we're building**: Inject project understanding into all LLM interactions
 **Implementation Context**: Integrate with `ContextManager.addStructuredResult()` for context persistence
 
 **Implementation Steps:**
+
 - [ ] **Project context injection** - Feed project summary to every LLM interaction
 - [ ] **Intent clarification** - LLM understands "add auth" in context of detected stack
 - [ ] **Architecture-aware suggestions** - LLM provides solutions that fit existing patterns
@@ -500,6 +541,7 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Integrate with `ContextManager.addStructuredResult()` for context persistence
 
 **Tests to Write:**
+
 - [ ] Test project context injection in LLM queries
 - [ ] Test intent clarification with project context
 - [ ] Test architecture-aware suggestion accuracy
@@ -507,15 +549,18 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Test context persistence across query sessions
 
 **QCode Commands Enabled:**
+
 - `qcode "add authentication to this project"` (context-aware)
 - `qcode "create a new component following project patterns"`
 - `qcode "suggest improvements that fit this architecture"`
 
 ##### **1.7.7.11** ⚡ **Dynamic Project Adaptation**
+
 **What we're building**: Real-time understanding that adapts as project changes
 **Implementation Context**: Use `WorkflowOrchestrator` patterns for context-aware workflow selection
 
 **Implementation Steps:**
+
 - [ ] **Real-time project understanding** - LLM analyzes current project state
 - [ ] **Impact assessment** - LLM predicts effects of proposed changes
 - [ ] **Cross-file awareness** - Understand dependencies and what changing files affects
@@ -523,6 +568,7 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Use `WorkflowOrchestrator` patterns for context-aware workflow selection
 
 **Tests to Write:**
+
 - [ ] Test real-time project state analysis
 - [ ] Test impact assessment accuracy for proposed changes
 - [ ] Test cross-file dependency understanding
@@ -530,15 +576,18 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Test integration with WorkflowOrchestrator
 
 **QCode Commands Enabled:**
+
 - `qcode "what would happen if I change this file?"`
 - `qcode "show me what depends on this component"`
 - `qcode "adapt the workflow for this project type"`
 
 ##### **1.7.7.12** 🎨 **Intelligent Response Generation**
+
 **What we're building**: Generate project-appropriate code and suggestions
 **Implementation Context**: Follow `OllamaClient.functionCall()` pattern for structured code generation
 
 **Implementation Steps:**
+
 - [ ] **Framework-specific code generation** - Generate React vs Vue vs Rails appropriate code
 - [ ] **Convention-compliant suggestions** - Follow project naming and organization patterns
 - [ ] **Architecture-aware recommendations** - Suggest changes that fit existing structure
@@ -546,6 +595,7 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Follow `OllamaClient.functionCall()` pattern for structured code generation
 
 **Tests to Write:**
+
 - [ ] Test framework-specific code generation accuracy
 - [ ] Test convention compliance in generated code
 - [ ] Test architecture-aware recommendation relevance
@@ -553,15 +603,18 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Test integration with OllamaClient function calling
 
 **QCode Commands Enabled:**
+
 - `qcode "generate a new React component in project style"`
 - `qcode "create a Rails controller following conventions"`
 - `qcode "suggest SwiftUI view implementation"`
 
 ##### **1.7.7.13** 💾 **Persistent Project Analysis**
+
 **What we're building**: Save and restore project understanding between sessions
 **Implementation Context**: Extend `ConversationMemory` interface for project-level persistence
 
 **Implementation Steps:**
+
 - [ ] **Project summary persistence** - Save LLM's project analysis between sessions
 - [ ] **Decision history tracking** - Remember why certain architectural choices were made
 - [ ] **Pattern cache** - Store discovered patterns for faster future analysis
@@ -569,6 +622,7 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Extend `ConversationMemory` interface for project-level persistence
 
 **Tests to Write:**
+
 - [ ] Test project summary persistence across QCode restarts
 - [ ] Test decision history tracking and retrieval
 - [ ] Test pattern cache performance improvements
@@ -576,15 +630,18 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Test ConversationMemory interface extensions
 
 **QCode Commands Enabled:**
+
 - `qcode "remember this architectural decision"`
 - `qcode "why was this pattern chosen?"`
 - `qcode "reload project understanding"`
 
 ##### **1.7.7.14** 📈 **Learning and Adaptation**
+
 **What we're building**: System that learns from usage and improves over time
 **Implementation Context**: Use `ContextManager.compressConversationMemory()` patterns for memory management
 
 **Implementation Steps:**
+
 - [ ] **Pattern reinforcement** - LLM learns from successful code generations
 - [ ] **Iterative understanding** - LLM deepens project knowledge over time
 - [ ] **Context evolution** - Update project understanding as codebase changes
@@ -592,6 +649,7 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Use `ContextManager.compressConversationMemory()` patterns for memory management
 
 **Tests to Write:**
+
 - [ ] Test pattern reinforcement from successful interactions
 - [ ] Test iterative understanding improvement
 - [ ] Test context evolution with codebase changes
@@ -599,15 +657,18 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Test memory management and compression
 
 **QCode Commands Enabled:**
+
 - `qcode "learn from this successful implementation"`
 - `qcode "update project understanding"`
 - `qcode "show how understanding has evolved"`
 
 ##### **1.7.7.15** 🔄 **Multi-Project Intelligence**
+
 **What we're building**: Handle multiple projects with separate contexts
 **Implementation Context**: Store project contexts in workspace-specific configuration files
 
 **Implementation Steps:**
+
 - [ ] **Project switching** - Maintain separate contexts for different projects
 - [ ] **Pattern transfer** - Apply learned patterns from one project to similar projects
 - [ ] **Team adaptation** - Adapt to different coding styles in team environments
@@ -615,6 +676,7 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Store project contexts in workspace-specific configuration files
 
 **Tests to Write:**
+
 - [ ] Test project context switching without interference
 - [ ] Test pattern transfer between similar projects
 - [ ] Test team coding style adaptation
@@ -622,15 +684,18 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Test workspace-specific configuration persistence
 
 **QCode Commands Enabled:**
+
 - `qcode "switch to project context"`
 - `qcode "apply patterns from similar project"`
 - `qcode "adapt to team coding style"`
 
 ##### **1.7.7.16** 🌍 **Real-World Cross-Language Validation**
+
 **What we're building**: End-to-end validation across different project types
 **Implementation Context**: Comprehensive test fixtures and real-world validation
 
 **Implementation Steps:**
+
 - [ ] **Create React CRA fixture** - `tests/fixtures/projects/react-cra/` with realistic structure
 - [ ] **Create Express API fixture** - `tests/fixtures/projects/ts-express-api/` with routes/models
 - [ ] **Create Rails fixture** - Ruby on Rails project with controllers/models/views
@@ -638,6 +703,7 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] **Create Python FastAPI fixture** - FastAPI project with SQLAlchemy models
 
 **Tests to Write:**
+
 - [ ] `tests/e2e/react-analysis.test.ts` - End-to-end React project analysis
 - [ ] `tests/e2e/rails-analysis.test.ts` - End-to-end Rails project analysis
 - [ ] `tests/e2e/swift-analysis.test.ts` - End-to-end Swift project analysis
@@ -645,6 +711,7 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Test cross-language understanding consistency
 
 **QCode Commands Validated:**
+
 - `qcode "analyze this React project and tell me its architecture"`
   → "This is a Next.js 13+ app using TypeScript, Tailwind CSS, Prisma with PostgreSQL, and Zustand for state management"
 - `qcode "analyze this Rails project and tell me its architecture"`
@@ -653,15 +720,18 @@ Without deep project understanding, every other tool operates blindly. This is w
   → "This is a SwiftUI app using MVVM pattern, Core Data for persistence, and Combine for reactive programming"
 
 ##### **1.7.7.17** 🎯 **Context-Aware Code Generation Validation**
+
 **What we're building**: Validate framework-specific intelligent code generation
 **Implementation Context**: End-to-end code generation testing with framework-specific validation
 
 **Implementation Steps:**
+
 - [ ] **Test framework-specific generation** - Verify generated code follows framework conventions
 - [ ] **Test context-aware suggestions** - Verify suggestions fit existing project patterns
 - [ ] **Test cross-language consistency** - Verify similar quality across all supported languages
 
 **Tests to Write:**
+
 - [ ] `tests/e2e/code-generation.test.ts` - End-to-end code generation testing
 - [ ] Test error handling generation across frameworks
 - [ ] Test component generation following project patterns
@@ -669,6 +739,7 @@ Without deep project understanding, every other tool operates blindly. This is w
 - [ ] Test generated code compilation and validity
 
 **QCode Commands Validated:**
+
 - `qcode "add error handling to the auth system"`
   → Rails: Uses rescue blocks and Rails error handling conventions
   → Swift: Uses Result types and proper do-catch error propagation  
@@ -687,28 +758,33 @@ Without deep project understanding, every other tool operates blindly. This is w
 After implementing sections 1.7.7.1-1.7.7.17, the agent should demonstrate:
 
 ✅ **Multi-Language Intelligence**:
+
 - Correctly identify React vs Vue vs Angular vs SwiftUI vs Rails architectures
 - Understand language-specific conventions (camelCase vs snake_case)
 - Generate framework-appropriate code that fits existing patterns
 
 ✅ **Deep Project Context**:
+
 - Remember project architecture and patterns across sessions
 - Provide contextually appropriate suggestions for "add authentication"
 - Understand project structure and recommend fitting solutions
 
 ✅ **Convention Compliance**:
+
 - Generate code that matches existing naming patterns
-- Follow project-specific organizational structures  
+- Follow project-specific organizational structures
 - Respect established architectural decisions
 
 ✅ **Cross-Language Workflow Orchestration**:
+
 - Intelligent workflow selection based on detected project type
 - Framework-aware tool execution and result interpretation
 - Context-preserved multi-step operations
 
 **Implementation Strategy:**
+
 1. **Foundation (1.7.7.1-1.7.7.3)** - Tool structure and data collection
-2. **LLM Integration (1.7.7.4-1.7.7.6)** - Context building and architecture analysis  
+2. **LLM Integration (1.7.7.4-1.7.7.6)** - Context building and architecture analysis
 3. **Code Analysis (1.7.7.7-1.7.7.9)** - Code discovery and understanding
 4. **Context Intelligence (1.7.7.10-1.7.7.12)** - Context-aware responses and generation
 5. **Memory System (1.7.7.13-1.7.7.15)** - Persistence and learning
@@ -846,18 +922,20 @@ This transforms QCode from a sophisticated file browser into a true coding agent
       **✅ IMPLEMENTATION COMPLETED - ALL FEATURES DELIVERED:**
 
       **Core Workflow Orchestrator:**
+
       - [x] **WorkflowOrchestrator class implemented** in `src/core/workflow-orchestrator.ts` (1009 lines)
       - [x] **Advanced pattern detection engine** with multi-layered matching (keywords + intent + project context)
       - [x] **LLM-enhanced pattern detection** with real-time query analysis and confidence scoring
       - [x] **Built-in pattern library** with 4 comprehensive workflow patterns:
         - Project Discovery & Architecture Analysis
-        - API Endpoint Discovery & Documentation  
+        - API Endpoint Discovery & Documentation
         - Code Quality Assessment & Issue Detection
         - File System Exploration & Analysis
       - [x] **Intelligent parameter extraction** from complex user queries
       - [x] **Workflow execution planning** with step sequence generation and adaptive execution
 
       **Advanced Pattern Features:**
+
       - [x] **Multi-trigger pattern matching** supporting keywords, intent, project context, and composite triggers
       - [x] **Confidence scoring and ranking** with threshold-based filtering (>20% relevance)
       - [x] **Project context awareness** for framework-specific workflow selection
@@ -865,6 +943,7 @@ This transforms QCode from a sophisticated file browser into a true coding agent
       - [x] **Parameter extraction strategies** for file patterns, directories, and operation types
 
       **Integration & Testing:**
+
       - [x] **Complete VCR test suite** in `tests/unit/workflow-orchestrator.test.ts` (213 lines)
       - [x] **Real LLM integration tests** with recorded interactions for deterministic behavior
       - [x] **Pattern detection validation** across 5 different query scenarios
@@ -873,6 +952,7 @@ This transforms QCode from a sophisticated file browser into a true coding agent
       - [x] **Workflow planning validation** with step generation and argument creation
 
       **Type System & Architecture:**
+
       - [x] **Complete type definitions** added to `src/types.ts` (224 new lines)
       - [x] **24 new interfaces** for comprehensive workflow orchestration:
         - `WorkflowPattern`, `WorkflowTrigger`, `WorkflowExecutionStrategy`
@@ -882,6 +962,7 @@ This transforms QCode from a sophisticated file browser into a true coding agent
       - [x] **Execution metrics tracking** for performance monitoring and optimization
 
       **Quality Assurance:**
+
       - [x] **260 tests passing** across entire test suite including new workflow orchestrator tests
       - [x] **VCR recordings created** for all workflow scenarios with realistic query patterns
       - [x] **Error boundary testing** with LLM timeout and failure recovery
@@ -889,8 +970,9 @@ This transforms QCode from a sophisticated file browser into a true coding agent
       - [x] **Performance validation** with confidence scoring and pattern ranking algorithms
 
       **Real-World Capabilities:**
+
       - [x] **"Analyze project structure"** → Automatically detects Project Analysis pattern (83.6% confidence)
-      - [x] **"Find API endpoints"** → Maps to API Discovery pattern (84.8% confidence)  
+      - [x] **"Find API endpoints"** → Maps to API Discovery pattern (84.8% confidence)
       - [x] **"Find TODO comments"** → Triggers Quality Analysis pattern (72.2% confidence)
       - [x] **Non-code queries rejected** → "What is the weather" returns 0 patterns
       - [x] **Parameter extraction working** → "analyze .ts files in src" extracts file types and directories
@@ -951,6 +1033,7 @@ This transforms QCode from a sophisticated file browser into a true coding agent
 **Next Priorities**:
 
 1. **Complete Project Fixtures** (1.7 remaining items):
+
    - Build realistic test projects (React CRA, Express API, Monorepo)
    - Validate advanced workflow orchestration with real project structures
 
@@ -960,6 +1043,7 @@ This transforms QCode from a sophisticated file browser into a true coding agent
    - Server discovery and health monitoring
 
 **Current Status**: Phase 1 is **fully complete** with sophisticated agent intelligence capable of:
+
 - **Intelligent query understanding** with pattern detection
 - **Multi-step workflow orchestration** with adaptive execution
 - **Context-aware decision making** across complex operations
@@ -1109,12 +1193,12 @@ After implementing project understanding (1.7.7), the agent should be able to:
 qcode "analyze this React project and tell me its architecture"
 # → "This is a Next.js 13+ app using TypeScript, Tailwind CSS, Prisma with PostgreSQL, and Zustand for state management"
 
-# Ruby  
+# Ruby
 qcode "analyze this Rails project and tell me its architecture"
 # → "This is a Rails 7 app using PostgreSQL, Devise for auth, Sidekiq for background jobs, and RSpec for testing"
 
 # Swift
-qcode "analyze this iOS project and tell me its architecture"  
+qcode "analyze this iOS project and tell me its architecture"
 # → "This is a SwiftUI app using MVVM pattern, Core Data for persistence, and Combine for reactive programming"
 
 # Python
@@ -1122,9 +1206,9 @@ qcode "analyze this Python project and tell me its architecture"
 # → "This is a FastAPI app using SQLAlchemy with PostgreSQL, Pydantic for validation, and pytest for testing"
 
 # Cross-language contextual code generation:
-qcode "add error handling to the auth system" 
+qcode "add error handling to the auth system"
 # → Rails: Uses rescue blocks and Rails error handling conventions
-# → Swift: Uses Result types and proper do-catch error propagation  
+# → Swift: Uses Result types and proper do-catch error propagation
 # → FastAPI: Uses HTTPException with proper status codes and error middleware
 
 qcode "create a new user profile component"
@@ -1152,16 +1236,18 @@ qcode "optimize this slow endpoint"
 **Model Context Protocol (MCP)** is an open standard that enables LLM applications to connect to external data sources and tools in a standardized way. MCP servers act as bridges that give LLMs controlled access to:
 
 - **Resources**: Data sources (files, databases, APIs) - similar to GET endpoints
-- **Tools**: Action capabilities (file operations, API calls) - similar to POST endpoints  
+- **Tools**: Action capabilities (file operations, API calls) - similar to POST endpoints
 - **Prompts**: Reusable interaction templates for LLMs
 
 **Why MCP Integration is Critical for QCode:**
+
 - **Extensibility**: Connect to external MCP servers (GitHub, Slack, databases, etc.)
-- **Ecosystem**: Leverage existing MCP server implementations 
+- **Ecosystem**: Leverage existing MCP server implementations
 - **Interoperability**: Standard protocol ensures compatibility with future tools
 - **Security**: Controlled, namespaced access to external capabilities
 
 **Phase 2 Architecture Overview:**
+
 ```
 QCode CLI → QCode Engine → Tool Registry → MCP Client (stdio only) → External MCP Server
                                        → Internal Tools (files, etc.)
@@ -1190,6 +1276,7 @@ QCode CLI → QCode Engine → Tool Registry → MCP Client (stdio only) → Ext
 ### 2.2 MCP Stdio Transport (SDK-Based)
 
 - [ ] **2.2.1 Stdio Client Implementation**
+
   - [ ] Implement `src/mcp/stdio-client.ts`:
     - [ ] Use `StdioClientTransport` from existing SDK
     - [ ] Wrap SDK client with QCode-specific functionality
@@ -1230,6 +1317,7 @@ QCode CLI → QCode Engine → Tool Registry → MCP Client (stdio only) → Ext
 ### 2.4 MCP Discovery and Configuration
 
 - [ ] **2.4.1 Server Configuration System**
+
   - [ ] Extend `src/config/` with MCP server definitions:
     - [ ] `MCPServerConfig` interface for stdio servers
     - [ ] Configuration validation with Zod schemas
@@ -1252,6 +1340,7 @@ QCode CLI → QCode Engine → Tool Registry → MCP Client (stdio only) → Ext
 ### 2.5 Enhanced Tool Registry (MCP Integration)
 
 - [ ] **2.5.1 Registry Extension for MCP**
+
   - [ ] Extend existing `src/core/registry.ts`:
     - [ ] **MCP tool integration** alongside internal tools
     - [ ] **Namespace conflict resolution** with clear precedence
@@ -1286,7 +1375,7 @@ QCode CLI → QCode Engine → Tool Registry → MCP Client (stdio only) → Ext
         "github": {
           "command": "npx",
           "args": ["@modelcontextprotocol/server-github"],
-          "env": {"GITHUB_TOKEN": "..."}
+          "env": { "GITHUB_TOKEN": "..." }
         }
       }
     }
@@ -1314,6 +1403,7 @@ QCode CLI → QCode Engine → Tool Registry → MCP Client (stdio only) → Ext
 ### 2.8 MCP Testing (SDK-Based)
 
 - [ ] **2.8.1 SDK-Based Test Infrastructure**
+
   - [ ] **Use existing SDK test patterns**:
     - [ ] Create test MCP servers using SDK server classes
     - [ ] Test client connections using SDK client
@@ -1342,12 +1432,14 @@ QCode CLI → QCode Engine → Tool Registry → MCP Client (stdio only) → Ext
 **Phase 2 Acceptance Criteria**:
 
 - [ ] **After 2.2 (Stdio Integration)**:
+
   - [ ] Can spawn and communicate with MCP servers via stdio using SDK
   - [ ] SDK client integration works correctly
   - [ ] Process management handles server lifecycle
   - [ ] Tool discovery works via SDK methods
 
 - [ ] **After 2.5 (Tool Registry Integration)**:
+
   - [ ] External MCP tools integrate seamlessly with internal tools
   - [ ] Namespace conflict resolution works correctly
   - [ ] Tool execution routes correctly to MCP clients
@@ -1362,6 +1454,7 @@ QCode CLI → QCode Engine → Tool Registry → MCP Client (stdio only) → Ext
 **Strategic Phase 2 Achievements**:
 
 ✅ **When Phase 2 is Complete**:
+
 - **SDK-Based Foundation**: Solid integration using proven TypeScript SDK
 - **Stdio-Only Simplicity**: Focused, reliable stdio transport
 - **Seamless Tool Integration**: External tools work like internal tools
@@ -1369,6 +1462,7 @@ QCode CLI → QCode Engine → Tool Registry → MCP Client (stdio only) → Ext
 - **Ecosystem Connectivity**: Connect to common MCP servers (GitHub, etc.)
 
 **Deferred to Later Phases**:
+
 - **HTTP/SSE Transport**: Moved to Phase 4 for web-based MCP servers
 - **Advanced Features**: Complex configurations, hot reloading, metrics
 - **Authentication**: OAuth and advanced security features
@@ -1418,6 +1512,7 @@ QCode CLI → QCode Engine → Tool Registry → MCP Client (stdio only) → Ext
 **Note**: This extends Phase 2's stdio-only MCP foundation with web-based server support
 
 - [ ] **4.1.1 Streamable HTTP Implementation (SDK-Based)**
+
   - [ ] Implement `src/mcp/http-client.ts`:
     - [ ] Use existing SDK's HTTP transport classes
     - [ ] **Streamable HTTP transport only** (new 2025-03-26 standard)
@@ -1434,6 +1529,7 @@ QCode CLI → QCode Engine → Tool Registry → MCP Client (stdio only) → Ext
     - [ ] Connection multiplexing for parallel requests
 
 - [ ] **4.1.2 HTTP Server Discovery and Configuration**
+
   - [ ] Extend MCP configuration for HTTP servers:
     - [ ] HTTP server configuration schema
     - [ ] URL-based server definitions
@@ -1579,6 +1675,7 @@ QCode CLI → QCode Engine → Tool Registry → MCP Client (stdio only) → Ext
 **Phase 4 Acceptance Criteria**:
 
 - [ ] **After 4.1 (HTTP MCP Transport)**:
+
   - [ ] Can connect to web-based MCP servers via Streamable HTTP
   - [ ] Session management and connection multiplexing works
   - [ ] HTTP servers work alongside existing stdio servers
@@ -1594,6 +1691,7 @@ QCode CLI → QCode Engine → Tool Registry → MCP Client (stdio only) → Ext
 **Strategic Phase 4 Achievements**:
 
 ✅ **When Phase 4 is Complete**:
+
 - **Full MCP Ecosystem**: Both stdio and HTTP transport support
 - **Web-Based Integration**: Connect to cloud-hosted MCP servers
 - **Modern Standards**: Streamable HTTP transport (no legacy SSE)
@@ -1617,6 +1715,7 @@ QCode CLI → QCode Engine → Tool Registry → MCP Client (stdio only) → Ext
 ### 🎯 **Next Immediate Priorities for Phase 2:**
 
 1. **MCP Integration** (2.1-2.8):
+
    - External tool integration via stdio and HTTP
    - Tool namespacing and conflict resolution
    - Server discovery and health monitoring
@@ -1628,6 +1727,7 @@ QCode CLI → QCode Engine → Tool Registry → MCP Client (stdio only) → Ext
 ### 🚀 **Strategic Achievement:**
 
 Phase 1 is now **fully complete** with sophisticated agent intelligence capable of:
+
 - **Intelligent query understanding** with pattern detection
 - **Multi-step workflow orchestration** with adaptive execution
 - **Context-aware decision making** across complex operations
@@ -1637,9 +1737,11 @@ Phase 1 is now **fully complete** with sophisticated agent intelligence capable 
 The WorkflowOrchestrator represents a significant advancement in AI agent capabilities, providing Claude Coder-level intelligence with zero API costs and full privacy control.
 
 #### 1.8.6 **CRITICAL MISSING: Intelligent Code Generation Engine**
+
 **Status: REQUIRED FOR DECENT CODING AGENT**
 
 - [ ] **Code Generation Tool** (`src/tools/code-generator.ts`):
+
   - [ ] **Function generation** - Create functions from descriptions
   - [ ] **Class/interface generation** - Generate TypeScript types
   - [ ] **Test generation** - Create unit tests for existing code
@@ -1653,9 +1755,11 @@ The WorkflowOrchestrator represents a significant advancement in AI agent capabi
   - [ ] **Code formatting** - Apply Prettier/ESLint fixes
 
 #### 1.8.7 **CRITICAL MISSING: Interactive Chat Mode**
+
 **Status: REQUIRED FOR DECENT CODING AGENT**
 
 - [ ] **Interactive CLI Mode** (`src/cli/interactive.ts`):
+
   - [ ] **Chat interface** - Persistent conversation
   - [ ] **Slash commands** - `/commit`, `/test`, `/build`, etc.
   - [ ] **Command history** - Remember previous commands
