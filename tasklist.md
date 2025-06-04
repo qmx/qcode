@@ -336,12 +336,13 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
   - [ ] **1.8.5.2 Sequential Tool Execution Chains**:
 
     - [ ] **1.8.5.2.1 Enhanced LLM Context Management**:
-      
+
       **Current Context Management Issues:**
-      
+
       The current `processWithLLMFunctionCalling` method (lines 481-820) uses a simple array to build conversation history (lines 565-575) without intelligent truncation. Results are formatted through `formatToolResult()` (lines 1052-1115) which outputs full content regardless of size, causing conversation context to explode exponentially in multi-step workflows.
 
       **Current Flow Analysis:**
+
       - Conversation history is built as simple message array in `conversationHistory` (lines 565-575)
       - Tool results are added via `stepResults.push(formattedResult)` (line 697) with no size consideration
       - Full result text is joined and pushed to conversation with `stepResults.join('\n')` (line 731)
@@ -349,11 +350,12 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
       - Context window fills rapidly, degrading LLM performance in complex workflows
 
       **Files to modify:**
+
       - `src/core/engine.ts` - Replace conversation building (lines 565-575) and result formatting (lines 1052-1115)
       - `src/types.ts` - Add new interfaces for intelligent context management
 
       **Architecture Strategy:**
-      
+
       **Phase 1: Structured Tool Results**
       Create intelligent result objects that separate display content from LLM context. Current `formatToolResult()` method creates user-friendly strings but loses semantic structure needed for smart context management.
 
@@ -364,6 +366,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
       Enhance `shouldContinueWorkflow()` method (lines 825-880) to make decisions based on structured context rather than string matching on conversation content.
 
       **New interfaces needed in `src/types.ts`:**
+
       ```typescript
       // Structured tool result for intelligent context management
       export interface StructuredToolResult {
@@ -371,26 +374,26 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
         toolName: string;
         success: boolean;
         duration: number;
-        
+
         // Result categorization for smart formatting
         type: 'file_content' | 'file_list' | 'search_results' | 'analysis' | 'error';
-        
+
         // Human-readable summary for conversation context (max 500 chars)
         summary: string;
-        
+
         // Key extracted information for workflow decisions
         keyFindings: string[];
-        
+
         // Full raw data for detailed analysis when needed
         fullData: any;
-        
+
         // Size management flags
         truncated: boolean;
         originalSize?: number;
-        
+
         // Context for next workflow step
         contextForNextStep: Record<string, any>;
-        
+
         // File-specific extracted metadata
         filePaths?: string[];
         patterns?: string[];
@@ -401,20 +404,20 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
       export interface ConversationMemory {
         // Original user intent
         originalQuery: string;
-        
+
         // Current workflow position
         stepNumber: number;
         maxSteps: number;
-        
+
         // Structured results from previous steps
         previousResults: StructuredToolResult[];
-        
+
         // Extracted patterns and decisions
         extractedPatterns: Record<string, any>;
-        
+
         // Working memory for cross-step context
         workingMemory: Record<string, any>;
-        
+
         // Conversation size management
         totalContextSize: number;
         maxContextSize: number;
@@ -436,19 +439,20 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
       **Implementation Strategy:**
 
       **1. Replace formatToolResult() Method (lines 1052-1115)**
-      
+
       Current method creates monolithic strings. Replace with:
+
       ```typescript
       private createStructuredResult(
-        toolName: string, 
-        result: ToolResult, 
+        toolName: string,
+        result: ToolResult,
         stepContext: ConversationMemory
       ): StructuredToolResult {
         // Analyze result type and extract key information
         // Create intelligent summaries based on content size
         // Extract actionable data for next steps
       }
-      
+
       private formatResultForConversation(
         structuredResult: StructuredToolResult,
         stepContext: ConversationMemory
@@ -460,8 +464,9 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
       ```
 
       **2. Enhance Conversation Building (lines 731-734)**
-      
+
       Replace simple string concatenation with intelligent memory management:
+
       ```typescript
       private buildContextAwareConversation(
         conversationMemory: ConversationMemory,
@@ -474,8 +479,9 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
       ```
 
       **3. Upgrade shouldContinueWorkflow() (lines 825-880)**
-      
+
       Current method uses string matching on conversation content. Replace with structured decision making:
+
       ```typescript
       private shouldContinueWorkflow(
         memory: ConversationMemory,
@@ -491,22 +497,26 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
       **Specific Implementation Areas:**
 
       **File Result Summarization:**
+
       - Large file contents (>2KB): Extract file type, key functions/classes, structure
       - File lists (>20 items): Group by type, highlight main entry points
       - Search results: Preserve match context, patterns, and file paths
 
       **Context Size Management:**
+
       - Monitor total conversation character count
       - Implement sliding window: keep system prompt + user query + last 3-5 structured responses
       - Preserve key findings in `workingMemory` for cross-step reference
 
       **Memory Extraction Patterns:**
+
       - Extract file paths for future reference
       - Identify project patterns (framework, structure, key files)
       - Track error patterns and recovery strategies
       - Preserve cross-file relationships and dependencies
 
       **Tasks:**
+
       - [ ] Create `StructuredToolResult` interface and conversion methods
       - [ ] Replace `formatToolResult()` with structured result creation
       - [ ] Implement conversation memory management with size limits
@@ -519,13 +529,15 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
     - [ ] **1.8.5.2.2 LLM-Driven Multi-Step Workflow Patterns**:
 
       **Files to create/modify:**
+
       - `src/core/workflow-orchestrator.ts` - NEW FILE for workflow pattern detection
       - `src/core/engine.ts` - Extend LLM system prompt with workflow strategies
       - `tests/e2e/sequential-workflows.test.ts` - NEW FILE for workflow pattern tests
 
       **Workflow patterns to implement:**
-      
+
       **Pattern 1: Project Discovery → Analysis → Summary**
+
       ```typescript
       // List files → Detect patterns → Read key files → Generate summary
       async executeProjectAnalysisWorkflow(query: string): Promise<WorkflowResult> {
@@ -537,6 +549,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
       ```
 
       **Pattern 2: Search → Read → Report Generation**
+
       ```typescript
       // Search for patterns → Read matching files → Write analysis report
       async executeSearchAndAnalysisWorkflow(query: string): Promise<WorkflowResult> {
@@ -548,6 +561,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
       ```
 
       **Pattern 3: Configuration Validation Chain**
+
       ```typescript
       // Find config files → Read settings → Validate consistency
       async executeConfigValidationWorkflow(query: string): Promise<WorkflowResult> {
@@ -559,6 +573,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
       ```
 
       **Tasks:**
+
       - [ ] Implement pattern detection in `src/core/workflow-orchestrator.ts`
       - [ ] Create workflow execution strategies with step dependencies
       - [ ] Add conditional logic for step execution based on intermediate results
@@ -567,16 +582,18 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
     - [ ] **1.8.5.2.3 Enhanced System Prompt for Multi-Step Reasoning**:
 
       **Files to modify:**
+
       - `src/core/engine.ts` - Update LLM system prompt (lines 565-588)
 
       **Current system prompt enhancement needed:**
+
       ```typescript
       // Replace existing system prompt with multi-step strategy
       const enhancedSystemPrompt = `You are QCode, an AI coding assistant with advanced workflow capabilities.
-
+      
       WORKFLOW STRATEGIES:
       For complex queries, break them into logical steps:
-
+      
       1. PROJECT UNDERSTANDING:
          - Always start with project structure analysis
          - Look for package.json, tsconfig.json, README files
@@ -591,7 +608,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
          - Use results from previous steps to inform next actions
          - Maintain context about project type and structure
          - Focus on files most relevant to the user's query
-
+      
       CONTEXT MANAGEMENT:
       - Summarize large outputs for conversation context
       - Extract key findings and pass them forward
@@ -604,6 +621,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
       ```
 
       **Tasks:**
+
       - [ ] Design context-aware prompting strategies
       - [ ] Add workflow pattern detection keywords
       - [ ] Implement step-by-step reasoning guidance
@@ -612,18 +630,21 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
     - [ ] **1.8.5.2.4 Tool Result Formatting for LLM Context**:
 
       **Files to modify:**
+
       - `src/core/engine.ts` - Replace `formatToolResult()` method (lines 1052-1069)
       - `src/tools/files.ts` - Enhance result objects with metadata
 
       **Current issues to fix:**
+
       - Results over 2KB flood conversation context
       - File lists with 50+ files overwhelm LLM
       - Search results lose important context in formatting
-      
+
       **Enhanced formatting strategy:**
+
       ```typescript
       private formatToolResultForLLMContext(
-        toolName: string, 
+        toolName: string,
         result: ToolResult,
         stepContext: ChainContext
       ): string {
@@ -631,16 +652,17 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
         if (stepContext.stepNumber === 1 && result.data?.files?.length > 10) {
           return this.formatProjectOverview(result);
         }
-        
+
         if (result.data?.content?.length > 2000) {
           return this.formatContentSummary(result);
         }
-        
+
         return this.formatFullResult(result);
       }
       ```
 
       **Tasks:**
+
       - [ ] Implement structured summaries for large file lists (>20 items)
       - [ ] Extract key findings from search results automatically
       - [ ] Context-aware result truncation based on query intent
@@ -649,12 +671,14 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
     - [ ] **1.8.5.2.5 Comprehensive Sequential Workflow Tests**:
 
       **Files to create:**
+
       - `tests/e2e/sequential-workflows.test.ts` - NEW comprehensive test suite
       - `tests/fixtures/recordings/workflow_*.json` - NEW VCR recordings
 
       **Test scenarios to implement:**
-      
+
       **VCR Test: React Component Analysis Workflow**
+
       ```typescript
       // Query: "Find all React components and analyze their props usage"
       // Step 1: List *.jsx, *.tsx files → identify React components
@@ -663,6 +687,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
       ```
 
       **VCR Test: Project Health Check Workflow**
+
       ```typescript
       // Query: "Analyze project structure and find potential issues"
       // Step 1: List project structure → identify project type
@@ -672,6 +697,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
       ```
 
       **VCR Test: API Documentation Workflow**
+
       ```typescript
       // Query: "Document all API endpoints in this Express app"
       // Step 1: List files matching server patterns → find route files
@@ -681,6 +707,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
       ```
 
       **Tasks:**
+
       - [ ] Create realistic project fixtures (React app, Express API, monorepo)
       - [ ] Record LLM interactions for complex multi-step workflows
       - [ ] Test error recovery when intermediate steps fail
@@ -691,25 +718,28 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
     - [ ] **1.8.5.2.6 Memory Management and Performance Optimization**:
 
       **Files to modify:**
+
       - `src/core/engine.ts` - Add conversation history management
       - `src/core/workflow-state.ts` - Enhance memory cleanup (lines 301-318)
 
       **Performance considerations:**
+
       - Conversation history grows exponentially with tool results
       - Large file contents consume LLM context window
       - Memory leaks from uncleaned workflow states
 
       **Optimization strategies:**
+
       ```typescript
       class ConversationMemoryManager {
         private maxHistorySize = 8000; // characters
         private maxSteps = 10;
-        
+
         compressHistory(history: ConversationMessage[]): ConversationMessage[] {
           // Keep system prompt + user query + last 3 assistant messages
           // Summarize older steps to preserve key findings
         }
-        
+
         extractKeyContext(result: ToolResult): KeyContext {
           // Extract file paths, patterns, errors for future reference
           // Discard verbose content while preserving actionable information
@@ -718,6 +748,7 @@ This task list implements the QCode TypeScript-based AI coding assistant as outl
       ```
 
       **Tasks:**
+
       - [ ] Implement sliding window conversation history
       - [ ] Add automatic context compression for long workflows
       - [ ] Monitor memory usage during multi-step execution
