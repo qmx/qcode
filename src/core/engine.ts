@@ -856,7 +856,7 @@ Continue calling functions until the user's request is fully satisfied.`,
   }
 
   /**
-   * Determine if workflow should continue based on structured context and completion status
+   * Determines if workflow should continue based on query analysis and current state
    */
   private shouldContinueWorkflow(
     originalQuery: string,
@@ -864,13 +864,25 @@ Continue calling functions until the user's request is fully satisfied.`,
     hadErrors: boolean,
     iterationCount: number
   ): boolean {
+    if (this.options.debug) {
+      logger.debug(
+        `shouldContinueWorkflow: query="${originalQuery}", errors=${hadErrors}, iteration=${iterationCount}`
+      );
+    }
+
     // Don't continue if we had errors in this iteration
     if (hadErrors) {
+      if (this.options.debug) {
+        logger.debug(`Stopping due to errors`);
+      }
       return false;
     }
 
     // Don't continue if we've hit iteration limit
     if (iterationCount >= (this.options.maxToolExecutions || 10)) {
+      if (this.options.debug) {
+        logger.debug(`Stopping due to iteration limit: ${iterationCount}`);
+      }
       return false;
     }
 
@@ -884,6 +896,10 @@ Continue calling functions until the user's request is fully satisfied.`,
         (queryLower.includes('read') || queryLower.includes('show'))) ||
       (queryLower.includes('find') && (queryLower.includes('read') || queryLower.includes('show')));
 
+    if (this.options.debug) {
+      logger.debug(`isExplicitMultiStep: ${isExplicitMultiStep}`);
+    }
+
     // For multi-step queries, check if we have a list operation but no read operation yet
     if (isExplicitMultiStep) {
       const hasListOperation = conversationHistory.some(
@@ -894,13 +910,36 @@ Continue calling functions until the user's request is fully satisfied.`,
             msg.content.includes('📂'))
       );
 
+      // Updated read operation detection to work with new context management formatting
       const hasReadOperation = conversationHistory.some(
         msg =>
-          msg.role === 'assistant' && (msg.content.includes('```') || msg.content.length > 1000)
+          msg.role === 'assistant' &&
+          (msg.content.includes('```') ||
+            (msg.content.includes('📄 **') && msg.content.includes('lines')) || // File content with line count
+            (msg.content.includes('Summary:') && msg.content.includes('lines')) || // File summary with line info
+            msg.content.length > 2000) // Increased threshold for large content
       );
 
+      if (this.options.debug) {
+        logger.debug(
+          `hasListOperation: ${hasListOperation}, hasReadOperation: ${hasReadOperation}`
+        );
+        logger.debug(
+          `conversation history:`,
+          conversationHistory.map(msg => ({
+            role: msg.role,
+            contentLength: msg.content.length,
+            preview: msg.content.slice(0, 100),
+          }))
+        );
+      }
+
       // Continue if we have list but no read yet
-      return hasListOperation && !hasReadOperation;
+      const shouldContinue = hasListOperation && !hasReadOperation;
+      if (this.options.debug) {
+        logger.debug(`shouldContinue (multi-step): ${shouldContinue}`);
+      }
+      return shouldContinue;
     }
 
     // For all other queries (including analysis), stop after first meaningful result
@@ -909,8 +948,16 @@ Continue calling functions until the user's request is fully satisfied.`,
       msg => msg.role === 'assistant' && msg.content.length > 100
     ).length;
 
+    if (this.options.debug) {
+      logger.debug(`meaningfulResults: ${meaningfulResults}`);
+    }
+
     // Stop after 1 result for non-explicit multi-step queries
-    return meaningfulResults < 1;
+    const shouldContinue = meaningfulResults < 1;
+    if (this.options.debug) {
+      logger.debug(`shouldContinue (single-step): ${shouldContinue}`);
+    }
+    return shouldContinue;
   }
 
   /**
