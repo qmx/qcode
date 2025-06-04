@@ -271,7 +271,166 @@ if (vcr.recording) {
 }
 ```
 
+## 🔄 Iterative Development Workflow (Recommended)
+
+**💡 TIP: For test development, keep recording mode ON while iterating, then switch to replay mode when tests are stable.**
+
+### Why Use Iterative Development?
+
+When developing and debugging VCR tests, you want to:
+- ✅ See real LLM responses while writing tests
+- ✅ Iterate quickly without environment variable hassle
+- ✅ Switch to deterministic replay when tests are working
+- ✅ Avoid manual environment variable management
+
+### Method 1: Programmatic Recording Control (Easiest)
+
+```typescript
+import { setupIterativeVCRTests } from '../helpers/vcr-helper';
+
+describe('My New Feature Tests', () => {
+  // Starts in recording mode for development
+  const vcr = setupIterativeVCRTests(__filename);
+  
+  // Switch to replay mode when tests are stable (call this when ready)
+  beforeAll(() => {
+    // vcr.switchToReplay(); // Uncomment when tests are working
+  });
+
+  it('should handle new feature', async () => {
+    await vcr.withRecording('new_feature_test', async () => {
+      // Your test code - uses live Ollama while developing
+      const response = await engine.processQuery('test this feature');
+      
+      expect(response.complete).toBe(true);
+      vcr.recordingLog('✓ LLM Response:', response.response);
+    });
+  });
+});
+```
+
+### Method 2: forceRecord Option
+
+```typescript
+import { setupVCRTests } from '../helpers/vcr-helper';
+
+describe('My Feature Tests', () => {
+  // Force recording mode regardless of environment variables
+  const vcr = setupVCRTests(__filename, undefined, { forceRecord: true });
+  
+  it('should test feature', async () => {
+    await vcr.withRecording('feature_test', async () => {
+      // Always uses live Ollama calls
+      const result = await client.complexAPICall();
+      expect(result).toBeDefined();
+    });
+  });
+});
+```
+
+### Method 3: Manual Recording Control
+
+```typescript
+import { setupVCRTests } from '../helpers/vcr-helper';
+
+describe('Feature Tests', () => {
+  const vcr = setupVCRTests(__filename);
+  
+  beforeAll(() => {
+    // Enable recording for development iteration
+    vcr.enableRecording();
+    
+    // Later: switch to replay mode when stable
+    // vcr.disableRecording();
+  });
+
+  it('should test feature', async () => {
+    await vcr.withRecording('test_name', async () => {
+      // Test code here
+    });
+  });
+});
+```
+
+### Iterative Development Steps
+
+#### Phase 1: Development (Recording Mode)
+1. **Start with recording enabled** using `setupIterativeVCRTests()` or `forceRecord: true`
+2. **Make sure Ollama is running**: `ollama serve`
+3. **Write your test logic** and run tests repeatedly:
+   ```bash
+   npm test -- tests/your-test-file.test.ts --watch
+   ```
+4. **Iterate freely** - each test run uses live Ollama and updates recordings
+5. **Use `vcr.recordingLog()`** to debug LLM responses during development
+
+#### Phase 2: Stabilization (Switch to Replay)
+1. **When tests work correctly**, switch to replay mode:
+   ```typescript
+   beforeAll(() => {
+     vcr.switchToReplay(); // or vcr.disableRecording()
+   });
+   ```
+2. **Run tests to ensure deterministic behavior**:
+   ```bash
+   npm test -- tests/your-test-file.test.ts
+   ```
+3. **Commit recordings** to version control for CI/CD
+
+### Development Workflow Example
+
+```typescript
+import { setupIterativeVCRTests } from '../helpers/vcr-helper';
+
+describe('New Engine Feature', () => {
+  const vcr = setupIterativeVCRTests(__filename);
+  
+  // PHASE 1: Development - keep this commented during iteration
+  // PHASE 2: Stabilization - uncomment when tests are working
+  // beforeAll(() => {
+  //   vcr.switchToReplay();
+  // });
+
+  it('should process complex queries correctly', async () => {
+    await vcr.withRecording('complex_query_test', async () => {
+      const response = await engine.processQuery('analyze this complex scenario');
+      
+      // Start with basic assertions, refine as you see real responses
+      expect(response.complete).toBe(true);
+      expect(response.toolsExecuted.length).toBeGreaterThan(0);
+      
+      // Debug during development
+      vcr.recordingLog('✓ Tools used:', response.toolsExecuted);
+      vcr.recordingLog('✓ Response:', response.response);
+      
+      // Add more specific assertions based on actual LLM behavior
+      expect(response.response).toContain('analysis');
+    });
+  });
+});
+```
+
+### Benefits of Iterative Approach
+
+- 🚀 **Faster development** - No environment variable switching
+- 🔍 **Real feedback** - See actual LLM responses while coding
+- 🎯 **Accurate tests** - Write assertions based on real behavior
+- 🔄 **Easy switching** - Programmatic control instead of manual env vars
+- 📼 **Automatic recording** - Recordings update automatically during iteration
+
+### When to Switch to Replay Mode
+
+Switch from recording to replay when:
+- ✅ Your test logic is working correctly
+- ✅ Assertions match actual LLM behavior
+- ✅ You're satisfied with the recorded interactions
+- ✅ Ready to commit stable, deterministic tests
+
+**🎯 Remember: The goal is fast iteration during development, then deterministic replay for CI/CD.**
+
 ## Recording New VCR Tests
+
+**💡 For development, use the [Iterative Development Workflow](#-iterative-development-workflow-recommended) above. This traditional approach is for one-off recording.**
 
 ### Step 1: Write the Test
 Use the clean `vcr.withRecording()` pattern above.
