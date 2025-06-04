@@ -531,3 +531,145 @@ export interface WorkflowMemoryUsage {
   /** Estimated total memory usage in bytes */
   totalSize: number;
 }
+
+// =============================================================================
+// PHASE 1: INTELLIGENT CONTEXT MANAGEMENT INTERFACES
+// =============================================================================
+
+/**
+ * Structured tool result for intelligent context management
+ * Separates display content from LLM context to enable smart formatting
+ */
+export interface StructuredToolResult {
+  // Tool execution metadata
+  /** The tool that was executed */
+  toolName: string;
+  /** Whether the tool execution was successful */
+  success: boolean;
+  /** Tool execution duration in milliseconds */
+  duration: number;
+
+  // Result categorization for smart formatting
+  /** Type of result for context-aware formatting */
+  type: 'file_content' | 'file_list' | 'search_results' | 'analysis' | 'error';
+
+  // Human-readable summary for conversation context (max 500 chars)
+  /** Brief summary of the result for LLM context */
+  summary: string;
+
+  // Key extracted information for workflow decisions
+  /** Important findings extracted from the result */
+  keyFindings: string[];
+
+  // Full raw data for detailed analysis when needed
+  /** Complete tool result data */
+  fullData: any;
+
+  // Size management flags
+  /** Whether the result was truncated for context management */
+  truncated: boolean;
+  /** Original size of the data before truncation */
+  originalSize?: number;
+
+  // Context for next workflow step
+  /** Data that should be preserved for subsequent workflow steps */
+  contextForNextStep: Record<string, any>;
+
+  // File-specific extracted metadata
+  /** File paths mentioned in the result */
+  filePaths?: string[];
+  /** Patterns or keywords detected */
+  patterns?: string[];
+  /** Errors encountered during execution */
+  errors?: string[];
+}
+
+/**
+ * Enhanced conversation memory management
+ * Tracks context and state across multiple tool executions
+ */
+export interface ConversationMemory {
+  // Original user intent
+  /** The user's original query */
+  originalQuery: string;
+
+  // Current workflow position
+  /** Current step number in the workflow */
+  stepNumber: number;
+  /** Maximum steps allowed in this workflow */
+  maxSteps: number;
+
+  // Structured results from previous steps
+  /** Results from all previous workflow steps */
+  previousResults: StructuredToolResult[];
+
+  // Extracted patterns and decisions
+  /** Patterns extracted across all steps */
+  extractedPatterns: Record<string, any>;
+
+  // Working memory for cross-step context
+  /** Persistent memory across workflow steps */
+  workingMemory: Record<string, any>;
+
+  // Conversation size management
+  /** Current total size of conversation context in characters */
+  totalContextSize: number;
+  /** Maximum allowed context size in characters */
+  maxContextSize: number;
+}
+
+/**
+ * Context-aware message formatting
+ * Enhanced message format with metadata for intelligent conversation management
+ */
+export interface ContextMessage {
+  /** Message role in the conversation */
+  role: 'system' | 'user' | 'assistant';
+  /** Message content */
+  content: string;
+  /** Additional metadata for context management */
+  metadata?: {
+    /** Tool results associated with this message */
+    toolResults?: StructuredToolResult[];
+    /** Step number in the workflow */
+    stepNumber?: number;
+    /** Size of this message in characters */
+    contextSize?: number;
+    /** Whether this message was truncated */
+    truncated?: boolean;
+  };
+}
+
+/**
+ * Tool result extraction strategy
+ * Defines how to extract key information from different types of tool results
+ */
+export interface ResultExtractionStrategy {
+  /** Result type this strategy applies to */
+  type: StructuredToolResult['type'];
+  /** Maximum summary length for this result type */
+  maxSummaryLength: number;
+  /** Key patterns to extract from the result */
+  extractionPatterns: string[];
+  /** Function to extract key findings */
+  extractKeyFindings: (data: any) => string[];
+  /** Function to create context for next step */
+  createNextStepContext: (data: any) => Record<string, any>;
+}
+
+/**
+ * Context size management configuration
+ * Controls how conversation context is maintained within size limits
+ */
+export interface ContextSizeConfig {
+  /** Maximum total context size in characters */
+  maxTotalSize: number;
+  /** Maximum size for individual tool results */
+  maxResultSize: number;
+  /** Number of recent steps to always preserve */
+  alwaysPreserveSteps: number;
+  /** Size threshold for triggering compression */
+  compressionThreshold: number;
+  /** Minimum context size to maintain */
+  minContextSize: number;
+}

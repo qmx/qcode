@@ -3,6 +3,8 @@ import { ToolRegistry } from './registry.js';
 import { Config, QCodeError, ToolContext, ToolResult } from '../types.js';
 import { WorkflowState, WorkflowContext } from './workflow-state.js';
 import { logger } from '../utils/logger.js';
+import { ContextManager } from './context-manager.js';
+import { StructuredToolResult } from '../types.js';
 
 /**
  * Query processing intent detected from user input
@@ -105,6 +107,7 @@ export class QCodeEngine {
   private executionCounter = 0;
   private activeWorkflows: Map<string, WorkflowState> = new Map();
   private readonly workingDirectory: string;
+  private contextManager: ContextManager;
 
   constructor(
     ollamaClient: OllamaClient,
@@ -128,6 +131,8 @@ export class QCodeEngine {
       maxWorkflowDepth: 5,
       ...options,
     };
+
+    this.contextManager = new ContextManager();
   }
 
   /**
@@ -487,80 +492,66 @@ For more specific help, describe what you'd like to do with your code.
     toolResults: ToolResult[];
     errors?: QCodeError[];
   }> {
-    if (this.options.debug) {
-      logger.debug(`🔍 [DEBUG LLM] Starting LLM function calling for query: "${query}"`);
-      logger.debug(`🔍 [DEBUG LLM] Context: ${JSON.stringify(context, null, 2)}`);
-    }
-
-    const toolsExecuted: string[] = [];
-    const toolResults: ToolResult[] = [];
-    const errors: QCodeError[] = [];
     const currentQuery = query;
     let iterationCount = 0;
     const maxIterations = this.options.maxToolExecutions || 10;
+    const toolsExecuted: string[] = [];
+    const toolResults: ToolResult[] = [];
+    const errors: QCodeError[] = [];
 
-    if (this.options.debug) {
-      logger.debug(`🔍 [DEBUG LLM] Max iterations: ${maxIterations}`);
-    }
+    // Initialize conversation memory for context management
+    const conversationMemory = this.contextManager.initializeConversationMemory(
+      currentQuery,
+      maxIterations
+    );
 
-    // Initialize workflow state if enabled
     let workflowState: WorkflowState | undefined;
-    if (this.options.enableWorkflowState) {
-      const workflowContext: WorkflowContext = {
-        ...context,
-        workflowId: `workflow-${context.executionId}`,
-        depth: 0,
-        maxDepth: this.options.maxWorkflowDepth || 5,
-      };
-      workflowState = new WorkflowState(workflowContext.workflowId, workflowContext);
-      this.activeWorkflows.set(workflowContext.workflowId, workflowState);
-
-      if (this.options.debug) {
-        logger.debug(`🔍 [DEBUG LLM] Workflow state initialized: ${workflowContext.workflowId}`);
-      }
-    }
 
     try {
-      // Get available tools for function calling
-      const availableTools = this.toolRegistry.getToolsForOllama('internal');
+      // Create workflow if workflow management is enabled
+      if (this.options.enableWorkflowState) {
+        const workflowContext: WorkflowContext = {
+          ...context,
+          workflowId: `workflow-${this.executionCounter}`,
+          depth: 0,
+          maxDepth: this.options.maxWorkflowDepth || 5,
+        };
 
-      if (this.options.debug) {
-        logger.debug(`🔍 [DEBUG LLM] Available tools: ${JSON.stringify(availableTools, null, 2)}`);
+        workflowState = new WorkflowState(workflowContext.workflowId, workflowContext);
+        this.activeWorkflows.set(workflowState.getId(), workflowState);
+
+        if (this.options.debug) {
+          logger.debug(`🔍 [DEBUG LLM] Created workflow state: ${workflowState.getId()}`);
+        }
       }
 
-      if (availableTools.length === 0) {
-        throw new QCodeError(
-          'No internal tools available for function calling',
-          'NO_TOOLS_AVAILABLE'
+      // Get available tools from registry for function calling
+      const availableTools = this.toolRegistry.getToolsForOllama();
+
+      if (this.options.debug) {
+        logger.debug(
+          `🔍 [DEBUG LLM] Available tools: ${JSON.stringify(availableTools.map((t: any) => t.function.name))}`
         );
       }
 
-      // Build conversation history for multi-step workflows
+      // Build initial conversation history with enhanced system prompt
       const conversationHistory: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> =
         [
           {
             role: 'system' as const,
-            content: `You are QCode, an AI coding assistant. You have access to file operation tools to help users with their coding tasks.
+            content: `You are QCode, a helpful AI coding assistant. You have access to tools to help with file operations and code analysis.
 
-Available tools:
-${availableTools.map(tool => `- ${tool.function.name}: ${tool.function.description}`).join('\n')}
+Available tools and their purposes:
+- internal.files: Read files, list directory contents, search within files
 
-When a user asks about files, use the appropriate tool to help them. Always use function calling when file operations are needed.
-
-For file paths, assume they are relative to the current workspace unless otherwise specified.
-
-IMPORTANT for the 'files' tool operations:
-- For list operation: Use 'path' parameter for the directory, 'pattern' for glob patterns like "*.swift", "**/*.ts"
-- For read operation: Use 'path' parameter for the file path, 'startLine' and 'endLine' for ranges
-- For search operation: Use 'query' parameter for text/regex to search, 'pattern' parameter for file filtering (optional), 'path' for directory scope
-
-STRATEGY for finding main functions or understanding project structure:
-1. First, list files in the current directory to understand the project type (look for package.json, tsconfig.json, etc.)
-2. Based on the project type, look for appropriate file patterns:
+When processing requests:
+1. For simple file reads: use internal.files with "read" operation
+2. For directory listings: use internal.files with "list" operation  
+3. For finding files by pattern: use internal.files with "list" operation with glob patterns like:
    - TypeScript/JavaScript projects: "**/*.ts", "**/*.js"
    - Python projects: "**/*.py"
    - Other projects: list all files first
-3. When looking for "main function", search for common entry points:
+4. When looking for "main function", search for common entry points:
    - index.ts, index.js, main.ts, main.js, cli.ts, app.ts
    - Or search for "main" or "function main" in the codebase
 
@@ -629,8 +620,8 @@ Continue calling functions until the user's request is fully satisfied.`,
           break;
         }
 
-        // Execute function calls and collect results
-        const stepResults: string[] = [];
+        // Execute function calls and collect structured results
+        const stepStructuredResults: StructuredToolResult[] = [];
         let stepHadErrors = false;
 
         for (const functionCall of functionCalls) {
@@ -674,16 +665,15 @@ Continue calling functions until the user's request is fully satisfied.`,
               await workflowState.completeStep(stepId, toolResult);
             }
 
-            if (toolResult.success) {
-              // Format successful result for user display and conversation history
-              const formattedResult = this.formatToolResult(functionCall.toolName, toolResult);
+            // Create structured result using context manager
+            const structuredResult = this.contextManager.createStructuredResult(
+              functionCall.toolName,
+              toolResult
+            );
 
-              if (this.options.debug) {
-                logger.debug(`🔍 [DEBUG LLM] Formatted tool result: ${formattedResult}`);
-              }
+            stepStructuredResults.push(structuredResult);
 
-              stepResults.push(formattedResult);
-            } else {
+            if (!toolResult.success) {
               stepHadErrors = true;
               const errorMsg = `Tool execution failed: ${toolResult.error}`;
               errors.push(
@@ -692,7 +682,6 @@ Continue calling functions until the user's request is fully satisfied.`,
                   arguments: functionCall.arguments,
                 })
               );
-              stepResults.push(`Error executing ${functionCall.toolName}: ${toolResult.error}`);
 
               if (this.options.debug) {
                 logger.debug(`🔍 [DEBUG LLM] Tool execution failed: ${errorMsg}`);
@@ -724,15 +713,59 @@ Continue calling functions until the user's request is fully satisfied.`,
             }
 
             errors.push(qcodeError);
-            stepResults.push(`Error executing ${functionCall.toolName}: ${qcodeError.message}`);
+
+            // Create error structured result
+            const errorResult: ToolResult = {
+              success: false,
+              error: qcodeError.message,
+              duration: 0,
+              tool: functionCall.toolName,
+              namespace: 'unknown',
+            };
+
+            const structuredResult = this.contextManager.createStructuredResult(
+              functionCall.toolName,
+              errorResult
+            );
+
+            stepStructuredResults.push(structuredResult);
+          }
+        }
+
+        // Update conversation memory with structured results and format for LLM context
+        const stepFormattedResults: string[] = [];
+        for (const structuredResult of stepStructuredResults) {
+          // Update conversation memory
+          const updatedMemory = this.contextManager.updateConversationMemory(
+            conversationMemory,
+            structuredResult
+          );
+          Object.assign(conversationMemory, updatedMemory);
+
+          // Format result for conversation context
+          const formattedResult = this.contextManager.formatResultForConversation(
+            structuredResult,
+            conversationMemory
+          );
+
+          stepFormattedResults.push(formattedResult);
+
+          if (this.options.debug) {
+            logger.debug(
+              `🔍 [DEBUG LLM] Structured result: ${JSON.stringify(structuredResult, null, 2)}`
+            );
+            logger.debug(`🔍 [DEBUG LLM] Formatted result: ${formattedResult}`);
           }
         }
 
         // Add the results to conversation history for next iteration
-        const stepResultsText = stepResults.join('\n');
+        const stepResultsText = stepFormattedResults.join('\n');
 
         if (this.options.debug) {
           logger.debug(`🔍 [DEBUG LLM] Step results text: ${stepResultsText}`);
+          logger.debug(
+            `🔍 [DEBUG LLM] Conversation memory context size: ${conversationMemory.totalContextSize}`
+          );
         }
 
         conversationHistory.push({
@@ -774,6 +807,9 @@ Continue calling functions until the user's request is fully satisfied.`,
 
       if (this.options.debug) {
         logger.debug(`🔍 [DEBUG LLM] Final response: ${finalResponse}`);
+        logger.debug(
+          `🔍 [DEBUG LLM] Final conversation memory: ${JSON.stringify(conversationMemory, null, 2)}`
+        );
       }
 
       return {
@@ -820,7 +856,7 @@ Continue calling functions until the user's request is fully satisfied.`,
   }
 
   /**
-   * Determine if workflow should continue based on query complexity and current state
+   * Determine if workflow should continue based on structured context and completion status
    */
   private shouldContinueWorkflow(
     originalQuery: string,
@@ -838,63 +874,43 @@ Continue calling functions until the user's request is fully satisfied.`,
       return false;
     }
 
-    // Check if the original query suggests multiple steps
     const queryLower = originalQuery.toLowerCase();
-    const hasMultipleSteps =
-      queryLower.includes(' and ') ||
-      queryLower.includes(' then ') ||
-      queryLower.includes('first') ||
-      queryLower.includes('analyze') ||
-      queryLower.includes('read the') ||
-      (queryLower.includes('list') && queryLower.includes('read'));
 
-    // Don't continue if query doesn't suggest multiple steps
-    if (!hasMultipleSteps) {
-      return false;
-    }
+    // Only continue for explicitly multi-step queries with clear indicators
+    const isExplicitMultiStep =
+      queryLower.includes(' and then ') ||
+      queryLower.includes(' first ') ||
+      (queryLower.includes('list') &&
+        (queryLower.includes('read') || queryLower.includes('show'))) ||
+      (queryLower.includes('find') && (queryLower.includes('read') || queryLower.includes('show')));
 
-    // Check if we've already executed a list operation and should follow with read
-    const hasListOperation = conversationHistory.some(
-      msg =>
-        msg.role === 'assistant' &&
-        (msg.content.includes('files found') ||
-          msg.content.includes('.ts') ||
-          msg.content.includes('.js') ||
-          msg.content.includes('📄') ||
-          msg.content.includes('📂'))
-    );
-
-    const hasReadOperation = conversationHistory.some(
-      msg =>
-        msg.role === 'assistant' &&
-        (msg.content.includes('```') ||
-          msg.content.includes('export') ||
-          msg.content.includes('class') ||
-          msg.content.includes('function') ||
-          msg.content.length > 500)
-    );
-
-    // Continue if we have multiple steps indicated and haven't completed read after list
-    if (hasListOperation && !hasReadOperation) {
-      return true;
-    }
-
-    // Also continue if query explicitly requests analysis and we haven't done it yet
-    if (
-      queryLower.includes('analyz') &&
-      !conversationHistory.some(
+    // For multi-step queries, check if we have a list operation but no read operation yet
+    if (isExplicitMultiStep) {
+      const hasListOperation = conversationHistory.some(
         msg =>
           msg.role === 'assistant' &&
-          (msg.content.toLowerCase().includes('class') ||
-            msg.content.toLowerCase().includes('method') ||
-            msg.content.toLowerCase().includes('function'))
-      )
-    ) {
-      return true;
+          (msg.content.includes('files found') ||
+            msg.content.includes('📄') ||
+            msg.content.includes('📂'))
+      );
+
+      const hasReadOperation = conversationHistory.some(
+        msg =>
+          msg.role === 'assistant' && (msg.content.includes('```') || msg.content.length > 1000)
+      );
+
+      // Continue if we have list but no read yet
+      return hasListOperation && !hasReadOperation;
     }
 
-    // Otherwise, stop here
-    return false;
+    // For all other queries (including analysis), stop after first meaningful result
+    // This prevents duplicate operations and relies on the LLM to make the right call initially
+    const meaningfulResults = conversationHistory.filter(
+      msg => msg.role === 'assistant' && msg.content.length > 100
+    ).length;
+
+    // Stop after 1 result for non-explicit multi-step queries
+    return meaningfulResults < 1;
   }
 
   /**
@@ -1044,69 +1060,6 @@ Continue calling functions until the user's request is fully satisfied.`,
     }
 
     return functionCalls;
-  }
-
-  /**
-   * Format tool execution result for user display
-   */
-  private formatToolResult(toolName: string, result: ToolResult): string {
-    if (!result.success) {
-      return `\nError in ${toolName}: ${result.error}`;
-    }
-
-    // Format based on tool type and result data
-    if (toolName.includes('files')) {
-      return this.formatFileToolResult(result);
-    }
-
-    // Default formatting
-    return `\n${toolName} executed successfully.\n${JSON.stringify(result.data, null, 2)}`;
-  }
-
-  /**
-   * Format file tool results for user-friendly display
-   */
-  private formatFileToolResult(result: ToolResult): string {
-    if (!result.data) {
-      return '\nFile operation completed successfully.';
-    }
-
-    const data = result.data;
-
-    // Handle read file results
-    if (data.content !== undefined) {
-      const lines = data.lines ? ` (${data.lines} lines)` : '';
-      const size = data.size ? ` (${data.size} bytes)` : '';
-      const truncated = data.truncated ? ' [truncated]' : '';
-
-      const formattedResult = `\n📄 **${data.path}**${lines}${size}${truncated}\n\`\`\`\n${data.content}\n\`\`\``;
-      return formattedResult;
-    }
-
-    // Handle list files results
-    if (data.files && Array.isArray(data.files)) {
-      const fileList = data.files
-        .map((file: any) => `${file.isDirectory ? '📁' : '📄'} ${file.relativePath}`)
-        .join('\n');
-
-      return `\n📂 **Files in ${data.path}** (${data.count} items)\n${fileList}`;
-    }
-
-    // Handle search results
-    if (data.matches && Array.isArray(data.matches)) {
-      const matchList = data.matches
-        .slice(0, 10) // Limit to first 10 matches
-        .map((match: any) => `📄 ${match.file}:${match.line} - ${match.match}`)
-        .join('\n');
-
-      const more =
-        data.matches.length > 10 ? `\n... and ${data.matches.length - 10} more matches` : '';
-
-      return `\n🔍 **Search results for "${data.query}"** (${data.totalMatches} matches in ${data.filesSearched} files)\n${matchList}${more}`;
-    }
-
-    // Default formatting for unknown data
-    return `\nOperation completed successfully.\n${JSON.stringify(data, null, 2)}`;
   }
 }
 
