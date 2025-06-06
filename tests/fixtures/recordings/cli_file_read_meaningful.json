@@ -8,7 +8,7 @@
       "messages": [
         {
           "role": "system",
-          "content": "You are QCode, a helpful AI coding assistant. You have access to tools to help with file operations and code analysis.\n\nAvailable tools and their purposes:\n- internal.files: Read files, list directory contents, search within files\n\nWhen processing requests:\n1. For simple file reads: use internal.files with \"read\" operation\n2. For directory listings: use internal.files with \"list\" operation  \n3. For finding files by pattern: use internal.files with \"list\" operation with glob patterns like:\n   - TypeScript/JavaScript projects: \"**/*.ts\", \"**/*.js\"\n   - Python projects: \"**/*.py\"\n   - Other projects: list all files first\n4. When looking for \"main function\", search for common entry points:\n   - index.ts, index.js, main.ts, main.js, cli.ts, app.ts\n   - Or search for \"main\" or \"function main\" in the codebase\n\nFor multi-step queries like \"list files and then read the first one\", break this down into steps:\n1. First, call the list function to get files\n2. Then, based on the results, call read function for a specific file\n\nContinue calling functions until the user's request is fully satisfied."
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
         },
         {
           "role": "user",
@@ -31,7 +31,12 @@
               "properties": {
                 "operation": {
                   "type": "string",
-                  "enum": ["read", "write", "list", "search"],
+                  "enum": [
+                    "read",
+                    "write",
+                    "list",
+                    "search"
+                  ],
                   "description": "The type of file operation to perform"
                 },
                 "path": {
@@ -95,7 +100,13 @@
                 },
                 "encoding": {
                   "type": "string",
-                  "enum": ["utf8", "utf-8", "ascii", "base64", "hex"],
+                  "enum": [
+                    "utf8",
+                    "utf-8",
+                    "ascii",
+                    "base64",
+                    "hex"
+                  ],
                   "description": "File encoding for read/write operations",
                   "default": "utf8"
                 },
@@ -110,7 +121,9 @@
                   "default": true
                 }
               },
-              "required": ["operation"],
+              "required": [
+                "operation"
+              ],
               "additionalProperties": false
             }
           }
@@ -120,7 +133,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-04T03:26:01.830821Z",
+      "created_at": "2025-06-06T05:02:31.782279Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -129,6 +142,7 @@
             "function": {
               "name": "internal:files",
               "arguments": {
+                "encoding": "utf8",
                 "operation": "read",
                 "path": "/Users/qmx/dev/qcode/tests/fixtures/test-files/sample.txt"
               }
@@ -138,17 +152,76 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 2701317709,
-      "load_duration": 15349084,
-      "prompt_eval_count": 803,
-      "prompt_eval_duration": 1591649125,
-      "eval_count": 35,
-      "eval_duration": 1092940708
+      "total_duration": 2797345500,
+      "load_duration": 16999666,
+      "prompt_eval_count": 688,
+      "prompt_eval_duration": 1623031250,
+      "eval_count": 42,
+      "eval_duration": 1155666833
     },
     "rawHeaders": {
-      "content-length": "451",
+      "content-length": "469",
       "content-type": "application/json; charset=utf-8",
-      "date": "Wed, 04 Jun 2025 03:26:01 GMT"
+      "date": "Fri, 06 Jun 2025 05:02:31 GMT"
+    },
+    "responseIsBinary": false
+  },
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "what is in the file /Users/qmx/dev/qcode/tests/fixtures/test-files/sample.txt?"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"encoding\":\"utf8\",\"operation\":\"read\",\"path\":\"/Users/qmx/dev/qcode/tests/fixtures/test-files/sample.txt\"}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nResult: {\n  \"content\": \"Hello World!\\n\\nThis is a test file for CLI testing.\\nIt contains multiple lines to test the file reading functionality.\\n\\nLine 1: TypeScript\\nLine 2: AI Assistant\\nLine 3: File Operations\\nLine 4: Security\\nLine 5: Workspace\",\n  \"path\": \"/Users/qmx/dev/qcode/tests/fixtures/test-files/sample.txt\",\n  \"lines\": 10,\n  \"size\": 217,\n  \"encoding\": \"utf8\"\n}"
+        },
+        {
+          "role": "user",
+          "content": "Based on the tool results above, please provide a direct and complete answer to the original question: \"what is in the file /Users/qmx/dev/qcode/tests/fixtures/test-files/sample.txt?\"\n\nDo not call any more tools. Just analyze the information you've gathered and give a clear, comprehensive answer."
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0.1
+      },
+      "tools": []
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-06T05:02:34.547628Z",
+      "message": {
+        "role": "assistant",
+        "content": "{\"content\": \"Hello World!\\n\\nThis is a test file for CLI testing.\\nIt contains multiple lines to test the file reading functionality.\\n\\nLine 1: TypeScript\\nLine 2: AI Assistant\\nLine 3: File Operations\\nLine 4: Security\\nLine 5: Workspace\"}"
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 2760096500,
+      "load_duration": 15559167,
+      "prompt_eval_count": 394,
+      "prompt_eval_duration": 808427167,
+      "eval_count": 65,
+      "eval_duration": 1934866250
+    },
+    "rawHeaders": {
+      "content-length": "550",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Fri, 06 Jun 2025 05:02:34 GMT"
     },
     "responseIsBinary": false
   }
