@@ -13,8 +13,9 @@ import { loadConfigWithOverrides } from './config/manager.js';
 import { Config, PartialConfig, QCodeError } from './types.js';
 import { OllamaClient } from './core/client.js';
 import { ToolRegistry } from './core/registry.js';
-import { QCodeEngine } from './core/engine.js';
+import { QCodeEngine, createQCodeEngine, EngineOptions } from './core/engine.js';
 import { FilesTool } from './tools/files.js';
+import { ProjectIntelligenceTool } from './tools/project-intelligence.js';
 import { WorkspaceSecurity } from './security/workspace.js';
 import { initializeLogger } from './utils/logger.js';
 
@@ -112,7 +113,7 @@ class QCodeCLI {
   }
 
   /**
-   * Initialize the QCode engine and its components
+   * Initialize the QCode engine with all required components
    */
   private async initializeEngine(): Promise<void> {
     if (!this.config) {
@@ -140,12 +141,39 @@ class QCodeCLI {
         filesTool.execute.bind(filesTool)
       );
 
-      // Initialize QCode engine
-      this.engine = new QCodeEngine(this.ollamaClient, this.toolRegistry, this.config, {
+      // Register internal ProjectIntelligenceTool
+      const projectIntelligenceTool = new ProjectIntelligenceTool(this.workspaceSecurity);
+      this.toolRegistry.registerInternalTool(
+        'project',
+        projectIntelligenceTool.definition,
+        projectIntelligenceTool.execute.bind(projectIntelligenceTool)
+      );
+
+      // Initialize QCode engine with progress callback
+      const engineOptions: EngineOptions = {
         workingDirectory: this.config.workingDirectory,
-        enableStreaming: this.config.ollama.stream,
+        enableStreaming: this.options.stream !== false,
+        maxToolExecutions: 10,
+        queryTimeout: this.options.timeout || 60000,
         debug: this.options.debug || false,
-      });
+        enableWorkflowState: true,
+        maxWorkflowDepth: 5,
+        // Add progress callback to show tool execution
+        onToolExecution: (toolName: string, _args: Record<string, any>) => {
+          if (!this.options.debug) {
+            // Show tool execution to user in non-debug mode
+            const toolNameFormatted = toolName.replace('internal:', '').replace('internal.', '');
+            console.log(chalk.cyan(`🔧 Executing: ${toolNameFormatted}`));
+          }
+        },
+      };
+
+      this.engine = createQCodeEngine(
+        this.ollamaClient,
+        this.toolRegistry,
+        this.config,
+        engineOptions
+      );
 
       // Validate engine health in debug mode
       if (this.options.debug) {
@@ -335,18 +363,31 @@ class QCodeCLI {
   private displayQueryResult(result: any): void {
     console.log();
 
-    // Display the main response
-    if (result.response) {
-      console.log(chalk.white(result.response));
-    }
-
-    // Display tool execution information in verbose mode
-    if (this.options.verbose && result.toolsExecuted?.length > 0) {
-      console.log();
+    // Always show tool execution information (not just in verbose mode)
+    if (result.toolsExecuted?.length > 0) {
       console.log(chalk.cyan('🔧 Tools executed:'));
       result.toolsExecuted.forEach((tool: string) => {
-        console.log(chalk.gray(`   • ${tool}`));
+        const toolNameFormatted = tool.replace('internal:', '').replace('internal.', '');
+        console.log(chalk.gray(`   • ${toolNameFormatted}`));
       });
+      console.log();
+    }
+
+    // Display the main response with improved formatting
+    if (result.response) {
+      let formattedResponse = result.response;
+      
+      // Try to parse and format JSON responses
+      try {
+        const parsed = JSON.parse(result.response);
+        if (typeof parsed === 'object' && parsed !== null) {
+          formattedResponse = this.formatStructuredResponse(parsed);
+        }
+      } catch {
+        // Not JSON or invalid JSON, use as-is
+      }
+      
+      console.log(chalk.white(formattedResponse));
     }
 
     // Display timing information in verbose mode
@@ -364,19 +405,93 @@ class QCodeCLI {
       });
     }
 
-    // Show file operation results
-    if (result.toolResults && result.toolResults.length > 0) {
-      const fileResults = result.toolResults.filter((tr: any) => tr.toolName?.includes('files'));
-      if (fileResults.length > 0 && this.options.verbose) {
-        console.log();
-        console.log(chalk.gray('📋 File operation details:'));
-        fileResults.forEach((tr: any) => {
-          console.log(chalk.gray(`   • ${tr.toolName}: ${tr.success ? 'success' : 'failed'}`));
-        });
-      }
+    console.log();
+  }
+
+  /**
+   * Format structured JSON responses in a human-readable way
+   */
+  private formatStructuredResponse(data: any): string {
+    if (Array.isArray(data)) {
+      return this.formatArrayResponse(data);
     }
 
-    console.log();
+    if (typeof data === 'object' && data !== null) {
+      return this.formatObjectResponse(data);
+    }
+
+    return String(data);
+  }
+
+  /**
+   * Format array responses
+   */
+  private formatArrayResponse(data: any[]): string {
+    return data.map((item, index) => {
+      if (typeof item === 'object' && item !== null) {
+        return `${index + 1}. ${this.formatObjectResponse(item)}`;
+      }
+      return `${index + 1}. ${String(item)}`;
+    }).join('\n');
+  }
+
+  /**
+   * Format object responses
+   */
+  private formatObjectResponse(data: Record<string, any>): string {
+    const lines: string[] = [];
+
+    // Handle special response types
+    if (data.files && Array.isArray(data.files)) {
+      lines.push(chalk.cyan('📁 Files found:'));
+      data.files.forEach((file: any) => {
+        const name = file.name || file.relativePath || 'Unknown';
+        const size = file.size ? ` (${file.size} bytes)` : '';
+        lines.push(`   • ${name}${size}`);
+      });
+      return lines.join('\n');
+    }
+
+    if (data.matches && Array.isArray(data.matches)) {
+      lines.push(chalk.cyan('🔍 Search results:'));
+      data.matches.forEach((match: any) => {
+        const file = match.file ? match.file.replace(/^.*\//, '') : 'Unknown file';
+        const line = match.line ? `:${match.line}` : '';
+        const matchText = match.match ? ` - "${match.match}"` : '';
+        lines.push(`   • ${file}${line}${matchText}`);
+      });
+      if (data.totalMatches) {
+        lines.push(`   Found ${data.totalMatches} total matches`);
+      }
+      return lines.join('\n');
+    }
+
+    if (data.message && data.description) {
+      return `${chalk.yellow('ℹ️')} ${data.message}\n${data.description}`;
+    }
+
+    // Generic object formatting
+    Object.entries(data).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        lines.push(`${chalk.cyan(key)}:`);
+        value.forEach((item: any) => {
+          if (typeof item === 'object' && item !== null) {
+            const subLines = this.formatObjectResponse(item).split('\n');
+            subLines.forEach(line => lines.push(`   ${line}`));
+          } else {
+            lines.push(`   • ${String(item)}`);
+          }
+        });
+      } else if (typeof value === 'object' && value !== null) {
+        lines.push(`${chalk.cyan(key)}:`);
+        const subLines = this.formatObjectResponse(value).split('\n');
+        subLines.forEach(line => lines.push(`   ${line}`));
+      } else {
+        lines.push(`${chalk.cyan(key)}: ${String(value)}`);
+      }
+    });
+
+    return lines.join('\n');
   }
 
   /**

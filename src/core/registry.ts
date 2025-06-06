@@ -219,6 +219,15 @@ export class ToolRegistry {
       return directLookup;
     }
 
+    // Try converting dots to colons (for Ollama function calling compatibility)
+    if (toolIdentifier.includes('.')) {
+      const colonVersion = toolIdentifier.replace('.', ':');
+      const colonLookup = this.tools.get(colonVersion);
+      if (colonLookup !== undefined) {
+        return colonLookup;
+      }
+    }
+
     // If no namespace specified, check for ambiguity first
     if (!toolIdentifier.includes(':')) {
       // Search in all namespaces for tools with this name

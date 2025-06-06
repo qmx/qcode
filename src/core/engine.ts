@@ -1,10 +1,7 @@
 import { OllamaClient, OllamaResponse } from './client.js';
 import { ToolRegistry } from './registry.js';
 import { Config, QCodeError, ToolContext, ToolResult } from '../types.js';
-import { WorkflowState, WorkflowContext } from './workflow-state.js';
 import { logger } from '../utils/logger.js';
-import { ContextManager } from './context-manager.js';
-import { StructuredToolResult } from '../types.js';
 
 /**
  * Query processing intent detected from user input
@@ -86,6 +83,8 @@ export interface EngineOptions {
   enableWorkflowState?: boolean;
   /** Maximum workflow depth */
   maxWorkflowDepth?: number;
+  /** Progress callback for tool execution updates */
+  onToolExecution?: (toolName: string, args: Record<string, any>) => void;
 }
 
 /**
@@ -105,9 +104,7 @@ export class QCodeEngine {
   private config: Config;
   private options: EngineOptions;
   private executionCounter = 0;
-  private activeWorkflows: Map<string, WorkflowState> = new Map();
   private readonly workingDirectory: string;
-  private contextManager: ContextManager;
 
   constructor(
     ollamaClient: OllamaClient,
@@ -131,8 +128,6 @@ export class QCodeEngine {
       maxWorkflowDepth: 5,
       ...options,
     };
-
-    this.contextManager = new ContextManager();
   }
 
   /**
@@ -167,54 +162,29 @@ export class QCodeEngine {
     const errors: QCodeError[] = [];
 
     try {
-      // Phase 1: Basic query processing
+      // Validate query
       this.validateQuery(query);
 
       if (this.options.debug) {
         logger.debug(`🔍 [DEBUG ENGINE] Query validated successfully`);
       }
 
-      // Phase 2: Intent detection (simple for now)
-      const intent = await this.detectIntent(query);
-      context.intent = intent;
-
+      // Route all queries directly to LLM function calling
+      // The LLM is smart enough to decide if it needs tools or can answer directly
       if (this.options.debug) {
-        logger.debug(`🔍 [DEBUG ENGINE] Intent detected: ${JSON.stringify(intent, null, 2)}`);
+        logger.debug(`🔍 [DEBUG ENGINE] Processing with LLM function calling`);
       }
 
-      // Phase 3: Process with LLM function calling for file operations
-      let response: string;
+      const llmResponse = await this.processWithLLMFunctionCalling(query, context);
+      const response = llmResponse.response;
+      toolsExecuted.push(...llmResponse.toolsExecuted);
+      toolResults.push(...llmResponse.toolResults);
+      errors.push(...(llmResponse.errors || []));
 
-      if (intent.type === 'file_operation') {
-        if (this.options.debug) {
-          logger.debug(`🔍 [DEBUG ENGINE] Processing as file operation with LLM function calling`);
-        }
-
-        const llmResponse = await this.processWithLLMFunctionCalling(query, context);
-        response = llmResponse.response;
-        toolsExecuted.push(...llmResponse.toolsExecuted);
-        toolResults.push(...llmResponse.toolResults);
-        errors.push(...(llmResponse.errors || []));
-
-        if (this.options.debug) {
-          logger.debug(
-            `🔍 [DEBUG ENGINE] LLM function calling response: ${JSON.stringify(llmResponse, null, 2)}`
-          );
-        }
-      } else {
-        if (this.options.debug) {
-          logger.debug(`🔍 [DEBUG ENGINE] Processing with simple intent-based response`);
-        }
-
-        // Fallback to simple responses for non-file operations
-        const ollamaResponse = await this.processWithIntent(query, context);
-        response = ollamaResponse.response;
-
-        if (this.options.debug) {
-          logger.debug(
-            `🔍 [DEBUG ENGINE] Intent-based response: ${JSON.stringify(ollamaResponse, null, 2)}`
-          );
-        }
+      if (this.options.debug) {
+        logger.debug(
+          `🔍 [DEBUG ENGINE] LLM function calling response: ${JSON.stringify(llmResponse, null, 2)}`
+        );
       }
 
       const result = {
@@ -353,611 +323,253 @@ export class QCodeEngine {
   }
 
   /**
-   * Detect intent from user query (simplified for Phase 1)
-   */
-  private async detectIntent(query: string): Promise<QueryIntent> {
-    const lowerQuery = query.toLowerCase().trim();
-
-    // Simple keyword-based intent detection for Phase 1
-    // TODO: Replace with LLM-based intent detection in later phases
-
-    // File operation patterns
-    const fileOperationPatterns = [
-      'file',
-      'read',
-      'list',
-      'show me',
-      'display',
-      'open',
-      'view',
-      'package.json',
-      'tsconfig.json',
-      'readme',
-      '.ts',
-      '.js',
-      '.json',
-      '.md',
-      'src/',
-      'first',
-      'lines',
-      'content',
-    ];
-
-    const hasFilePattern = fileOperationPatterns.some(pattern => lowerQuery.includes(pattern));
-
-    if (hasFilePattern) {
-      return {
-        type: 'file_operation',
-        confidence: 0.8,
-        parameters: { query },
-        suggestedTools: ['internal.files'],
-      };
-    }
-
-    if (lowerQuery.includes('help') || lowerQuery === '?') {
-      return {
-        type: 'help',
-        confidence: 0.9,
-        parameters: { query },
-      };
-    }
-
-    return {
-      type: 'unknown',
-      confidence: 0.1,
-      parameters: { query },
-    };
-  }
-
-  /**
-   * Process query based on detected intent (simplified for Phase 1)
-   */
-  private async processWithIntent(query: string, context: QueryContext): Promise<OllamaResponse> {
-    if (!context.intent) {
-      throw new QCodeError('No intent detected', 'NO_INTENT', { query });
-    }
-
-    // Phase 1: Simple intent-based responses
-    // TODO: Replace with LLM orchestration in later phases
-
-    switch (context.intent.type) {
-      case 'help':
-        return this.generateHelpResponse();
-
-      case 'file_operation':
-        return this.generateFileOperationResponse(query);
-
-      default:
-        return this.generateUnknownResponse(query);
-    }
-  }
-
-  /**
-   * Generate help response
-   */
-  private async generateHelpResponse(): Promise<OllamaResponse> {
-    const tools = this.getAvailableTools();
-    const helpText = `
-QCode AI Coding Assistant
-
-Available tools:
-${tools.map(tool => `- ${tool.namespace}.${tool.name}: ${tool.description}`).join('\n')}
-
-Example queries:
-- "list files in src/"
-- "read package.json"
-- "help"
-
-For more specific help, describe what you'd like to do with your code.
-`.trim();
-
-    return {
-      response: helpText,
-      model: this.config.ollama.model,
-      done: true,
-    };
-  }
-
-  /**
-   * Generate response for file operations (placeholder for Phase 2)
-   */
-  private async generateFileOperationResponse(query: string): Promise<OllamaResponse> {
-    return {
-      response: `File operation detected: "${query}"\n\nTool orchestration will be implemented in Phase 2.`,
-      model: this.config.ollama.model,
-      done: true,
-    };
-  }
-
-  /**
-   * Generate response for unknown queries (placeholder for LLM integration)
-   */
-  private async generateUnknownResponse(query: string): Promise<OllamaResponse> {
-    return {
-      response: `I understand you asked: "${query}"\n\nLLM integration for general queries will be implemented in Phase 3.`,
-      model: this.config.ollama.model,
-      done: true,
-    };
-  }
-
-  /**
-   * Process with LLM function calling, supporting multi-step workflows
+   * Process with LLM function calling using proper orchestration loop
    */
   private async processWithLLMFunctionCalling(
     query: string,
-    context: QueryContext
+    context: ToolContext
   ): Promise<{
     response: string;
     toolsExecuted: string[];
     toolResults: ToolResult[];
     errors?: QCodeError[];
   }> {
-    const currentQuery = query;
-    let iterationCount = 0;
     const maxIterations = this.options.maxToolExecutions || 10;
     const toolsExecuted: string[] = [];
     const toolResults: ToolResult[] = [];
     const errors: QCodeError[] = [];
 
-    // Initialize conversation memory for context management
-    const conversationMemory = this.contextManager.initializeConversationMemory(
-      currentQuery,
-      maxIterations
-    );
-
-    let workflowState: WorkflowState | undefined;
-
     try {
-      // Create workflow if workflow management is enabled
-      if (this.options.enableWorkflowState) {
-        const workflowContext: WorkflowContext = {
-          ...context,
-          workflowId: `workflow-${this.executionCounter}`,
-          depth: 0,
-          maxDepth: this.options.maxWorkflowDepth || 5,
-        };
-
-        workflowState = new WorkflowState(workflowContext.workflowId, workflowContext);
-        this.activeWorkflows.set(workflowState.getId(), workflowState);
-
-        if (this.options.debug) {
-          logger.debug(`🔍 [DEBUG LLM] Created workflow state: ${workflowState.getId()}`);
-        }
-      }
-
-      // Get available tools from registry for function calling
+      // Get available tools
       const availableTools = this.toolRegistry.getToolsForOllama();
 
       if (this.options.debug) {
-        logger.debug(
-          `🔍 [DEBUG LLM] Available tools: ${JSON.stringify(availableTools.map((t: any) => t.function.name))}`
-        );
+        logger.debug(`🔍 [DEBUG LLM] Available tools: ${JSON.stringify(availableTools.map((t: any) => t.function.name))}`);
       }
 
-      // Build initial conversation history with enhanced system prompt
-      const conversationHistory: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> =
-        [
-          {
-            role: 'system' as const,
-            content: `You are QCode, a helpful AI coding assistant. You have access to tools to help with file operations and code analysis.
+      // Initialize conversation with system prompt and user query
+      const conversationHistory: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+        {
+          role: 'system',
+          content: `You are QCode, a helpful AI coding assistant with access to tools.
 
-Available tools and their purposes:
-- internal.files: Read files, list directory contents, search within files
+Available tools:
+- internal.files: Read files, list directories, search within files
+- internal.project: Analyze project structure, technologies, frameworks, and architecture
 
-When processing requests:
-1. For simple file reads: use internal.files with "read" operation
-2. For directory listings: use internal.files with "list" operation  
-3. For finding files by pattern: use internal.files with "list" operation with glob patterns like:
-   - TypeScript/JavaScript projects: "**/*.ts", "**/*.js"
-   - Python projects: "**/*.py"
-   - Other projects: list all files first
-4. When looking for "main function", search for common entry points:
-   - index.ts, index.js, main.ts, main.js, cli.ts, app.ts
-   - Or search for "main" or "function main" in the codebase
+Instructions:
+1. Use tools to gather the information needed to answer the user's question
+2. After getting tool results, provide a clear, direct answer to what was asked
+3. If you need more information, call additional tools
+4. When you have enough information, provide your final answer
 
-For multi-step queries like "list files and then read the first one", break this down into steps:
-1. First, call the list function to get files
-2. Then, based on the results, call read function for a specific file
-
-Continue calling functions until the user's request is fully satisfied.`,
-          },
-          {
-            role: 'user' as const,
-            content: currentQuery,
-          },
-        ];
+Be specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content.`,
+        },
+        {
+          role: 'user',
+          content: query,
+        },
+      ];
 
       if (this.options.debug) {
-        logger.debug(
-          `🔍 [DEBUG LLM] Initial conversation history: ${JSON.stringify(conversationHistory, null, 2)}`
-        );
+        logger.debug(`🔍 [DEBUG LLM] Starting orchestration loop for query: "${query}"`);
       }
 
-      // Multi-step workflow loop
-      while (iterationCount < maxIterations) {
+      // Phase 1: Let LLM call tools to gather information
+      let iterationCount = 0;
+      let toolPhaseComplete = false;
+
+      while (!toolPhaseComplete && iterationCount < maxIterations) {
         iterationCount++;
 
         if (this.options.debug) {
-          logger.debug(`🔍 [DEBUG LLM] Starting iteration ${iterationCount}/${maxIterations}`);
+          logger.debug(`🔍 [DEBUG LLM] Tool calling iteration ${iterationCount}/${maxIterations}`);
         }
 
-        // Create function call request
-        const functionCallRequest = {
+        // Call LLM with tools available
+        const llmResponse = await this.ollamaClient.functionCall({
           model: this.config.ollama.model,
           messages: conversationHistory,
           tools: availableTools,
           format: 'json',
           temperature: this.config.ollama.temperature,
-        };
-
-        if (this.options.debug) {
-          logger.debug(
-            `🔍 [DEBUG LLM] Function call request: ${JSON.stringify(functionCallRequest, null, 2)}`
-          );
-        }
-
-        // Make function call to LLM
-        const llmResponse = await this.ollamaClient.functionCall(functionCallRequest);
+        });
 
         if (this.options.debug) {
           logger.debug(`🔍 [DEBUG LLM] LLM response: ${JSON.stringify(llmResponse, null, 2)}`);
         }
 
-        // Parse function calls from response
+        // Parse any tool calls from the response
         const functionCalls = this.parseFunctionCalls(llmResponse);
 
-        if (this.options.debug) {
-          logger.debug(
-            `🔍 [DEBUG LLM] Parsed function calls: ${JSON.stringify(functionCalls, null, 2)}`
-          );
-        }
-
         if (functionCalls.length === 0) {
+          // No tool calls - LLM provided a direct answer
           if (this.options.debug) {
-            logger.debug(`🔍 [DEBUG LLM] No function calls found, breaking loop`);
+            logger.debug(`🔍 [DEBUG LLM] No tool calls - LLM provided direct answer`);
           }
-          // No more function calls, we're done
-          break;
+          toolPhaseComplete = true;
+          
+          // Add the LLM's final response
+          const finalAnswer = llmResponse.message?.content || llmResponse.response || 'No response provided.';
+          return {
+            response: finalAnswer,
+            toolsExecuted,
+            toolResults,
+            ...(errors.length > 0 && { errors }),
+          };
         }
 
-        // Execute function calls and collect structured results
-        const stepStructuredResults: StructuredToolResult[] = [];
-        let stepHadErrors = false;
+        // Execute tool calls
+        if (this.options.debug) {
+          logger.debug(`🔍 [DEBUG LLM] LLM made ${functionCalls.length} tool calls`);
+        }
 
+        // Add the LLM's message with tool calls to conversation
+        conversationHistory.push({
+          role: 'assistant',
+          content: llmResponse.message?.content || JSON.stringify(functionCalls.map(fc => ({ name: fc.toolName, args: fc.arguments }))),
+        });
+
+        // Execute all tool calls and collect results
+        const toolCallResults: string[] = [];
+        
         for (const functionCall of functionCalls) {
+          // Notify CLI about tool execution
+          if (this.options.onToolExecution) {
+            this.options.onToolExecution(functionCall.toolName, functionCall.arguments);
+          }
+
           if (this.options.debug) {
-            logger.debug(
-              `🔍 [DEBUG LLM] Executing function call: ${JSON.stringify(functionCall, null, 2)}`
-            );
+            logger.debug(`🔍 [DEBUG LLM] Executing: ${functionCall.toolName}`);
           }
 
           try {
-            // Start workflow step if tracking
-            let stepId: string | undefined;
-            if (workflowState) {
-              stepId = await workflowState.startStep(
-                `Execute ${functionCall.toolName}`,
-                functionCall.toolName,
-                functionCall.arguments
-              );
-
-              if (this.options.debug) {
-                logger.debug(`🔍 [DEBUG LLM] Workflow step started: ${stepId}`);
-              }
-            }
-
-            // Execute the tool
             const toolResult = await this.toolRegistry.executeTool(
               functionCall.toolName,
               functionCall.arguments,
               context
             );
 
-            if (this.options.debug) {
-              logger.debug(`🔍 [DEBUG LLM] Tool result: ${JSON.stringify(toolResult, null, 2)}`);
-            }
-
             toolsExecuted.push(functionCall.toolName);
             toolResults.push(toolResult);
 
-            // Complete workflow step if tracking
-            if (workflowState && stepId) {
-              await workflowState.completeStep(stepId, toolResult);
-            }
-
-            // Create structured result using context manager
-            const structuredResult = this.contextManager.createStructuredResult(
-              functionCall.toolName,
-              toolResult
-            );
-
-            stepStructuredResults.push(structuredResult);
-
-            if (!toolResult.success) {
-              stepHadErrors = true;
-              const errorMsg = `Tool execution failed: ${toolResult.error}`;
-              errors.push(
-                new QCodeError(errorMsg, 'TOOL_EXECUTION_ERROR', {
-                  toolName: functionCall.toolName,
-                  arguments: functionCall.arguments,
-                })
-              );
-
-              if (this.options.debug) {
-                logger.debug(`🔍 [DEBUG LLM] Tool execution failed: ${errorMsg}`);
-              }
-
-              // Fail workflow step if tracking
-              if (workflowState && stepId) {
-                await workflowState.failStep(
-                  stepId,
-                  new QCodeError(errorMsg, 'TOOL_EXECUTION_ERROR')
-                );
-              }
+            if (toolResult.success) {
+              // Format tool result in a simple, readable way
+              const resultSummary = this.formatToolResultSimple(functionCall.toolName, toolResult);
+              toolCallResults.push(`Tool: ${functionCall.toolName}\nResult: ${resultSummary}`);
+            } else {
+              const errorMsg = `Tool ${functionCall.toolName} failed: ${toolResult.error}`;
+              toolCallResults.push(`Tool: ${functionCall.toolName}\nError: ${errorMsg}`);
+              errors.push(new QCodeError(errorMsg, 'TOOL_EXECUTION_ERROR'));
             }
           } catch (error) {
-            stepHadErrors = true;
-            const qcodeError =
-              error instanceof QCodeError
-                ? error
-                : new QCodeError(
-                    `Tool execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-                    'TOOL_EXECUTION_ERROR',
-                    { toolName: functionCall.toolName }
-                  );
-
-            if (this.options.debug) {
-              logger.debug(
-                `🔍 [DEBUG LLM] Tool execution exception: ${error instanceof Error ? error.stack : JSON.stringify(error)}`
-              );
-            }
-
-            errors.push(qcodeError);
-
-            // Create error structured result
-            const errorResult: ToolResult = {
-              success: false,
-              error: qcodeError.message,
-              duration: 0,
-              tool: functionCall.toolName,
-              namespace: 'unknown',
-            };
-
-            const structuredResult = this.contextManager.createStructuredResult(
-              functionCall.toolName,
-              errorResult
-            );
-
-            stepStructuredResults.push(structuredResult);
+            const errorMsg = `Tool ${functionCall.toolName} error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+            toolCallResults.push(`Tool: ${functionCall.toolName}\nError: ${errorMsg}`);
+            errors.push(new QCodeError(errorMsg, 'TOOL_EXECUTION_ERROR'));
           }
         }
 
-        // Update conversation memory with structured results and format for LLM context
-        const stepFormattedResults: string[] = [];
-        for (const structuredResult of stepStructuredResults) {
-          // Update conversation memory
-          const updatedMemory = this.contextManager.updateConversationMemory(
-            conversationMemory,
-            structuredResult
-          );
-          Object.assign(conversationMemory, updatedMemory);
-
-          // Format result for conversation context
-          const formattedResult = this.contextManager.formatResultForConversation(
-            structuredResult,
-            conversationMemory
-          );
-
-          stepFormattedResults.push(formattedResult);
-
-          if (this.options.debug) {
-            logger.debug(
-              `🔍 [DEBUG LLM] Structured result: ${JSON.stringify(structuredResult, null, 2)}`
-            );
-            logger.debug(`🔍 [DEBUG LLM] Formatted result: ${formattedResult}`);
-          }
-        }
-
-        // Add the results to conversation history for next iteration
-        const stepResultsText = stepFormattedResults.join('\n');
-
-        if (this.options.debug) {
-          logger.debug(`🔍 [DEBUG LLM] Step results text: ${stepResultsText}`);
-          logger.debug(
-            `🔍 [DEBUG LLM] Conversation memory context size: ${conversationMemory.totalContextSize}`
-          );
-        }
-
+        // Add tool results to conversation
         conversationHistory.push({
-          role: 'assistant' as const,
-          content: stepResultsText,
+          role: 'user',
+          content: `Tool results:\n\n${toolCallResults.join('\n\n')}`,
         });
 
-        // Check if this looks like a multi-step query that needs continuation
-        const needsContinuation = this.shouldContinueWorkflow(
-          query,
-          conversationHistory,
-          stepHadErrors,
-          iterationCount
-        );
-
-        if (this.options.debug) {
-          logger.debug(`🔍 [DEBUG LLM] Needs continuation: ${needsContinuation}`);
+        // Check if we should continue (simple heuristic: if we have useful results, try to get final answer)
+        if (toolResults.length > 0 && toolResults.some(r => r.success)) {
+          toolPhaseComplete = true;
         }
-
-        if (!needsContinuation) {
-          // We're done, return the final response
-          break;
-        }
-
-        // Add a prompt to continue if needed
-        conversationHistory.push({
-          role: 'user' as const,
-          content: 'Continue with the next step if needed to fully answer the original question.',
-        });
       }
 
-      // Generate final response by combining all step results
-      const allResults = conversationHistory
-        .filter(msg => msg.role === 'assistant')
-        .map(msg => msg.content)
-        .join('\n\n');
+      // Phase 2: Force final answer by calling LLM without tools
+      if (this.options.debug) {
+        logger.debug(`🔍 [DEBUG LLM] Tool phase complete, requesting final answer`);
+      }
 
-      const finalResponse = allResults.trim() || 'Tool execution completed.';
+      // Add explicit instruction for final answer
+      conversationHistory.push({
+        role: 'user',
+        content: `Based on the tool results above, please provide a direct and complete answer to the original question: "${query}"
+
+Do not call any more tools. Just analyze the information you've gathered and give a clear, comprehensive answer.`,
+      });
+
+      // Call LLM without tools to get final answer
+      const finalLlmResponse = await this.ollamaClient.functionCall({
+        model: this.config.ollama.model,
+        messages: conversationHistory,
+        tools: [], // No tools - force text response
+        format: 'json',
+        temperature: this.config.ollama.temperature,
+      });
+
+      const finalAnswer = finalLlmResponse.message?.content || finalLlmResponse.response || 'Unable to provide a complete answer.';
 
       if (this.options.debug) {
-        logger.debug(`🔍 [DEBUG LLM] Final response: ${finalResponse}`);
-        logger.debug(
-          `🔍 [DEBUG LLM] Final conversation memory: ${JSON.stringify(conversationMemory, null, 2)}`
-        );
+        logger.debug(`🔍 [DEBUG LLM] Got final answer: ${finalAnswer}`);
       }
 
       return {
-        response: finalResponse,
+        response: finalAnswer,
         toolsExecuted,
         toolResults,
         ...(errors.length > 0 && { errors }),
       };
+
     } catch (error) {
-      if (this.options.debug) {
-        logger.debug(
-          `🔍 [DEBUG LLM] Exception in processWithLLMFunctionCalling: ${error instanceof Error ? error.stack : JSON.stringify(error)}`
-        );
-      }
-
-      // Interrupt workflow if tracking
-      if (workflowState) {
-        await workflowState.interrupt(
-          `Processing error: ${error instanceof Error ? error.message : 'Unknown error'}`
-        );
-      }
-
-      const qcodeError =
-        error instanceof QCodeError
-          ? error
-          : new QCodeError(
-              `Function calling failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              'FUNCTION_CALLING_ERROR'
-            );
+      const qcodeError = error instanceof QCodeError
+        ? error
+        : new QCodeError(
+            `LLM orchestration failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            'ORCHESTRATION_ERROR'
+          );
 
       return {
-        response: `I encountered an error while processing your request: ${qcodeError.message}`,
+        response: `I encountered an error: ${qcodeError.message}`,
         toolsExecuted,
         toolResults,
         errors: [qcodeError],
       };
-    } finally {
-      // Cleanup workflow
-      if (workflowState) {
-        await workflowState.cleanup();
-        this.activeWorkflows.delete(workflowState.getId());
-      }
     }
   }
 
   /**
-   * Determines if workflow should continue based on query analysis and current state
+   * Format tool result in a simple, readable way
    */
-  private shouldContinueWorkflow(
-    originalQuery: string,
-    conversationHistory: Array<{ role: string; content: string }>,
-    hadErrors: boolean,
-    iterationCount: number
-  ): boolean {
-    if (this.options.debug) {
-      logger.debug(
-        `shouldContinueWorkflow: query="${originalQuery}", errors=${hadErrors}, iteration=${iterationCount}`
-      );
+  private formatToolResultSimple(toolName: string, result: ToolResult): string {
+    if (!result.success) {
+      return `Error: ${result.error}`;
     }
 
-    // Don't continue if we had errors in this iteration
-    if (hadErrors) {
-      if (this.options.debug) {
-        logger.debug(`Stopping due to errors`);
+    // Special handling for project analysis
+    if (toolName.includes('project') && result.data?.overview) {
+      const data = result.data;
+      let output = `Project Analysis:\n`;
+      
+      if (data.overview?.name) {
+        output += `- Name: ${data.overview.name}\n`;
       }
-      return false;
-    }
-
-    // Don't continue if we've hit iteration limit
-    if (iterationCount >= (this.options.maxToolExecutions || 10)) {
-      if (this.options.debug) {
-        logger.debug(`Stopping due to iteration limit: ${iterationCount}`);
+      if (data.overview?.type) {
+        output += `- Type: ${data.overview.type}\n`;
       }
-      return false;
-    }
-
-    const queryLower = originalQuery.toLowerCase();
-
-    // Only continue for explicitly multi-step queries with clear indicators
-    const isExplicitMultiStep =
-      queryLower.includes(' and then ') ||
-      queryLower.includes(' first ') ||
-      (queryLower.includes('list') &&
-        (queryLower.includes('read') || queryLower.includes('show'))) ||
-      (queryLower.includes('find') && (queryLower.includes('read') || queryLower.includes('show')));
-
-    if (this.options.debug) {
-      logger.debug(`isExplicitMultiStep: ${isExplicitMultiStep}`);
-    }
-
-    // For multi-step queries, check if we have a list operation but no read operation yet
-    if (isExplicitMultiStep) {
-      const hasListOperation = conversationHistory.some(
-        msg =>
-          msg.role === 'assistant' &&
-          (msg.content.includes('files found') ||
-            msg.content.includes('📄') ||
-            msg.content.includes('📂'))
-      );
-
-      // Updated read operation detection to work with new context management formatting
-      const hasReadOperation = conversationHistory.some(
-        msg =>
-          msg.role === 'assistant' &&
-          (msg.content.includes('```') ||
-            (msg.content.includes('📄 **') && msg.content.includes('lines')) || // File content with line count
-            (msg.content.includes('Summary:') && msg.content.includes('lines')) || // File summary with line info
-            msg.content.length > 2000) // Increased threshold for large content
-      );
-
-      if (this.options.debug) {
-        logger.debug(
-          `hasListOperation: ${hasListOperation}, hasReadOperation: ${hasReadOperation}`
-        );
-        logger.debug(
-          `conversation history:`,
-          conversationHistory.map(msg => ({
-            role: msg.role,
-            contentLength: msg.content.length,
-            preview: msg.content.slice(0, 100),
-          }))
-        );
+      if (data.overview?.primaryLanguage) {
+        output += `- Primary Language: ${data.overview.primaryLanguage}\n`;
       }
-
-      // Continue if we have list but no read yet
-      const shouldContinue = hasListOperation && !hasReadOperation;
-      if (this.options.debug) {
-        logger.debug(`shouldContinue (multi-step): ${shouldContinue}`);
+      if (data.overview?.languages?.length > 0) {
+        output += `- Languages: ${data.overview.languages.join(', ')}\n`;
       }
-      return shouldContinue;
+      if (data.overview?.frameworks?.length > 0) {
+        output += `- Frameworks: ${data.overview.frameworks.join(', ')}\n`;
+      }
+      if (data.overview?.technologies?.length > 0) {
+        output += `- Technologies: ${data.overview.technologies.join(', ')}\n`;
+      }
+      
+      return output;
     }
 
-    // For all other queries (including analysis), stop after first meaningful result
-    // This prevents duplicate operations and relies on the LLM to make the right call initially
-    const meaningfulResults = conversationHistory.filter(
-      msg => msg.role === 'assistant' && msg.content.length > 100
-    ).length;
-
-    if (this.options.debug) {
-      logger.debug(`meaningfulResults: ${meaningfulResults}`);
-    }
-
-    // Stop after 1 result for non-explicit multi-step queries
-    const shouldContinue = meaningfulResults < 1;
-    if (this.options.debug) {
-      logger.debug(`shouldContinue (single-step): ${shouldContinue}`);
-    }
-    return shouldContinue;
+    // For other tools, provide a simple summary
+    return JSON.stringify(result.data, null, 2).slice(0, 500) + (JSON.stringify(result.data).length > 500 ? '...' : '');
   }
 
   /**

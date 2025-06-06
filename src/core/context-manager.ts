@@ -247,6 +247,8 @@ export class ContextManager {
         return this.formatFileListResult(structuredResult);
       case 'search_results':
         return this.formatSearchResult(structuredResult);
+      case 'analysis':
+        return this.formatAnalysisResult(structuredResult);
       default:
         return this.formatGenericResult(structuredResult);
     }
@@ -429,6 +431,97 @@ export class ContextManager {
     const filesSearched = data?.filesSearched || 0;
 
     return `\n🔍 **Search results for "${query}"** (${totalMatches} matches in ${filesSearched} files)\n**Summary:** ${result.summary}\n**Key findings:** ${result.keyFindings.join(', ')}`;
+  }
+
+  private formatAnalysisResult(result: StructuredToolResult): string {
+    // Special handling for project analysis results
+    if (result.toolName === 'internal:project' && result.fullData) {
+      return this.formatProjectAnalysisResult(result);
+    }
+    
+    // Fallback to generic analysis formatting
+    return `\n✅ **${result.toolName}** completed\n**Summary:** ${result.summary}\n**Key findings:** ${result.keyFindings.join(', ')}`;
+  }
+
+  private formatProjectAnalysisResult(result: StructuredToolResult): string {
+    const data = result.fullData as any;
+    
+    if (!data?.overview) {
+      return `\n✅ **${result.toolName}** completed\n**Summary:** ${result.summary}\n**Key findings:** ${result.keyFindings.join(', ')}`;
+    }
+
+    let output = `\n✅ **Project Analysis Complete**\n\n`;
+    
+    // Project Overview
+    output += `**📁 Project Overview**\n`;
+    output += `• **Name**: ${data.overview.name}\n`;
+    output += `• **Type**: ${data.overview.type}\n`;
+    output += `• **Description**: ${data.overview.description}\n`;
+    output += `• **Primary Language**: ${data.overview.primaryLanguage}\n\n`;
+    
+    // Technologies & Frameworks
+    if (data.overview.technologies?.length > 0 || data.overview.frameworks?.length > 0) {
+      output += `**🛠️ Technologies & Frameworks**\n`;
+      if (data.overview.languages?.length > 0) {
+        output += `• **Languages**: ${data.overview.languages.join(', ')}\n`;
+      }
+      if (data.overview.frameworks?.length > 0) {
+        output += `• **Frameworks**: ${data.overview.frameworks.join(', ')}\n`;
+      }
+      if (data.overview.technologies?.length > 0) {
+        output += `• **Tools**: ${data.overview.technologies.join(', ')}\n`;
+      }
+      output += '\n';
+    }
+    
+    // Project Structure
+    if (data.structure) {
+      output += `**📂 Project Structure**\n`;
+      if (data.structure.directories?.length > 0) {
+        output += `• **Directories**: ${data.structure.directories.slice(0, 8).join(', ')}${data.structure.directories.length > 8 ? ', ...' : ''}\n`;
+      }
+      if (data.structure.entryPoints?.length > 0) {
+        output += `• **Entry Points**: ${data.structure.entryPoints.join(', ')}\n`;
+      }
+      if (data.structure.configFiles?.length > 0) {
+        output += `• **Config Files**: ${data.structure.configFiles.join(', ')}\n`;
+      }
+      output += '\n';
+    }
+    
+    // Dependencies
+    if (data.dependencies) {
+      const prodCount = Object.keys(data.dependencies.production || {}).length;
+      const devCount = Object.keys(data.dependencies.development || {}).length;
+      if (prodCount > 0 || devCount > 0) {
+        output += `**📦 Dependencies**\n`;
+        output += `• **Package Manager**: ${data.dependencies.packageManager}\n`;
+        if (prodCount > 0) output += `• **Production**: ${prodCount} packages\n`;
+        if (devCount > 0) output += `• **Development**: ${devCount} packages\n`;
+        output += '\n';
+      }
+    }
+    
+    // Architecture Patterns
+    if (data.architecture?.patterns?.length > 0) {
+      output += `**🏗️ Architecture Patterns**\n`;
+      output += `• ${data.architecture.patterns.join(', ')}\n`;
+      if (data.architecture.organization !== 'unknown') {
+        output += `• **Organization**: ${data.architecture.organization}\n`;
+      }
+      output += '\n';
+    }
+    
+    // Code Quality
+    if (data.codeAnalysis?.quality) {
+      output += `**🎯 Code Quality**\n`;
+      output += `• **Score**: ${data.codeAnalysis.quality.score}/10\n`;
+      if (data.codeAnalysis.quality.strengths?.length > 0) {
+        output += `• **Strengths**: ${data.codeAnalysis.quality.strengths.join(', ')}\n`;
+      }
+    }
+    
+    return output;
   }
 
   private formatGenericResult(result: StructuredToolResult): string {
