@@ -8,7 +8,7 @@
       "messages": [
         {
           "role": "system",
-          "content": "You are QCode, a helpful AI coding assistant. You have access to tools to help with file operations and code analysis.\n\nAvailable tools and their purposes:\n- internal.files: Read files, list directory contents, search within files\n\nWhen processing requests:\n1. For simple file reads: use internal.files with \"read\" operation\n2. For directory listings: use internal.files with \"list\" operation  \n3. For finding files by pattern: use internal.files with \"list\" operation with glob patterns like:\n   - TypeScript/JavaScript projects: \"**/*.ts\", \"**/*.js\"\n   - Python projects: \"**/*.py\"\n   - Other projects: list all files first\n4. When looking for \"main function\", search for common entry points:\n   - index.ts, index.js, main.ts, main.js, cli.ts, app.ts\n   - Or search for \"main\" or \"function main\" in the codebase\n\nFor multi-step queries like \"list files and then read the first one\", break this down into steps:\n1. First, call the list function to get files\n2. Then, based on the results, call read function for a specific file\n\nContinue calling functions until the user's request is fully satisfied."
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
         },
         {
           "role": "user",
@@ -31,7 +31,12 @@
               "properties": {
                 "operation": {
                   "type": "string",
-                  "enum": ["read", "write", "list", "search"],
+                  "enum": [
+                    "read",
+                    "write",
+                    "list",
+                    "search"
+                  ],
                   "description": "The type of file operation to perform"
                 },
                 "path": {
@@ -95,7 +100,13 @@
                 },
                 "encoding": {
                   "type": "string",
-                  "enum": ["utf8", "utf-8", "ascii", "base64", "hex"],
+                  "enum": [
+                    "utf8",
+                    "utf-8",
+                    "ascii",
+                    "base64",
+                    "hex"
+                  ],
                   "description": "File encoding for read/write operations",
                   "default": "utf8"
                 },
@@ -110,7 +121,9 @@
                   "default": true
                 }
               },
-              "required": ["operation"],
+              "required": [
+                "operation"
+              ],
               "additionalProperties": false
             }
           }
@@ -120,7 +133,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-04T03:21:23.053501Z",
+      "created_at": "2025-06-06T05:12:41.531113Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -129,9 +142,12 @@
             "function": {
               "name": "internal:files",
               "arguments": {
+                "createDirs": false,
+                "encoding": "utf8",
+                "includeHidden": false,
                 "operation": "list",
-                "path": "./",
-                "recursive": "true"
+                "path": ".",
+                "recursive": true
               }
             }
           }
@@ -139,17 +155,76 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 892254958,
-      "load_duration": 10756833,
-      "prompt_eval_count": 799,
-      "prompt_eval_duration": 112626833,
-      "eval_count": 29,
-      "eval_duration": 767371417
+      "total_duration": 2810807250,
+      "load_duration": 11856833,
+      "prompt_eval_count": 684,
+      "prompt_eval_duration": 1445701791,
+      "eval_count": 46,
+      "eval_duration": 1352178917
     },
     "rawHeaders": {
-      "content-length": "412",
+      "content-length": "471",
       "content-type": "application/json; charset=utf-8",
-      "date": "Wed, 04 Jun 2025 03:21:23 GMT"
+      "date": "Fri, 06 Jun 2025 05:12:41 GMT"
+    },
+    "responseIsBinary": false
+  },
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "List all files in this directory, then show me the contents of package.json"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"createDirs\":false,\"encoding\":\"utf8\",\"includeHidden\":false,\"operation\":\"list\",\"path\":\".\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nResult: {\n  \"files\": [\n    {\n      \"name\": \"src\",\n      \"path\": \"/Users/qmx/dev/qcode/tests/fixtures/projects/test-workspace/src\",\n      \"relativePath\": \"src\",\n      \"size\": 96,\n      \"isDirectory\": true,\n      \"isFile\": false,\n      \"modified\": \"2025-06-04T02:29:40.973Z\"\n    },\n    {\n      \"name\": \"large-file.txt\",\n      \"path\": \"/Users/qmx/dev/qcode/tests/fixtures/projects/test-workspace/large-file.txt\",\n      \"relativePath\": \"large-file.txt\",\n      \"size\": 11691,\n      \"isDirectory\": false,\n      \"is..."
+        },
+        {
+          "role": "user",
+          "content": "Based on the tool results above, please provide a direct and complete answer to the original question: \"List all files in this directory, then show me the contents of package.json\"\n\nDo not call any more tools. Just analyze the information you've gathered and give a clear, comprehensive answer."
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0.1
+      },
+      "tools": []
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-06T05:12:47.709866Z",
+      "message": {
+        "role": "assistant",
+        "content": "{ \n  \"files\": [\n    {\n      \"name\": \"src\",\n      \"path\": \"/Users/qmx/dev/qcode/tests/fixtures/projects/test-workspace/src\",\n      \"relativePath\": \"src\",\n      \"size\": 96,\n      \"isDirectory\": true,\n      \"isFile\": false,\n      \"modified\": \"2025-06-04T02:29:40.973Z\"\n    },\n    {\n      \"name\": \"large-file.txt\",\n      \"path\": \"/Users/qmx/dev/qcode/tests/fixtures/projects/test-workspace/large-file.txt\",\n      \"relativePath\": \"large-file.txt\",\n      \"size\": 11691,\n      \"isDirectory\": false,\n      \"isFile\": true,\n      \"modified\": \"2025-06-04T02:29:40.973Z\"\n    }\n  ]\n}"
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 6174347292,
+      "load_duration": 12044333,
+      "prompt_eval_count": 430,
+      "prompt_eval_duration": 843540583,
+      "eval_count": 179,
+      "eval_duration": 5317374500
+    },
+    "rawHeaders": {
+      "content-length": "934",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Fri, 06 Jun 2025 05:12:47 GMT"
     },
     "responseIsBinary": false
   }
