@@ -8,27 +8,11 @@
       "messages": [
         {
           "role": "system",
-          "content": "You are QCode, a helpful AI coding assistant. You have access to tools to help with file operations and code analysis.\n\nAvailable tools and their purposes:\n- internal.files: Read files, list directory contents, search within files\n\nWhen processing requests:\n1. For simple file reads: use internal.files with \"read\" operation\n2. For directory listings: use internal.files with \"list\" operation  \n3. For finding files by pattern: use internal.files with \"list\" operation with glob patterns like:\n   - TypeScript/JavaScript projects: \"**/*.ts\", \"**/*.js\"\n   - Python projects: \"**/*.py\"\n   - Other projects: list all files first\n4. When looking for \"main function\", search for common entry points:\n   - index.ts, index.js, main.ts, main.js, cli.ts, app.ts\n   - Or search for \"main\" or \"function main\" in the codebase\n\nFor multi-step queries like \"list files and then read the first one\", break this down into steps:\n1. First, call the list function to get files\n2. Then, based on the results, call read function for a specific file\n\nContinue calling functions until the user's request is fully satisfied."
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
         },
         {
           "role": "user",
           "content": "List JavaScript files and show me the content of the first one found"
-        },
-        {
-          "role": "assistant",
-          "content": "\n📂 **Files in /Users/qmx/dev/qcode/tests/fixtures** (0 items)\n**Summary:** Found 0 items in /Users/qmx/dev/qcode/tests/fixtures. Types: \n**Key findings:** "
-        },
-        {
-          "role": "user",
-          "content": "Continue with the next step if needed to fully answer the original question."
-        },
-        {
-          "role": "assistant",
-          "content": "\n📂 **Files in /Users/qmx/dev/qcode/tests/fixtures** (0 items)\n**Summary:** Found 0 items in /Users/qmx/dev/qcode/tests/fixtures. Types: \n**Key findings:** "
-        },
-        {
-          "role": "user",
-          "content": "Continue with the next step if needed to fully answer the original question."
         }
       ],
       "stream": false,
@@ -47,7 +31,12 @@
               "properties": {
                 "operation": {
                   "type": "string",
-                  "enum": ["read", "write", "list", "search"],
+                  "enum": [
+                    "read",
+                    "write",
+                    "list",
+                    "search"
+                  ],
                   "description": "The type of file operation to perform"
                 },
                 "path": {
@@ -111,7 +100,13 @@
                 },
                 "encoding": {
                   "type": "string",
-                  "enum": ["utf8", "utf-8", "ascii", "base64", "hex"],
+                  "enum": [
+                    "utf8",
+                    "utf-8",
+                    "ascii",
+                    "base64",
+                    "hex"
+                  ],
                   "description": "File encoding for read/write operations",
                   "default": "utf8"
                 },
@@ -126,7 +121,9 @@
                   "default": true
                 }
               },
-              "required": ["operation"],
+              "required": [
+                "operation"
+              ],
               "additionalProperties": false
             }
           }
@@ -136,7 +133,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-04T03:13:34.060796Z",
+      "created_at": "2025-06-06T05:32:58.298302Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -146,10 +143,10 @@
               "name": "internal:files",
               "arguments": {
                 "encoding": "utf8",
-                "endLine": 10,
-                "operation": "read",
-                "path": "/Users/qmx/dev/qcode/tests/fixtures/**/*.js",
-                "startLine": 1
+                "operation": "list",
+                "path": ".",
+                "pattern": "**/*.js",
+                "recursive": true
               }
             }
           }
@@ -157,17 +154,76 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 17545040667,
-      "load_duration": 12409708,
-      "prompt_eval_count": 937,
-      "prompt_eval_duration": 1879684000,
-      "eval_count": 55,
-      "eval_duration": 5560429625
+      "total_duration": 4694177167,
+      "load_duration": 10724458,
+      "prompt_eval_count": 682,
+      "prompt_eval_duration": 3136517458,
+      "eval_count": 41,
+      "eval_duration": 1545945209
     },
     "rawHeaders": {
-      "content-length": "483",
+      "content-length": "450",
       "content-type": "application/json; charset=utf-8",
-      "date": "Wed, 04 Jun 2025 03:13:34 GMT"
+      "date": "Fri, 06 Jun 2025 05:32:58 GMT"
+    },
+    "responseIsBinary": false
+  },
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "List JavaScript files and show me the content of the first one found"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"encoding\":\"utf8\",\"operation\":\"list\",\"path\":\".\",\"pattern\":\"**/*.js\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nResult: {\n  \"files\": [],\n  \"path\": \"/Users/qmx/dev/qcode/tests/fixtures\",\n  \"count\": 0,\n  \"pattern\": \"**/*.js\"\n}"
+        },
+        {
+          "role": "user",
+          "content": "Based on the tool results above, please provide a direct and complete answer to the original question: \"List JavaScript files and show me the content of the first one found\"\n\nDo not call any more tools. Just analyze the information you've gathered and give a clear, comprehensive answer."
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0
+      },
+      "tools": []
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-06T05:32:59.507591Z",
+      "message": {
+        "role": "assistant",
+        "content": "{\"answer\":\"There are no JavaScript files in the specified directory (/Users/qmx/dev/qcode/tests/fixtures).\"}"
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 1203967084,
+      "load_duration": 11042167,
+      "prompt_eval_count": 310,
+      "prompt_eval_duration": 585289834,
+      "eval_count": 24,
+      "eval_duration": 606505458
+    },
+    "rawHeaders": {
+      "content-length": "407",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Fri, 06 Jun 2025 05:32:59 GMT"
     },
     "responseIsBinary": false
   }

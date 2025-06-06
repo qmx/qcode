@@ -8,11 +8,142 @@
       "messages": [
         {
           "role": "system",
-          "content": "You are QCode, a helpful AI coding assistant. You have access to tools to help with file operations and code analysis.\n\nAvailable tools and their purposes:\n- internal.files: Read files, list directory contents, search within files\n\nWhen processing requests:\n1. For simple file reads: use internal.files with \"read\" operation\n2. For directory listings: use internal.files with \"list\" operation  \n3. For finding files by pattern: use internal.files with \"list\" operation with glob patterns like:\n   - TypeScript/JavaScript projects: \"**/*.ts\", \"**/*.js\"\n   - Python projects: \"**/*.py\"\n   - Other projects: list all files first\n4. When looking for \"main function\", search for common entry points:\n   - index.ts, index.js, main.ts, main.js, cli.ts, app.ts\n   - Or search for \"main\" or \"function main\" in the codebase\n\nFor multi-step queries like \"list files and then read the first one\", break this down into steps:\n1. First, call the list function to get files\n2. Then, based on the results, call read function for a specific file\n\nContinue calling functions until the user's request is fully satisfied."
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
         },
         {
           "role": "user",
           "content": "Find all test files, list them, and then read one of them"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"./tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Directory not found: /Users/qmx/dev/qcode/tests/fixtures/tests"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "user",
+          "content": "Based on the tool results above, please provide a direct and complete answer to the original question: \"Find all test files, list them, and then read one of them\"\n\nDo not call any more tools. Just analyze the information you've gathered and give a clear, comprehensive answer."
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0
+      },
+      "tools": []
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-06T05:34:06.175849Z",
+      "message": {
+        "role": "assistant",
+        "content": "{ \"test_files\": [], \"error_message\": \"Access denied: Path is outside allowed workspace boundaries\" }"
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 38352630083,
+      "load_duration": 11146625,
+      "prompt_eval_count": 943,
+      "prompt_eval_duration": 26693926334,
+      "eval_count": 23,
+      "eval_duration": 11639379875
+    },
+    "rawHeaders": {
+      "content-length": "406",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Fri, 06 Jun 2025 05:34:06 GMT"
+    },
+    "responseIsBinary": false
+  },
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "List all files recursively and show me a summary"
         }
       ],
       "stream": false,
@@ -31,7 +162,12 @@
               "properties": {
                 "operation": {
                   "type": "string",
-                  "enum": ["read", "write", "list", "search"],
+                  "enum": [
+                    "read",
+                    "write",
+                    "list",
+                    "search"
+                  ],
                   "description": "The type of file operation to perform"
                 },
                 "path": {
@@ -95,7 +231,13 @@
                 },
                 "encoding": {
                   "type": "string",
-                  "enum": ["utf8", "utf-8", "ascii", "base64", "hex"],
+                  "enum": [
+                    "utf8",
+                    "utf-8",
+                    "ascii",
+                    "base64",
+                    "hex"
+                  ],
                   "description": "File encoding for read/write operations",
                   "default": "utf8"
                 },
@@ -110,7 +252,9 @@
                   "default": true
                 }
               },
-              "required": ["operation"],
+              "required": [
+                "operation"
+              ],
               "additionalProperties": false
             }
           }
@@ -120,7 +264,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-04T03:13:47.807346Z",
+      "created_at": "2025-06-06T05:34:11.464925Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -129,10 +273,10 @@
             "function": {
               "name": "internal:files",
               "arguments": {
+                "includeMetadata": true,
                 "operation": "list",
-                "path": "./",
-                "pattern": "**/*.test.ts",
-                "recursive": "true"
+                "path": ".",
+                "recursive": true
               }
             }
           }
@@ -140,17 +284,148 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 19290213125,
-      "load_duration": 18482125,
-      "prompt_eval_count": 798,
-      "prompt_eval_duration": 211317791,
-      "eval_count": 37,
-      "eval_duration": 3846952959
+      "total_duration": 41950916667,
+      "load_duration": 11419458,
+      "prompt_eval_count": 678,
+      "prompt_eval_duration": 25044894708,
+      "eval_count": 33,
+      "eval_duration": 16893194458
     },
     "rawHeaders": {
-      "content-length": "440",
+      "content-length": "438",
       "content-type": "application/json; charset=utf-8",
-      "date": "Wed, 04 Jun 2025 03:13:47 GMT"
+      "date": "Fri, 06 Jun 2025 05:34:11 GMT"
+    },
+    "responseIsBinary": false
+  },
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "Find all test files, list them, and then read one of them"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"./tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Directory not found: /Users/qmx/dev/qcode/tests/fixtures/tests"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"operation\":\"list\",\"path\":\"/Users/qmx/dev/qcode/tests\",\"pattern\":\"**/*.test.ts\",\"recursive\":true}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:files\nError: Tool internal:files failed: Access denied: Path is outside allowed workspace boundaries"
+        },
+        {
+          "role": "user",
+          "content": "Based on the tool results above, please provide a direct and complete answer to the original question: \"Find all test files, list them, and then read one of them\"\n\nDo not call any more tools. Just analyze the information you've gathered and give a clear, comprehensive answer."
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0
+      },
+      "tools": []
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-06T05:34:18.914633Z",
+      "message": {
+        "role": "assistant",
+        "content": "{ \"test_files\": [], \"error_message\": \"Access denied: Path is outside allowed workspace boundaries\" }"
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 20081459583,
+      "load_duration": 79042833,
+      "prompt_eval_count": 943,
+      "prompt_eval_duration": 1195213125,
+      "eval_count": 23,
+      "eval_duration": 11541518500
+    },
+    "rawHeaders": {
+      "content-length": "405",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Fri, 06 Jun 2025 05:34:18 GMT"
     },
     "responseIsBinary": false
   }
