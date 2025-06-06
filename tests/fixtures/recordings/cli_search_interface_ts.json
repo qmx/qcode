@@ -133,7 +133,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-06T05:06:31.337586Z",
+      "created_at": "2025-06-06T05:12:02.266568Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -142,13 +142,13 @@
             "function": {
               "name": "internal:files",
               "arguments": {
-                "caseSensitive": false,
+                "caseSensitive": "false",
                 "operation": "search",
-                "path": "./",
+                "path": "",
                 "pattern": "**/*.ts",
                 "query": "interface",
-                "recursive": true,
-                "useRegex": false
+                "recursive": "true",
+                "useRegex": "false"
               }
             }
           }
@@ -156,17 +156,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 4612000458,
-      "load_duration": 11323625,
+      "total_duration": 3108503958,
+      "load_duration": 12329500,
       "prompt_eval_count": 677,
-      "prompt_eval_duration": 2741687500,
-      "eval_count": 53,
-      "eval_duration": 1857647500
+      "prompt_eval_duration": 1516515750,
+      "eval_count": 55,
+      "eval_duration": 1578220167
     },
     "rawHeaders": {
-      "content-length": "494",
+      "content-length": "498",
       "content-type": "application/json; charset=utf-8",
-      "date": "Fri, 06 Jun 2025 05:06:31 GMT"
+      "date": "Fri, 06 Jun 2025 05:12:02 GMT"
     },
     "responseIsBinary": false
   },
@@ -187,7 +187,7 @@
         },
         {
           "role": "assistant",
-          "content": "[{\"name\":\"internal:files\",\"args\":{\"caseSensitive\":false,\"operation\":\"search\",\"path\":\"./\",\"pattern\":\"**/*.ts\",\"query\":\"interface\",\"recursive\":true,\"useRegex\":false}}]"
+          "content": "[{\"name\":\"internal:files\",\"args\":{\"caseSensitive\":\"false\",\"operation\":\"search\",\"path\":\"\",\"pattern\":\"**/*.ts\",\"query\":\"interface\",\"recursive\":\"true\",\"useRegex\":\"false\"}}]"
         },
         {
           "role": "user",
@@ -208,24 +208,24 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-06T05:06:32.321732Z",
+      "created_at": "2025-06-06T05:12:03.220869Z",
       "message": {
         "role": "assistant",
         "content": "{\"interface\":\"found\"}"
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 979095000,
-      "load_duration": 14977792,
-      "prompt_eval_count": 386,
-      "prompt_eval_duration": 778791250,
+      "total_duration": 950580792,
+      "load_duration": 13012792,
+      "prompt_eval_count": 384,
+      "prompt_eval_duration": 759204334,
       "eval_count": 7,
-      "eval_duration": 184144042
+      "eval_duration": 177053541
     },
     "rawHeaders": {
       "content-length": "318",
       "content-type": "application/json; charset=utf-8",
-      "date": "Fri, 06 Jun 2025 05:06:32 GMT"
+      "date": "Fri, 06 Jun 2025 05:12:03 GMT"
     },
     "responseIsBinary": false
   }

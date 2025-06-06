@@ -133,7 +133,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-06T05:05:55.632539Z",
+      "created_at": "2025-06-06T05:11:49.702739Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -156,17 +156,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 2933801584,
-      "load_duration": 11279625,
+      "total_duration": 2865000000,
+      "load_duration": 11124000,
       "prompt_eval_count": 678,
-      "prompt_eval_duration": 1502607375,
+      "prompt_eval_duration": 1405009833,
       "eval_count": 52,
-      "eval_duration": 1418868666
+      "eval_duration": 1447845667
     },
     "rawHeaders": {
       "content-length": "488",
       "content-type": "application/json; charset=utf-8",
-      "date": "Fri, 06 Jun 2025 05:05:55 GMT"
+      "date": "Fri, 06 Jun 2025 05:11:49 GMT"
     },
     "responseIsBinary": false
   },
@@ -208,24 +208,24 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-06T05:05:56.714027Z",
+      "created_at": "2025-06-06T05:11:50.562379Z",
       "message": {
         "role": "assistant",
-        "content": "{\"TODO\":\n\n-1.0 \n  \t}"
+        "content": "{\"TODO\":\n\n-0\n}"
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 1074876334,
-      "load_duration": 11202750,
+      "total_duration": 852899125,
+      "load_duration": 11418250,
       "prompt_eval_count": 307,
-      "prompt_eval_duration": 619133667,
-      "eval_count": 14,
-      "eval_duration": 443426417
+      "prompt_eval_duration": 577243083,
+      "eval_count": 9,
+      "eval_duration": 263073542
     },
     "rawHeaders": {
-      "content-length": "321",
+      "content-length": "312",
       "content-type": "application/json; charset=utf-8",
-      "date": "Fri, 06 Jun 2025 05:05:56 GMT"
+      "date": "Fri, 06 Jun 2025 05:11:50 GMT"
     },
     "responseIsBinary": false
   }
