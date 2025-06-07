@@ -43,7 +43,8 @@ describe('QCodeEngine - E2E Integration Tests', () => {
 
     // Setup real configuration and clients
     config = getDefaultConfig(TEST_WORKSPACE);
-    ollamaClient = new OllamaClient(config.ollama);
+    const ollamaConfig = { ...config.ollama, retries: 0 };
+    ollamaClient = new OllamaClient(ollamaConfig);
     toolRegistry = new ToolRegistry(config.security, TEST_WORKSPACE);
 
     // Register the FilesTool
