@@ -31,12 +31,7 @@
               "properties": {
                 "operation": {
                   "type": "string",
-                  "enum": [
-                    "read",
-                    "write",
-                    "list",
-                    "search"
-                  ],
+                  "enum": ["read", "write", "list", "search"],
                   "description": "The type of file operation to perform"
                 },
                 "path": {
@@ -100,13 +95,7 @@
                 },
                 "encoding": {
                   "type": "string",
-                  "enum": [
-                    "utf8",
-                    "utf-8",
-                    "ascii",
-                    "base64",
-                    "hex"
-                  ],
+                  "enum": ["utf8", "utf-8", "ascii", "base64", "hex"],
                   "description": "File encoding for read/write operations",
                   "default": "utf8"
                 },
@@ -121,9 +110,7 @@
                   "default": true
                 }
               },
-              "required": [
-                "operation"
-              ],
+              "required": ["operation"],
               "additionalProperties": false
             }
           }
@@ -207,12 +194,7 @@
               "properties": {
                 "operation": {
                   "type": "string",
-                  "enum": [
-                    "read",
-                    "write",
-                    "list",
-                    "search"
-                  ],
+                  "enum": ["read", "write", "list", "search"],
                   "description": "The type of file operation to perform"
                 },
                 "path": {
@@ -276,13 +258,7 @@
                 },
                 "encoding": {
                   "type": "string",
-                  "enum": [
-                    "utf8",
-                    "utf-8",
-                    "ascii",
-                    "base64",
-                    "hex"
-                  ],
+                  "enum": ["utf8", "utf-8", "ascii", "base64", "hex"],
                   "description": "File encoding for read/write operations",
                   "default": "utf8"
                 },
@@ -297,9 +273,7 @@
                   "default": true
                 }
               },
-              "required": [
-                "operation"
-              ],
+              "required": ["operation"],
               "additionalProperties": false
             }
           }
@@ -390,12 +364,7 @@
               "properties": {
                 "operation": {
                   "type": "string",
-                  "enum": [
-                    "read",
-                    "write",
-                    "list",
-                    "search"
-                  ],
+                  "enum": ["read", "write", "list", "search"],
                   "description": "The type of file operation to perform"
                 },
                 "path": {
@@ -459,13 +428,7 @@
                 },
                 "encoding": {
                   "type": "string",
-                  "enum": [
-                    "utf8",
-                    "utf-8",
-                    "ascii",
-                    "base64",
-                    "hex"
-                  ],
+                  "enum": ["utf8", "utf-8", "ascii", "base64", "hex"],
                   "description": "File encoding for read/write operations",
                   "default": "utf8"
                 },
@@ -480,9 +443,7 @@
                   "default": true
                 }
               },
-              "required": [
-                "operation"
-              ],
+              "required": ["operation"],
               "additionalProperties": false
             }
           }
@@ -581,12 +542,7 @@
               "properties": {
                 "operation": {
                   "type": "string",
-                  "enum": [
-                    "read",
-                    "write",
-                    "list",
-                    "search"
-                  ],
+                  "enum": ["read", "write", "list", "search"],
                   "description": "The type of file operation to perform"
                 },
                 "path": {
@@ -650,13 +606,7 @@
                 },
                 "encoding": {
                   "type": "string",
-                  "enum": [
-                    "utf8",
-                    "utf-8",
-                    "ascii",
-                    "base64",
-                    "hex"
-                  ],
+                  "enum": ["utf8", "utf-8", "ascii", "base64", "hex"],
                   "description": "File encoding for read/write operations",
                   "default": "utf8"
                 },
@@ -671,9 +621,7 @@
                   "default": true
                 }
               },
-              "required": [
-                "operation"
-              ],
+              "required": ["operation"],
               "additionalProperties": false
             }
           }
@@ -780,12 +728,7 @@
               "properties": {
                 "operation": {
                   "type": "string",
-                  "enum": [
-                    "read",
-                    "write",
-                    "list",
-                    "search"
-                  ],
+                  "enum": ["read", "write", "list", "search"],
                   "description": "The type of file operation to perform"
                 },
                 "path": {
@@ -849,13 +792,7 @@
                 },
                 "encoding": {
                   "type": "string",
-                  "enum": [
-                    "utf8",
-                    "utf-8",
-                    "ascii",
-                    "base64",
-                    "hex"
-                  ],
+                  "enum": ["utf8", "utf-8", "ascii", "base64", "hex"],
                   "description": "File encoding for read/write operations",
                   "default": "utf8"
                 },
@@ -870,9 +807,7 @@
                   "default": true
                 }
               },
-              "required": [
-                "operation"
-              ],
+              "required": ["operation"],
               "additionalProperties": false
             }
           }

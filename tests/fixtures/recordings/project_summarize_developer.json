@@ -248,7 +248,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-06T04:54:43.003661Z",
+      "created_at": "2025-06-07T02:32:47.735903Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -269,17 +269,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 3912228125,
-      "load_duration": 10843708,
+      "total_duration": 3876332083,
+      "load_duration": 10604833,
       "prompt_eval_count": 1121,
-      "prompt_eval_duration": 2644503334,
+      "prompt_eval_duration": 2627561500,
       "eval_count": 47,
-      "eval_duration": 1255165083
+      "eval_duration": 1236828125
     },
     "rawHeaders": {
       "content-length": "478",
       "content-type": "application/json; charset=utf-8",
-      "date": "Fri, 06 Jun 2025 04:54:43 GMT"
+      "date": "Sat, 07 Jun 2025 02:32:47 GMT"
     },
     "responseIsBinary": false
   },
@@ -304,7 +304,7 @@
         },
         {
           "role": "user",
-          "content": "Tool results:\n\nTool: internal:project\nResult: {\n  \"summary\": {\n    \"overview\": \"This is a placeholder implementation that will be enhanced with real project summarization\",\n    \"technologies\": [],\n    \"keyFeatures\": [],\n    \"architecture\": \"unknown\",\n    \"status\": \"analysis pending\"\n  },\n  \"metadata\": {\n    \"summarizedAt\": \"2025-06-06T04:54:43.006Z\",\n    \"format\": \"technical\",\n    \"audience\": \"developer\"\n  },\n  \"details\": {\n    \"structure\": \"Structure analysis not yet implemented\",\n    \"patterns\": [],\n    \"conventions\": {},\n    \"dependencie"
+          "content": "Tool results:\n\nTool: internal:project\nResult: {\n  \"summary\": {\n    \"overview\": \"This is a placeholder implementation that will be enhanced with real project summarization\",\n    \"technologies\": [],\n    \"keyFeatures\": [],\n    \"architecture\": \"unknown\",\n    \"status\": \"analysis pending\"\n  },\n  \"metadata\": {\n    \"summarizedAt\": \"2025-06-07T02:32:47.740Z\",\n    \"format\": \"technical\",\n    \"audience\": \"developer\"\n  },\n  \"details\": {\n    \"structure\": \"Structure analysis not yet implemented\",\n    \"patterns\": [],\n    \"conventions\": {},\n    \"dependencie"
         },
         {
           "role": "user",
@@ -321,24 +321,24 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-06T04:54:44.565139Z",
+      "created_at": "2025-06-07T02:32:49.403762Z",
       "message": {
         "role": "assistant",
         "content": "{ \n  \"technologies\": [],\n  \"keyFeatures\": [],\n  \"architecture\": \"unknown\",\n  \"status\": \"analysis pending\"\n}"
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 1556632459,
-      "load_duration": 11593834,
+      "total_duration": 1661513542,
+      "load_duration": 11094625,
       "prompt_eval_count": 407,
-      "prompt_eval_duration": 822209917,
+      "prompt_eval_duration": 902621541,
       "eval_count": 31,
-      "eval_duration": 721356667
+      "eval_duration": 746394625
     },
     "rawHeaders": {
       "content-length": "419",
       "content-type": "application/json; charset=utf-8",
-      "date": "Fri, 06 Jun 2025 04:54:44 GMT"
+      "date": "Sat, 07 Jun 2025 02:32:49 GMT"
     },
     "responseIsBinary": false
   }
