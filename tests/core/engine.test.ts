@@ -78,7 +78,7 @@ describe('QCodeEngine - Unit Tests', () => {
       expect(response.complete).toBe(false);
       expect(response.errors).toHaveLength(1);
       expect(response.errors?.[0]?.code).toBe('INVALID_QUERY');
-      
+
       // Should not make any LLM calls
       expect(mockOllamaClient.generate).not.toHaveBeenCalled();
       expect(mockOllamaClient.functionCall).not.toHaveBeenCalled();
@@ -91,7 +91,7 @@ describe('QCodeEngine - Unit Tests', () => {
       expect(response.complete).toBe(false);
       expect(response.errors).toHaveLength(1);
       expect(response.errors?.[0]?.code).toBe('QUERY_TOO_LONG');
-      
+
       // Should not make any LLM calls
       expect(mockOllamaClient.generate).not.toHaveBeenCalled();
       expect(mockOllamaClient.functionCall).not.toHaveBeenCalled();
@@ -103,7 +103,7 @@ describe('QCodeEngine - Unit Tests', () => {
       expect(response.complete).toBe(false);
       expect(response.errors).toHaveLength(1);
       expect(response.errors?.[0]?.code).toBe('EMPTY_QUERY');
-      
+
       // Should not make any LLM calls
       expect(mockOllamaClient.generate).not.toHaveBeenCalled();
       expect(mockOllamaClient.functionCall).not.toHaveBeenCalled();
@@ -123,7 +123,7 @@ describe('QCodeEngine - Unit Tests', () => {
       expect(response.complete).toBe(true);
       expect(response.response).toBeDefined();
       expect(typeof response.response).toBe('string');
-      
+
       // Should make LLM calls for valid queries
       expect(mockOllamaClient.functionCall).toHaveBeenCalled();
     });
