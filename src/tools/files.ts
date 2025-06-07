@@ -7,9 +7,9 @@ import glob, { Options as GlobOptions } from 'fast-glob';
 import { NamespacedTool, ToolDefinition, ToolResult, QCodeError } from '../types.js';
 import { WorkspaceSecurity } from '../security/workspace.js';
 import { isAbsolute } from 'path';
-import { safeLogger } from '../utils/logger.js';
+import { getLogger } from '../utils/logger.js';
 
-const logger = safeLogger();
+const logger = getLogger();
 
 /**
  * Zod schemas for file operation parameters

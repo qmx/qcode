@@ -272,7 +272,7 @@ qcode "add user authentication"
 - [x] **LLM-Powered Analysis Engine** - `src/tools/project-intelligence.ts` implemented
 - [x] **Dynamic Project Discovery** - Automatically discovers project files and structure
 - [x] **Intelligent Technology Detection** - LLM analyzes actual project content to identify frameworks and patterns
-- [x] **Context-Aware Project Understanding** - Understands project-specific conventions and architectural decisions  
+- [x] **Context-Aware Project Understanding** - Understands project-specific conventions and architectural decisions
 - [x] **Structured Analysis Output** - Comprehensive project analysis with overview, structure, dependencies, and code quality metrics
 - [x] **CLI Integration** - Full integration with `qcode` command-line interface
 - [x] **Enhanced Context Formatting** - Rich, structured output formatting for project analysis results
@@ -302,6 +302,7 @@ qcode "add user authentication"
 **Real-world validation:**
 
 The tool has been validated with comprehensive test coverage and demonstrates:
+
 - Accurate project analysis across different project types
 - Proper framework and technology identification
 - Contextual understanding that improves with LLM analysis
@@ -312,6 +313,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 #### 1.7.8 E2E Test Fixtures and Project Analysis Validation
 
 - [ ] **Create comprehensive test project fixtures**:
+
   - [ ] `tests/fixtures/projects/react-cra/` - Create React App with standard structure
     - [ ] `src/App.js`, `src/components/`, `package.json`, `public/index.html`
     - [ ] Include common dependencies: React Router, styled-components, Jest
@@ -330,8 +332,9 @@ The tool has been validated with comprehensive test coverage and demonstrates:
     - [ ] Test `"analyze this Python project"` workflow with VCR recording
 
 - [ ] **LLM reasoning VCR recordings**:
+
   - [ ] `tests/fixtures/recordings/llm_reasoning_react.json` - LLM analysis of React project
-  - [ ] `tests/fixtures/recordings/llm_reasoning_rails.json` - LLM analysis of Rails project  
+  - [ ] `tests/fixtures/recordings/llm_reasoning_rails.json` - LLM analysis of Rails project
   - [ ] `tests/fixtures/recordings/llm_reasoning_swift.json` - LLM analysis of Swift project
   - [ ] `tests/fixtures/recordings/llm_reasoning_python.json` - LLM analysis of Python project
   - [ ] Each recording should capture the LLM's step-by-step reasoning process
@@ -345,6 +348,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 #### 1.7.9 File Editing Tool (LLM-Guided)
 
 - [ ] **Basic file editing capabilities**:
+
   - [ ] Implement `src/tools/edit.ts` with LLM-guided editing
   - [ ] Support for creating new files with appropriate content
   - [ ] Support for modifying existing files with surgical precision
@@ -352,6 +356,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   - [ ] Atomic operations with backup and rollback capabilities
 
 - [ ] **LLM-assisted editing features**:
+
   - [ ] Context-aware code generation based on project analysis
   - [ ] Smart imports and dependency management
   - [ ] Code style consistency with existing project patterns
@@ -366,6 +371,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 #### 1.7.10 Git Integration Tool
 
 - [ ] **Basic git operations**:
+
   - [ ] Implement `src/tools/git.ts` with common git commands
   - [ ] Support for `git status`, `git diff`, `git add`, `git commit`
   - [ ] Integration with `WorkspaceSecurity` for repository boundary enforcement
@@ -380,6 +386,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 #### 1.7.11 Shell Execution Tool
 
 - [ ] **Safe shell execution with strict allowlist**:
+
   - [ ] Implement `src/tools/shell.ts` with command validation
   - [ ] **Strict command allowlist/whitelist** - only predetermined safe commands allowed
   - [ ] Integration with existing `src/security/commands.ts` validation
@@ -388,6 +395,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   - [ ] Command argument sanitization and validation
 
 - [ ] **Allowlist categories**:
+
   - [ ] **Package managers**: `npm`, `yarn`, `pnpm`, `pip`, `poetry`, `bundle`, `gem`, `cargo`, `go mod`
   - [ ] **Build tools**: `make`, `cmake`, `gradle`, `mvn`, `swift build`, `dotnet build`
   - [ ] **Version control**: `git status`, `git diff`, `git log`, `git branch` (read-only git commands)
@@ -396,6 +404,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   - [ ] **Project scripts**: Commands defined in package.json scripts, Makefile targets, etc.
 
 - [ ] **Security restrictions**:
+
   - [ ] No file system commands (`rm`, `mv`, `cp`, `chmod`, etc.)
   - [ ] No network commands (`curl`, `wget`, `ssh`, etc.)
   - [ ] No system commands (`sudo`, `su`, `systemctl`, etc.)
@@ -449,8 +458,9 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   The complex rule-based workflow orchestration system has been replaced with a much more elegant LLM-centric approach where the LLM itself handles all workflow decisions.
 
   **Benefits of LLM-centric approach**:
+
   - **Simplified Architecture**: No need for complex pattern matching and rule engines
-  - **Adaptive Intelligence**: LLM can handle novel scenarios without predefined patterns  
+  - **Adaptive Intelligence**: LLM can handle novel scenarios without predefined patterns
   - **Natural Language Understanding**: Direct query interpretation without pattern matching
   - **Context Awareness**: LLM uses actual project data to inform decisions
   - **Self-Directing**: LLM manages its own execution flow based on results
@@ -458,12 +468,14 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 #### 1.8.6 Update Tests After Architectural Changes
 
 - [ ] **Fix broken tests due to engine rewrite**:
+
   - [ ] Update existing engine tests to work with new LLM-centric approach
   - [ ] Remove old workflow orchestrator tests that are no longer relevant
   - [ ] Update VCR recordings that may have changed due to new LLM interaction patterns
   - [ ] Fix any integration tests that depended on old intent detection system
 
 - [ ] **Add new tests for LLM orchestration**:
+
   - [ ] Test LLM tool selection and chaining behavior
   - [ ] Test error recovery when tools fail
   - [ ] Test result synthesis quality across different query types
@@ -581,7 +593,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 Phase 1 now delivers a **true AI agent** rather than a rule-based script executor:
 
 - **LLM Intelligence**: The LLM itself coordinates all operations and makes intelligent decisions
-- **Project Understanding**: Deep, LLM-powered analysis of any project type  
+- **Project Understanding**: Deep, LLM-powered analysis of any project type
 - **Adaptive Behavior**: Responds intelligently to novel scenarios without predefined patterns
 - **Context-Aware Responses**: All answers informed by actual project data and structure
 - **Self-Directing Agent**: LLM manages its own workflow and tool execution strategy
@@ -593,7 +605,7 @@ Phase 1 now delivers a **true AI agent** rather than a rule-based script executo
 qcode "analyze this project and tell me about its architecture"
 # → LLM performs comprehensive analysis with file discovery and content analysis
 
-# Context-aware file operations  
+# Context-aware file operations
 qcode "show me the main configuration files"
 # → LLM discovers and displays relevant config files for the project type
 
@@ -1103,12 +1115,14 @@ QCode CLI → LLM Engine → Tool Registry → MCP Client (stdio only) → Exter
 The transformation from rule-based to LLM-centric architecture represents a **fundamental advancement** in AI agent design:
 
 **Before (Rule-Based)**:
+
 - Hardcoded patterns and workflows
 - Limited to predefined scenarios
 - Brittle and inflexible
 - Pattern matching for intent detection
 
 **After (LLM-Centric)**:
+
 - LLM makes all orchestration decisions
 - Adapts to any scenario intelligently
 - Self-directing and context-aware
@@ -1117,6 +1131,7 @@ The transformation from rule-based to LLM-centric architecture represents a **fu
 ### 🎯 **Next Immediate Priorities:**
 
 1. **Complete Phase 1 Supporting Tools**:
+
    - Code editing tool with LLM-guided editing
    - Git integration with intelligent commit messages
    - Shell execution with project-aware commands

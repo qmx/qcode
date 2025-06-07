@@ -230,6 +230,26 @@ it('should handle user workflow', async () => {
 });
 ```
 
+### VCR Recording Rules
+
+**CRITICAL: When you encounter "Nock: No match for request" errors:**
+
+1. **Always regenerate the VCR recording immediately** - this means the HTTP request changed or the recording is missing
+2. **Use NOCK_MODE=record to capture the missing request:**
+   ```bash
+   NOCK_MODE=record npm test -- --testPathPattern=failing-test.ts --testNamePattern="specific test name"
+   ```
+3. **Verify the recording contains both `/api/chat` AND `/api/generate` requests** if the test uses ProjectIntelligenceTool
+4. **Check that retry counts match between test config and recordings** - tests should use `retries: 0` to match VCR playback
+5. **Never ignore or work around missing VCR recordings** - always fix by recording the actual HTTP interactions
+
+**Root Causes of "Nock: No match" errors:**
+
+- Missing VCR recording file
+- HTTP request body/headers changed since recording
+- Configuration mismatch (retries, model, URL)
+- Tool making additional `/api/generate` calls not captured in original recording
+
 ### Tool Development Template
 
 ```typescript

@@ -438,27 +438,27 @@ export class ContextManager {
     if (result.toolName === 'internal:project' && result.fullData) {
       return this.formatProjectAnalysisResult(result);
     }
-    
+
     // Fallback to generic analysis formatting
     return `\n✅ **${result.toolName}** completed\n**Summary:** ${result.summary}\n**Key findings:** ${result.keyFindings.join(', ')}`;
   }
 
   private formatProjectAnalysisResult(result: StructuredToolResult): string {
     const data = result.fullData as any;
-    
+
     if (!data?.overview) {
       return `\n✅ **${result.toolName}** completed\n**Summary:** ${result.summary}\n**Key findings:** ${result.keyFindings.join(', ')}`;
     }
 
     let output = `\n✅ **Project Analysis Complete**\n\n`;
-    
+
     // Project Overview
     output += `**📁 Project Overview**\n`;
     output += `• **Name**: ${data.overview.name}\n`;
     output += `• **Type**: ${data.overview.type}\n`;
     output += `• **Description**: ${data.overview.description}\n`;
     output += `• **Primary Language**: ${data.overview.primaryLanguage}\n\n`;
-    
+
     // Technologies & Frameworks
     if (data.overview.technologies?.length > 0 || data.overview.frameworks?.length > 0) {
       output += `**🛠️ Technologies & Frameworks**\n`;
@@ -473,7 +473,7 @@ export class ContextManager {
       }
       output += '\n';
     }
-    
+
     // Project Structure
     if (data.structure) {
       output += `**📂 Project Structure**\n`;
@@ -488,7 +488,7 @@ export class ContextManager {
       }
       output += '\n';
     }
-    
+
     // Dependencies
     if (data.dependencies) {
       const prodCount = Object.keys(data.dependencies.production || {}).length;
@@ -501,7 +501,7 @@ export class ContextManager {
         output += '\n';
       }
     }
-    
+
     // Architecture Patterns
     if (data.architecture?.patterns?.length > 0) {
       output += `**🏗️ Architecture Patterns**\n`;
@@ -511,7 +511,7 @@ export class ContextManager {
       }
       output += '\n';
     }
-    
+
     // Code Quality
     if (data.codeAnalysis?.quality) {
       output += `**🎯 Code Quality**\n`;
@@ -520,7 +520,7 @@ export class ContextManager {
         output += `• **Strengths**: ${data.codeAnalysis.quality.strengths.join(', ')}\n`;
       }
     }
-    
+
     return output;
   }
 

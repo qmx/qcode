@@ -9,9 +9,9 @@ import {
   MCPServerInfo,
   ValidationResult,
 } from '../types.js';
-import { safeLogger } from '../utils/logger.js';
+import { getLogger } from '../utils/logger.js';
 
-const logger = safeLogger();
+const logger = getLogger();
 
 /**
  * Tool execution context with additional registry information

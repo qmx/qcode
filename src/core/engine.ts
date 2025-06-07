@@ -344,14 +344,17 @@ export class QCodeEngine {
       const availableTools = this.toolRegistry.getToolsForOllama();
 
       if (this.options.debug) {
-        logger.debug(`🔍 [DEBUG LLM] Available tools: ${JSON.stringify(availableTools.map((t: any) => t.function.name))}`);
+        logger.debug(
+          `🔍 [DEBUG LLM] Available tools: ${JSON.stringify(availableTools.map((t: any) => t.function.name))}`
+        );
       }
 
       // Initialize conversation with system prompt and user query
-      const conversationHistory: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
-        {
-          role: 'system',
-          content: `You are QCode, a helpful AI coding assistant with access to tools.
+      const conversationHistory: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> =
+        [
+          {
+            role: 'system',
+            content: `You are QCode, a helpful AI coding assistant with access to tools.
 
 Available tools:
 - internal.files: Read files, list directories, search within files
@@ -364,12 +367,12 @@ Instructions:
 4. When you have enough information, provide your final answer
 
 Be specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content.`,
-        },
-        {
-          role: 'user',
-          content: query,
-        },
-      ];
+          },
+          {
+            role: 'user',
+            content: query,
+          },
+        ];
 
       if (this.options.debug) {
         logger.debug(`🔍 [DEBUG LLM] Starting orchestration loop for query: "${query}"`);
@@ -408,9 +411,10 @@ Be specific and focused in your answers. If asked about technologies, list them 
             logger.debug(`🔍 [DEBUG LLM] No tool calls - LLM provided direct answer`);
           }
           toolPhaseComplete = true;
-          
+
           // Add the LLM's final response
-          const finalAnswer = llmResponse.message?.content || llmResponse.response || 'No response provided.';
+          const finalAnswer =
+            llmResponse.message?.content || llmResponse.response || 'No response provided.';
           return {
             response: finalAnswer,
             toolsExecuted,
@@ -427,12 +431,14 @@ Be specific and focused in your answers. If asked about technologies, list them 
         // Add the LLM's message with tool calls to conversation
         conversationHistory.push({
           role: 'assistant',
-          content: llmResponse.message?.content || JSON.stringify(functionCalls.map(fc => ({ name: fc.toolName, args: fc.arguments }))),
+          content:
+            llmResponse.message?.content ||
+            JSON.stringify(functionCalls.map(fc => ({ name: fc.toolName, args: fc.arguments }))),
         });
 
         // Execute all tool calls and collect results
         const toolCallResults: string[] = [];
-        
+
         for (const functionCall of functionCalls) {
           // Notify CLI about tool execution
           if (this.options.onToolExecution) {
@@ -503,7 +509,10 @@ Do not call any more tools. Just analyze the information you've gathered and giv
         temperature: this.config.ollama.temperature,
       });
 
-      const finalAnswer = finalLlmResponse.message?.content || finalLlmResponse.response || 'Unable to provide a complete answer.';
+      const finalAnswer =
+        finalLlmResponse.message?.content ||
+        finalLlmResponse.response ||
+        'Unable to provide a complete answer.';
 
       if (this.options.debug) {
         logger.debug(`🔍 [DEBUG LLM] Got final answer: ${finalAnswer}`);
@@ -515,14 +524,14 @@ Do not call any more tools. Just analyze the information you've gathered and giv
         toolResults,
         ...(errors.length > 0 && { errors }),
       };
-
     } catch (error) {
-      const qcodeError = error instanceof QCodeError
-        ? error
-        : new QCodeError(
-            `LLM orchestration failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            'ORCHESTRATION_ERROR'
-          );
+      const qcodeError =
+        error instanceof QCodeError
+          ? error
+          : new QCodeError(
+              `LLM orchestration failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              'ORCHESTRATION_ERROR'
+            );
 
       return {
         response: `I encountered an error: ${qcodeError.message}`,
@@ -545,7 +554,7 @@ Do not call any more tools. Just analyze the information you've gathered and giv
     if (toolName.includes('project') && result.data?.overview) {
       const data = result.data;
       let output = `Project Analysis:\n`;
-      
+
       if (data.overview?.name) {
         output += `- Name: ${data.overview.name}\n`;
       }
@@ -564,12 +573,15 @@ Do not call any more tools. Just analyze the information you've gathered and giv
       if (data.overview?.technologies?.length > 0) {
         output += `- Technologies: ${data.overview.technologies.join(', ')}\n`;
       }
-      
+
       return output;
     }
 
     // For other tools, provide a simple summary
-    return JSON.stringify(result.data, null, 2).slice(0, 500) + (JSON.stringify(result.data).length > 500 ? '...' : '');
+    return (
+      JSON.stringify(result.data, null, 2).slice(0, 500) +
+      (JSON.stringify(result.data).length > 500 ? '...' : '')
+    );
   }
 
   /**
