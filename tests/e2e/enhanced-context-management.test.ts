@@ -12,7 +12,8 @@ describe('Enhanced LLM Context Management - E2E Tests', () => {
 
   beforeEach(() => {
     const config = getDefaultConfig();
-    const client = new OllamaClient(config.ollama);
+    const ollamaConfig = { ...config.ollama, retries: 0 };
+    const client = new OllamaClient(ollamaConfig);
     const workspaceSecurity = new WorkspaceSecurity(config.security, process.cwd());
     const toolRegistry = new ToolRegistry(config.security, process.cwd());
     const filesTool = new FilesTool(workspaceSecurity);
@@ -41,7 +42,7 @@ describe('Enhanced LLM Context Management - E2E Tests', () => {
         expect(response.complete).toBe(true);
         expect(response.response).toBeDefined();
         expect(response.response.length).toBeGreaterThan(10);
-        
+
         // Tool may or may not be executed depending on LLM decision
         if (response.toolsExecuted.length > 0) {
           expect(response.toolsExecuted.some(tool => tool.includes('files'))).toBe(true);
@@ -58,7 +59,7 @@ describe('Enhanced LLM Context Management - E2E Tests', () => {
         expect(response.complete).toBe(true);
         expect(response.response).toBeDefined();
         expect(response.response.length).toBeGreaterThan(10);
-        
+
         // Tool may or may not be executed depending on LLM decision
         if (response.toolsExecuted.length > 0) {
           expect(response.toolsExecuted.some(tool => tool.includes('files'))).toBe(true);
@@ -79,7 +80,7 @@ describe('Enhanced LLM Context Management - E2E Tests', () => {
         expect(response.complete).toBe(true);
         expect(response.response).toBeDefined();
         expect(response.response.length).toBeGreaterThan(10);
-        
+
         // Tool may or may not be executed depending on LLM decision
         if (response.toolsExecuted.length > 0) {
           expect(response.toolsExecuted.some(tool => tool.includes('files'))).toBe(true);
@@ -100,7 +101,7 @@ describe('Enhanced LLM Context Management - E2E Tests', () => {
         expect(response.complete).toBe(true);
         expect(response.response).toBeDefined();
         expect(response.response.length).toBeGreaterThan(10);
-        
+
         // Tool may or may not be executed depending on LLM decision
         if (response.toolsExecuted.length > 0) {
           expect(response.toolsExecuted.some(tool => tool.includes('files'))).toBe(true);
@@ -120,7 +121,7 @@ describe('Enhanced LLM Context Management - E2E Tests', () => {
         expect(response.complete).toBe(true);
         expect(response.response).toBeDefined();
         expect(response.response.length).toBeGreaterThan(10);
-        
+
         // Tool may or may not be executed depending on LLM decision
         if (response.toolsExecuted.length > 0) {
           expect(response.toolsExecuted.some(tool => tool.includes('files'))).toBe(true);
@@ -141,7 +142,7 @@ describe('Enhanced LLM Context Management - E2E Tests', () => {
         expect(response.complete).toBe(true);
         expect(response.response).toBeDefined();
         expect(response.response.length).toBeGreaterThan(10);
-        
+
         // Tool may or may not be executed depending on LLM decision
         if (response.toolsExecuted.length > 0) {
           expect(response.toolsExecuted.some(tool => tool.includes('files'))).toBe(true);
