@@ -70,27 +70,6 @@ export function getLogger(): winston.Logger {
 }
 
 /**
- * Safe logger access with fallback to console
- * Use this in modules that might be loaded before logger initialization
- */
-export function safeLogger() {
-  if (loggerInstance) {
-    return loggerInstance;
-  }
-
-  // Fallback logger that mimics winston interface but uses console
-  // This is only used during initialization or in test environments
-  /* eslint-disable no-console */
-  return {
-    error: (message: string, ...meta: any[]) => console.error(`ERROR: ${message}`, ...meta),
-    warn: (message: string, ...meta: any[]) => console.warn(`WARN: ${message}`, ...meta),
-    info: (message: string, ...meta: any[]) => console.log(`INFO: ${message}`, ...meta),
-    debug: (message: string, ...meta: any[]) => console.log(`DEBUG: ${message}`, ...meta),
-  } as winston.Logger;
-  /* eslint-enable no-console */
-}
-
-/**
  * Convenience functions for different log levels
  */
 export const logger = {
