@@ -13,9 +13,31 @@ process.env.NODE_ENV = 'test';
 process.env.QCODE_CONFIG_PATH = '';
 process.env.QCODE_WORKSPACE = '';
 
+// Determine if we should allow real API calls (only for E2E tests)
+const isE2ETest = process.argv.some(arg => arg.includes('e2e/'));
+const isIntegrationTest = process.argv.some(arg => arg.includes('integration/'));
+process.env.QCODE_ALLOW_API_CALLS = isE2ETest || isIntegrationTest ? 'true' : 'false';
+
 // Test workspace constants
 export const TEST_WORKSPACE = path.resolve(__dirname, 'fixtures', 'projects', 'test-workspace');
 export const TEST_PROJECT_ROOT = path.resolve(__dirname, '..');
+
+// Mock logger globally for all tests - tests don't need real logging
+jest.mock('../src/utils/logger.js', () => ({
+  getLogger: jest.fn(() => ({
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  })),
+  initializeLogger: jest.fn(),
+  logger: {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
 
 // Global test utilities
 beforeEach(() => {

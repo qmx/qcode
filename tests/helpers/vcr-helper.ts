@@ -1,9 +1,13 @@
 import nock from 'nock';
 import fs from 'fs/promises';
 import path from 'path';
-import { safeLogger } from '../../src/utils/logger.js';
-
-const logger = safeLogger();
+// Mock logger for test helper - no real logging needed in tests
+const logger = {
+  info: (..._args: any[]) => {},
+  debug: (..._args: any[]) => {},
+  warn: (..._args: any[]) => {},
+  error: (..._args: any[]) => {},
+};
 
 export interface VCRRecordingOptions {
   enableRequestHeaders?: boolean;
