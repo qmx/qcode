@@ -23,7 +23,7 @@ describe('QCode Function Calling E2E Tests', () => {
 
     // Initialize configuration and components
     const config = getDefaultConfig();
-    client = new OllamaClient(config.ollama);
+    client = new OllamaClient({ ...config.ollama, retries: 0 });
 
     // Initialize components with proper constructor arguments
     const workspaceSecurity = new WorkspaceSecurity(config.security, testWorkspace);

@@ -15,7 +15,7 @@ describe('Project Intelligence Basic E2E Test', () => {
   beforeEach(() => {
     // Setup real engine with all components
     const config = getDefaultConfig();
-    const client = new OllamaClient(config.ollama);
+    const client = new OllamaClient({ ...config.ollama, retries: 0 });
     const workspaceSecurity = new WorkspaceSecurity(config.security, TEST_WORKSPACE);
     // Add the test workspace to allowed paths
     workspaceSecurity.addAllowedPath(TEST_WORKSPACE);

@@ -17,7 +17,8 @@ describe('Search Workflow - End-to-End VCR Tests', () => {
 
   beforeAll(() => {
     const config = getDefaultConfig();
-    client = new OllamaClient(config.ollama);
+    const ollamaConfig = { ...config.ollama, retries: 0 };
+    client = new OllamaClient(ollamaConfig);
 
     // Initialize components with proper constructor arguments
     const workspaceSecurity = new WorkspaceSecurity(config.security, config.workingDirectory);
@@ -48,7 +49,7 @@ describe('Search Workflow - End-to-End VCR Tests', () => {
         expect(result.response).toBeDefined();
         expect(typeof result.response).toBe('string');
         expect(result.response.length).toBeGreaterThan(10);
-        
+
         // Tool may or may not be executed depending on LLM decision
         // If tools were executed, verify basic structure
         if (result.toolsExecuted.length > 0) {
@@ -69,7 +70,7 @@ describe('Search Workflow - End-to-End VCR Tests', () => {
         expect(result.response).toBeDefined();
         expect(typeof result.response).toBe('string');
         expect(result.response.length).toBeGreaterThan(10);
-        
+
         // Tool may or may not be executed depending on LLM decision
         if (result.toolsExecuted.length > 0) {
           expect(result.toolsExecuted.some(tool => tool.includes('files'))).toBe(true);
@@ -96,7 +97,7 @@ describe('Search Workflow - End-to-End VCR Tests', () => {
         expect(result.response).toBeDefined();
         expect(typeof result.response).toBe('string');
         expect(result.response.length).toBeGreaterThan(10);
-        
+
         // Tool may or may not be executed depending on LLM decision
         if (result.toolsExecuted.length > 0) {
           expect(result.toolsExecuted.some(tool => tool.includes('files'))).toBe(true);
@@ -124,7 +125,7 @@ describe('Search Workflow - End-to-End VCR Tests', () => {
         expect(result.response).toBeDefined();
         expect(typeof result.response).toBe('string');
         expect(result.response.length).toBeGreaterThan(10);
-        
+
         // Tool may or may not be executed depending on LLM decision
         if (result.toolsExecuted.length > 0) {
           expect(result.toolsExecuted.some(tool => tool.includes('files'))).toBe(true);
@@ -150,7 +151,7 @@ describe('Search Workflow - End-to-End VCR Tests', () => {
         expect(result.response).toBeDefined();
         expect(typeof result.response).toBe('string');
         expect(result.response.length).toBeGreaterThan(10);
-        
+
         // Tool may or may not be executed depending on LLM decision
         if (result.toolsExecuted.length > 0) {
           expect(result.toolsExecuted.some(tool => tool.includes('files'))).toBe(true);
@@ -179,7 +180,7 @@ describe('Search Workflow - End-to-End VCR Tests', () => {
         expect(result.response).toBeDefined();
         expect(typeof result.response).toBe('string');
         expect(result.response.length).toBeGreaterThan(10);
-        
+
         // Tool may or may not be executed depending on LLM decision
         if (result.toolsExecuted.length > 0) {
           expect(result.toolsExecuted.some(tool => tool.includes('files'))).toBe(true);

@@ -47,7 +47,7 @@ describe('Workflow Context Passing E2E', () => {
       configFiles: [],
     };
 
-    const ollamaClient = new OllamaClient(config.ollama);
+    const ollamaClient = new OllamaClient({ ...config.ollama, retries: 0 });
     const workspaceSecurity = new WorkspaceSecurity(config.security, config.workingDirectory);
     const toolRegistry = new ToolRegistry(config.security, config.workingDirectory);
 
@@ -78,7 +78,7 @@ describe('Workflow Context Passing E2E', () => {
       expect(response.complete).toBe(true);
       expect(response.response).toBeDefined();
       expect(response.response.length).toBeGreaterThan(10);
-      
+
       // Tool may or may not be executed depending on LLM decision
       if (response.toolsExecuted.length > 0) {
         expect(response.toolsExecuted.some(tool => tool.includes('files'))).toBe(true);
@@ -99,7 +99,7 @@ describe('Workflow Context Passing E2E', () => {
       expect(response.complete).toBe(true);
       expect(response.response).toBeDefined();
       expect(response.response.length).toBeGreaterThan(10);
-      
+
       // Tool may or may not be executed depending on LLM decision
       if (response.toolsExecuted.length > 0) {
         expect(response.toolsExecuted.some(tool => tool.includes('files'))).toBe(true);
@@ -129,7 +129,7 @@ describe('Workflow Context Passing E2E', () => {
       expect(response.complete).toBe(true);
       expect(response.response).toBeDefined();
       expect(response.response.length).toBeGreaterThan(10);
-      
+
       // Tool may or may not be executed depending on LLM decision
       if (response.toolsExecuted.length > 0) {
         expect(response.toolsExecuted.some(tool => tool.includes('files'))).toBe(true);
@@ -149,7 +149,7 @@ describe('Workflow Context Passing E2E', () => {
 
       expect(response.response).toBeDefined();
       expect(response.response.length).toBeGreaterThan(10);
-      
+
       // Tool may or may not be executed depending on LLM decision
       if (response.toolsExecuted.length > 0) {
         expect(response.toolsExecuted.some(tool => tool.includes('files'))).toBe(true);

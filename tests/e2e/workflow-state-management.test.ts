@@ -21,7 +21,7 @@ describe('Workflow State Management - E2E Tests', () => {
   beforeEach(() => {
     // Setup real engine with all components following canonical example
     const config = getDefaultConfig();
-    const ollamaClient = new OllamaClient(config.ollama);
+    const ollamaClient = new OllamaClient({ ...config.ollama, retries: 0 });
     const toolRegistry = new ToolRegistry(config.security, config.workingDirectory);
     const workspaceSecurity = new WorkspaceSecurity(config.security, config.workingDirectory);
 

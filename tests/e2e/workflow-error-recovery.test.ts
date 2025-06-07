@@ -23,7 +23,7 @@ describe('Workflow Error Recovery E2E', () => {
 
     // Initialize configuration and components before changing directory
     const config = getDefaultConfig(testWorkspace);
-    client = new OllamaClient(config.ollama);
+    client = new OllamaClient({ ...config.ollama, retries: 0 });
 
     // Initialize components
     const workspaceSecurity = new WorkspaceSecurity(config.security, testWorkspace);

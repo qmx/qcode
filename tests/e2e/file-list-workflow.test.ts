@@ -33,7 +33,7 @@ describe('File List Workflow - E2E with LLM Function Calling', () => {
     );
 
     // Create Ollama client and engine
-    const client = new OllamaClient(config.ollama);
+    const client = new OllamaClient({ ...config.ollama, retries: 0 });
     engine = new QCodeEngine(client, toolRegistry, config, {
       workingDirectory: config.workingDirectory,
       enableStreaming: false,

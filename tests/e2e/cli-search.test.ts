@@ -18,7 +18,7 @@ describe('CLI Search Functionality VCR Tests', () => {
 
   beforeAll(() => {
     const config = getDefaultConfig(TEST_WORKSPACE);
-    client = new OllamaClient(config.ollama);
+    client = new OllamaClient({ ...config.ollama, retries: 0 });
 
     // Initialize components with proper constructor arguments
     const workspaceSecurity = new WorkspaceSecurity(config.security, TEST_WORKSPACE);
@@ -52,7 +52,7 @@ describe('CLI Search Functionality VCR Tests', () => {
         // Validate that tool was attempted
         const toolResult = result.toolResults?.find(r => r.tool === 'files');
         expect(toolResult).toBeDefined();
-        
+
         // Tool may succeed or fail, but should provide a response
         expect(result.response.length).toBeGreaterThan(10);
 
@@ -72,7 +72,7 @@ describe('CLI Search Functionality VCR Tests', () => {
 
         const toolResult = result.toolResults?.find(r => r.tool === 'files');
         expect(toolResult).toBeDefined();
-        
+
         // Tool may succeed or fail, but should provide a response
         expect(result.response.length).toBeGreaterThan(10);
 
@@ -92,7 +92,7 @@ describe('CLI Search Functionality VCR Tests', () => {
 
         const toolResult = result.toolResults?.find(r => r.tool === 'files');
         expect(toolResult).toBeDefined();
-        
+
         // Tool may succeed or fail, but should provide a response
         expect(result.response.length).toBeGreaterThan(10);
 
@@ -112,7 +112,7 @@ describe('CLI Search Functionality VCR Tests', () => {
 
         const toolResult = result.toolResults?.find(r => r.tool === 'files');
         expect(toolResult).toBeDefined();
-        
+
         // Tool may succeed or fail, but should provide a response
         expect(result.response.length).toBeGreaterThan(10);
 
@@ -134,7 +134,7 @@ describe('CLI Search Functionality VCR Tests', () => {
 
         const toolResult = result.toolResults?.find(r => r.tool === 'files');
         expect(toolResult).toBeDefined();
-        
+
         // Tool may succeed or fail, but should provide a response
         expect(result.response.length).toBeGreaterThan(10);
 

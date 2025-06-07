@@ -31,7 +31,7 @@ describe('CLI File Read Operations (VCR)', () => {
     const config = getDefaultConfig();
     config.workingDirectory = path.join(__dirname, '../..');
 
-    const ollamaClient = new OllamaClient(config.ollama);
+    const ollamaClient = new OllamaClient({ ...config.ollama, retries: 0 });
     const workspaceSecurity = new WorkspaceSecurity(config.security, config.workingDirectory);
     const toolRegistry = new ToolRegistry(config.security, config.workingDirectory);
 
