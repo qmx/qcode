@@ -142,7 +142,10 @@ class QCodeCLI {
       );
 
       // Register internal ProjectIntelligenceTool
-      const projectIntelligenceTool = new ProjectIntelligenceTool(this.workspaceSecurity);
+      const projectIntelligenceTool = new ProjectIntelligenceTool(
+        this.workspaceSecurity,
+        this.config.ollama
+      );
       this.toolRegistry.registerInternalTool(
         'project',
         projectIntelligenceTool.definition,
@@ -376,7 +379,7 @@ class QCodeCLI {
     // Display the main response with improved formatting
     if (result.response) {
       let formattedResponse = result.response;
-      
+
       // Try to parse and format JSON responses
       try {
         const parsed = JSON.parse(result.response);
@@ -386,7 +389,7 @@ class QCodeCLI {
       } catch {
         // Not JSON or invalid JSON, use as-is
       }
-      
+
       console.log(chalk.white(formattedResponse));
     }
 
@@ -427,12 +430,14 @@ class QCodeCLI {
    * Format array responses
    */
   private formatArrayResponse(data: any[]): string {
-    return data.map((item, index) => {
-      if (typeof item === 'object' && item !== null) {
-        return `${index + 1}. ${this.formatObjectResponse(item)}`;
-      }
-      return `${index + 1}. ${String(item)}`;
-    }).join('\n');
+    return data
+      .map((item, index) => {
+        if (typeof item === 'object' && item !== null) {
+          return `${index + 1}. ${this.formatObjectResponse(item)}`;
+        }
+        return `${index + 1}. ${String(item)}`;
+      })
+      .join('\n');
   }
 
   /**

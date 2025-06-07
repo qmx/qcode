@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { NamespacedTool, ToolDefinition, ToolResult, QCodeError } from '../types.js';
 import { WorkspaceSecurity } from '../security/workspace.js';
-import { safeLogger } from '../utils/logger.js';
+import { getLogger } from '../utils/logger.js';
 
-const logger = safeLogger();
+const logger = getLogger();
 
 /**
  * Zod schemas for project intelligence operation parameters
@@ -195,9 +195,18 @@ export class ProjectIntelligenceTool implements NamespacedTool {
   public readonly fullName = 'internal:project';
 
   private workspaceSecurity: WorkspaceSecurity;
+  private ollamaConfig: any;
 
-  constructor(workspaceSecurity: WorkspaceSecurity) {
+  constructor(workspaceSecurity: WorkspaceSecurity, ollamaConfig?: any) {
     this.workspaceSecurity = workspaceSecurity;
+    this.ollamaConfig = ollamaConfig || {
+      url: 'http://localhost:11434',
+      model: 'llama3.1:8b',
+      timeout: 30000,
+      retries: 2,
+      temperature: 0.1,
+      stream: false,
+    };
   }
 
   /**
@@ -557,12 +566,12 @@ export class ProjectIntelligenceTool implements NamespacedTool {
   }> {
     const fs = await import('fs/promises');
     const path = await import('path');
-    
+
     try {
       const packageJsonPath = path.join(workingDirectory, 'package.json');
       const packageJsonContent = await fs.readFile(packageJsonPath, 'utf-8');
       const packageJson = JSON.parse(packageJsonContent);
-      
+
       return {
         name: packageJson.name,
         description: packageJson.description,
@@ -594,41 +603,41 @@ export class ProjectIntelligenceTool implements NamespacedTool {
     testFiles: string[];
   }> {
     const fs = await import('fs/promises');
-    
+
     try {
       const items = await fs.readdir(workingDirectory, { withFileTypes: true });
-      
+
       const directories: string[] = [];
       const keyFiles: string[] = [];
       const configFiles: string[] = [];
       const entryPoints: string[] = [];
       const testFiles: string[] = [];
-      
+
       for (const item of items) {
         if (item.isDirectory()) {
           directories.push(item.name);
         } else {
           const fileName = item.name;
-          
+
           // Categorize files
           if (this.isConfigFile(fileName)) {
             configFiles.push(fileName);
           }
-          
+
           if (this.isEntryPoint(fileName)) {
             entryPoints.push(fileName);
           }
-          
+
           if (this.isTestFile(fileName)) {
             testFiles.push(fileName);
           }
-          
+
           if (this.isKeyFile(fileName)) {
             keyFiles.push(fileName);
           }
         }
       }
-      
+
       return {
         directories,
         keyFiles,
@@ -659,23 +668,34 @@ export class ProjectIntelligenceTool implements NamespacedTool {
     try {
       // Gather project files and structure
       const projectFiles = await this.gatherProjectFiles(workingDirectory);
-      
+
       // Read key configuration files
-      const configContents = await this.readKeyConfigFiles(workingDirectory, projectFiles.configFiles);
-      
+      const configContents = await this.readKeyConfigFiles(
+        workingDirectory,
+        projectFiles.configFiles
+      );
+
       // Use LLM to analyze the project
       const analysis = await this.analyzeProjectWithLLM(projectFiles, configContents);
-      
+
       return {
         primaryLanguage: analysis.primaryLanguage || 'Unknown',
         languages: analysis.languages || [],
         frameworks: analysis.frameworks || [],
         technologies: analysis.technologies || [],
       };
-      
     } catch (error) {
       logger.debug(`LLM tech stack analysis failed: ${error}`);
-      
+
+      // In test mode, fail hard to ensure VCR recordings are complete
+      if (process.env.NODE_ENV === 'test') {
+        throw new QCodeError(
+          'LLM tech stack analysis failed in test mode - missing VCR recording?',
+          'LLM_ANALYSIS_FAILED',
+          { originalError: error instanceof Error ? error.message : String(error) }
+        );
+      }
+
       // No fallbacks - if LLM fails, we genuinely don't know
       return {
         primaryLanguage: 'Unknown',
@@ -697,29 +717,49 @@ export class ProjectIntelligenceTool implements NamespacedTool {
   }> {
     const fs = await import('fs/promises');
     const path = await import('path');
-    
+
     const directories: string[] = [];
     const allFiles: string[] = [];
     const configFiles: string[] = [];
     const sourceFiles: string[] = [];
-    
+
     try {
       const items = await fs.readdir(workingDirectory, { withFileTypes: true });
-      
+
       for (const item of items) {
-        if (item.isDirectory() && !item.name.startsWith('.') && !['node_modules', 'target', 'build', 'dist'].includes(item.name)) {
+        if (
+          item.isDirectory() &&
+          !item.name.startsWith('.') &&
+          !['node_modules', 'target', 'build', 'dist'].includes(item.name)
+        ) {
           directories.push(item.name);
         } else if (item.isFile()) {
           allFiles.push(item.name);
-          
+
           // Identify config files
           if (this.isConfigFile(item.name)) {
             configFiles.push(item.name);
           }
-          
+
           // Identify source files by extension
           const ext = path.extname(item.name).toLowerCase();
-          if (['.ts', '.js', '.py', '.swift', '.rs', '.go', '.java', '.cpp', '.c', '.rb', '.php', '.cs', '.kt'].includes(ext)) {
+          if (
+            [
+              '.ts',
+              '.js',
+              '.py',
+              '.swift',
+              '.rs',
+              '.go',
+              '.java',
+              '.cpp',
+              '.c',
+              '.rb',
+              '.php',
+              '.cs',
+              '.kt',
+            ].includes(ext)
+          ) {
             sourceFiles.push(item.name);
           }
         }
@@ -727,29 +767,45 @@ export class ProjectIntelligenceTool implements NamespacedTool {
     } catch (error) {
       logger.debug(`Error gathering project files: ${error}`);
     }
-    
+
     return { directories, allFiles, configFiles, sourceFiles };
   }
 
   /**
    * Read contents of key configuration files
    */
-  private async readKeyConfigFiles(workingDirectory: string, configFiles: string[]): Promise<Record<string, string>> {
+  private async readKeyConfigFiles(
+    workingDirectory: string,
+    configFiles: string[]
+  ): Promise<Record<string, string>> {
     const fs = await import('fs/promises');
     const path = await import('path');
     const contents: Record<string, string> = {};
-    
+
     // Priority config files to read (limit to most important ones)
     const priorityFiles = [
-      'Package.swift', 'Cargo.toml', 'package.json', 'requirements.txt', 'go.mod', 
-      'pom.xml', 'build.gradle', 'pyproject.toml', 'composer.json', 'Gemfile',
-      'tsconfig.json', '.swiftlint.yml', 'Dockerfile', 'docker-compose.yml'
+      'Package.swift',
+      'Cargo.toml',
+      'package.json',
+      'requirements.txt',
+      'go.mod',
+      'pom.xml',
+      'build.gradle',
+      'pyproject.toml',
+      'composer.json',
+      'Gemfile',
+      'tsconfig.json',
+      '.swiftlint.yml',
+      'Dockerfile',
+      'docker-compose.yml',
     ];
-    
-    const filesToRead = configFiles.filter(file => 
-      priorityFiles.some(priority => file.toLowerCase().includes(priority.toLowerCase()))
-    ).slice(0, 8); // Limit to 8 files max
-    
+
+    const filesToRead = configFiles
+      .filter(file =>
+        priorityFiles.some(priority => file.toLowerCase().includes(priority.toLowerCase()))
+      )
+      .slice(0, 8); // Limit to 8 files max
+
     for (const file of filesToRead) {
       try {
         const content = await fs.readFile(path.join(workingDirectory, file), 'utf-8');
@@ -759,7 +815,7 @@ export class ProjectIntelligenceTool implements NamespacedTool {
         logger.debug(`Could not read config file ${file}: ${error}`);
       }
     }
-    
+
     return contents;
   }
 
@@ -767,7 +823,12 @@ export class ProjectIntelligenceTool implements NamespacedTool {
    * Use LLM to analyze project structure and configuration
    */
   private async analyzeProjectWithLLM(
-    projectFiles: { directories: string[]; allFiles: string[]; configFiles: string[]; sourceFiles: string[] },
+    projectFiles: {
+      directories: string[];
+      allFiles: string[];
+      configFiles: string[];
+      sourceFiles: string[];
+    },
     configContents: Record<string, string>
   ): Promise<{
     primaryLanguage: string;
@@ -777,16 +838,9 @@ export class ProjectIntelligenceTool implements NamespacedTool {
   }> {
     // Import OllamaClient dynamically to avoid circular dependencies
     const { OllamaClient } = await import('../core/client.js');
-    
-    // Create LLM client (use same config as main engine)
-    const ollamaClient = new OllamaClient({
-      url: process.env.OLLAMA_URL || 'http://localhost:11434',
-      model: process.env.OLLAMA_MODEL || 'llama3.1:8b',
-      timeout: 30000,
-      retries: 2,
-      temperature: 0.1,
-      stream: false,
-    });
+
+    // Create LLM client using the provided config
+    const ollamaClient = new OllamaClient(this.ollamaConfig);
 
     const prompt = `Analyze this project and identify its technologies, frameworks, and programming languages.
 
@@ -796,7 +850,9 @@ PROJECT STRUCTURE:
 - Source files: ${projectFiles.sourceFiles.slice(0, 20).join(', ')}${projectFiles.sourceFiles.length > 20 ? '...' : ''}
 
 CONFIGURATION FILE CONTENTS:
-${Object.entries(configContents).map(([file, content]) => `--- ${file} ---\n${content}`).join('\n\n')}
+${Object.entries(configContents)
+  .map(([file, content]) => `--- ${file} ---\n${content}`)
+  .join('\n\n')}
 
 Analyze this project and respond with a JSON object in this exact format:
 {
@@ -808,23 +864,60 @@ Analyze this project and respond with a JSON object in this exact format:
 
 Be comprehensive but accurate. For Swift projects, include Swift Package Manager, SwiftLint, etc. For Node.js, include npm/yarn, testing frameworks, etc. Only include what you can actually detect from the files.`;
 
-         try {
-       const response = await ollamaClient.generate(prompt);
-       
-       // Extract JSON from response
-       const jsonMatch = response.response.match(/\{[\s\S]*\}/);
-       if (jsonMatch) {
-         const analysis = JSON.parse(jsonMatch[0]);
-         return {
-           primaryLanguage: analysis.primaryLanguage || 'Unknown',
-           languages: Array.isArray(analysis.languages) ? analysis.languages : [],
-           frameworks: Array.isArray(analysis.frameworks) ? analysis.frameworks : [],
-           technologies: Array.isArray(analysis.technologies) ? analysis.technologies : [],
-         };
-       }
-       
-       throw new Error('No valid JSON found in LLM response');
-      
+    try {
+      const response = await ollamaClient.generate(prompt);
+
+      // Extract JSON from response - match balanced braces to avoid capturing extra text
+      const jsonMatch = response.response.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/);
+      if (jsonMatch) {
+        try {
+          const analysis = JSON.parse(jsonMatch[0]);
+          return {
+            primaryLanguage: analysis.primaryLanguage || 'Unknown',
+            languages: Array.isArray(analysis.languages) ? analysis.languages : [],
+            frameworks: Array.isArray(analysis.frameworks) ? analysis.frameworks : [],
+            technologies: Array.isArray(analysis.technologies) ? analysis.technologies : [],
+          };
+        } catch (parseError) {
+          // If JSON parsing fails, try a more aggressive approach
+          const lines = response.response.split('\n');
+          const jsonLines = [];
+          let inJson = false;
+          let braceCount = 0;
+
+          for (const line of lines) {
+            if (line.trim().startsWith('{')) {
+              inJson = true;
+              braceCount = 0;
+            }
+
+            if (inJson) {
+              jsonLines.push(line);
+              braceCount += (line.match(/\{/g) || []).length;
+              braceCount -= (line.match(/\}/g) || []).length;
+
+              if (braceCount === 0) {
+                break;
+              }
+            }
+          }
+
+          if (jsonLines.length > 0) {
+            const jsonStr = jsonLines.join('\n');
+            const analysis = JSON.parse(jsonStr);
+            return {
+              primaryLanguage: analysis.primaryLanguage || 'Unknown',
+              languages: Array.isArray(analysis.languages) ? analysis.languages : [],
+              frameworks: Array.isArray(analysis.frameworks) ? analysis.frameworks : [],
+              technologies: Array.isArray(analysis.technologies) ? analysis.technologies : [],
+            };
+          }
+
+          throw parseError;
+        }
+      }
+
+      throw new Error('No valid JSON found in LLM response');
     } catch (error) {
       logger.debug(`LLM analysis failed: ${error}`);
       throw error;
@@ -841,73 +934,74 @@ Be comprehensive but accurate. For Swift projects, include Swift Package Manager
     conventions: Record<string, string>;
   }> {
     const fs = await import('fs/promises');
-    
+
     const patterns: string[] = [];
     const layering: string[] = [];
     let organization = 'unknown';
     const conventions: Record<string, string> = {};
-    
+
     try {
       const items = await fs.readdir(workingDirectory, { withFileTypes: true });
       const directories = items.filter(item => item.isDirectory()).map(item => item.name);
-      
+
       // Detect organization patterns
       if (directories.includes('src')) {
         organization = 'source-based';
         layering.push('src/');
       }
-      
+
       if (directories.includes('lib') || directories.includes('dist')) {
         patterns.push('compiled-output');
       }
-      
+
       if (directories.includes('tests') || directories.includes('test')) {
         patterns.push('dedicated-testing');
       }
-      
+
       if (directories.includes('docs') || directories.includes('documentation')) {
         patterns.push('documented-project');
       }
-      
+
       if (directories.includes('config') || directories.includes('configs')) {
         patterns.push('configuration-management');
       }
-      
+
       // Check for common architecture patterns
       if (directories.includes('components') || directories.includes('views')) {
         patterns.push('component-architecture');
       }
-      
+
       if (directories.includes('services') || directories.includes('api')) {
         patterns.push('service-layer');
       }
-      
+
       if (directories.includes('utils') || directories.includes('helpers')) {
         patterns.push('utility-organization');
       }
-      
+
       if (directories.includes('types') || directories.includes('interfaces')) {
         patterns.push('type-organization');
         conventions['Type Organization'] = 'Dedicated types directory';
       }
-      
+
       if (directories.includes('security')) {
         patterns.push('security-focused');
         conventions['Security'] = 'Dedicated security module';
       }
-      
+
       // Detect naming conventions from common files
       const tsFiles = items.filter(item => item.name.endsWith('.ts')).map(item => item.name);
       if (tsFiles.some(file => file.includes('.test.ts'))) {
         conventions['Test Files'] = '*.test.ts pattern';
       }
-      
+
       if (tsFiles.some(file => file.includes('.config.ts'))) {
         conventions['Config Files'] = '*.config.ts pattern';
       }
-      
-    } catch {}
-    
+    } catch (error) {
+      // Ignore file system errors during pattern detection
+    }
+
     return {
       patterns,
       layering,
@@ -922,7 +1016,7 @@ Be comprehensive but accurate. For Swift projects, include Swift Package Manager
   private detectPackageManager(workingDirectory: string): string {
     const fs = require('fs');
     const path = require('path');
-    
+
     try {
       if (fs.existsSync(path.join(workingDirectory, 'package-lock.json'))) {
         return 'npm';
@@ -933,8 +1027,10 @@ Be comprehensive but accurate. For Swift projects, include Swift Package Manager
       if (fs.existsSync(path.join(workingDirectory, 'pnpm-lock.yaml'))) {
         return 'pnpm';
       }
-    } catch {}
-    
+    } catch (error) {
+      // Ignore file system errors during package manager detection
+    }
+
     return 'npm'; // default
   }
 
@@ -956,17 +1052,34 @@ Be comprehensive but accurate. For Swift projects, include Swift Package Manager
    */
   private isConfigFile(fileName: string): boolean {
     const configFiles = [
-      'package.json', 'tsconfig.json', 'jest.config.js', '.eslintrc.json', 
-      '.prettierrc.json', 'webpack.config.js', 'vite.config.js', 'rollup.config.js'
+      'package.json',
+      'tsconfig.json',
+      'jest.config.js',
+      '.eslintrc.json',
+      '.prettierrc.json',
+      'webpack.config.js',
+      'vite.config.js',
+      'rollup.config.js',
     ];
-    return configFiles.includes(fileName) || fileName.startsWith('.') && fileName.includes('config');
+    return (
+      configFiles.includes(fileName) || (fileName.startsWith('.') && fileName.includes('config'))
+    );
   }
 
   /**
    * Check if file is an entry point
    */
   private isEntryPoint(fileName: string): boolean {
-    const entryPoints = ['index.js', 'index.ts', 'main.js', 'main.ts', 'app.js', 'app.ts', 'cli.js', 'cli.ts'];
+    const entryPoints = [
+      'index.js',
+      'index.ts',
+      'main.js',
+      'main.ts',
+      'app.js',
+      'app.ts',
+      'cli.js',
+      'cli.ts',
+    ];
     return entryPoints.includes(fileName);
   }
 
@@ -974,7 +1087,12 @@ Be comprehensive but accurate. For Swift projects, include Swift Package Manager
    * Check if file is a test file
    */
   private isTestFile(fileName: string): boolean {
-    return fileName.includes('.test.') || fileName.includes('.spec.') || fileName.includes('test') || fileName.includes('spec');
+    return (
+      fileName.includes('.test.') ||
+      fileName.includes('.spec.') ||
+      fileName.includes('test') ||
+      fileName.includes('spec')
+    );
   }
 
   /**
