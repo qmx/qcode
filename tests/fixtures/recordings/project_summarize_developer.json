@@ -31,12 +31,7 @@
               "properties": {
                 "operation": {
                   "type": "string",
-                  "enum": [
-                    "read",
-                    "write",
-                    "list",
-                    "search"
-                  ],
+                  "enum": ["read", "write", "list", "search"],
                   "description": "The type of file operation to perform"
                 },
                 "path": {
@@ -100,13 +95,7 @@
                 },
                 "encoding": {
                   "type": "string",
-                  "enum": [
-                    "utf8",
-                    "utf-8",
-                    "ascii",
-                    "base64",
-                    "hex"
-                  ],
+                  "enum": ["utf8", "utf-8", "ascii", "base64", "hex"],
                   "description": "File encoding for read/write operations",
                   "default": "utf8"
                 },
@@ -121,9 +110,7 @@
                   "default": true
                 }
               },
-              "required": [
-                "operation"
-              ],
+              "required": ["operation"],
               "additionalProperties": false
             }
           }
@@ -138,32 +125,18 @@
               "properties": {
                 "operation": {
                   "type": "string",
-                  "enum": [
-                    "analyze",
-                    "understand",
-                    "summarize"
-                  ],
+                  "enum": ["analyze", "understand", "summarize"],
                   "description": "The type of project intelligence operation to perform"
                 },
                 "scope": {
                   "type": "string",
-                  "enum": [
-                    "full",
-                    "structure",
-                    "dependencies",
-                    "architecture",
-                    "patterns"
-                  ],
+                  "enum": ["full", "structure", "dependencies", "architecture", "patterns"],
                   "description": "Scope of analysis: full project, structure only, dependencies, architecture patterns, or code patterns",
                   "default": "full"
                 },
                 "depth": {
                   "type": "string",
-                  "enum": [
-                    "basic",
-                    "detailed",
-                    "comprehensive"
-                  ],
+                  "enum": ["basic", "detailed", "comprehensive"],
                   "description": "Depth of analysis: basic overview, detailed analysis, or comprehensive deep-dive",
                   "default": "detailed"
                 },
@@ -190,23 +163,13 @@
                 },
                 "format": {
                   "type": "string",
-                  "enum": [
-                    "brief",
-                    "detailed",
-                    "technical",
-                    "executive"
-                  ],
+                  "enum": ["brief", "detailed", "technical", "executive"],
                   "description": "Format of summary: brief overview, detailed analysis, technical deep-dive, or executive summary",
                   "default": "detailed"
                 },
                 "audience": {
                   "type": "string",
-                  "enum": [
-                    "developer",
-                    "manager",
-                    "team",
-                    "stakeholder"
-                  ],
+                  "enum": ["developer", "manager", "team", "stakeholder"],
                   "description": "Target audience for the summary to adjust language and focus appropriately",
                   "default": "developer"
                 },
@@ -236,9 +199,7 @@
                   "default": true
                 }
               },
-              "required": [
-                "operation"
-              ],
+              "required": ["operation"],
               "additionalProperties": false
             }
           }
@@ -248,7 +209,7 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-07T02:32:47.735903Z",
+      "created_at": "2025-06-07T22:27:58.414315Z",
       "message": {
         "role": "assistant",
         "content": "",
@@ -269,17 +230,17 @@
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 3876332083,
-      "load_duration": 10604833,
+      "total_duration": 4077707709,
+      "load_duration": 11027834,
       "prompt_eval_count": 1121,
-      "prompt_eval_duration": 2627561500,
+      "prompt_eval_duration": 2637796417,
       "eval_count": 47,
-      "eval_duration": 1236828125
+      "eval_duration": 1425593083
     },
     "rawHeaders": {
       "content-length": "478",
       "content-type": "application/json; charset=utf-8",
-      "date": "Sat, 07 Jun 2025 02:32:47 GMT"
+      "date": "Sat, 07 Jun 2025 22:27:58 GMT"
     },
     "responseIsBinary": false
   },
@@ -304,7 +265,7 @@
         },
         {
           "role": "user",
-          "content": "Tool results:\n\nTool: internal:project\nResult: {\n  \"summary\": {\n    \"overview\": \"This is a placeholder implementation that will be enhanced with real project summarization\",\n    \"technologies\": [],\n    \"keyFeatures\": [],\n    \"architecture\": \"unknown\",\n    \"status\": \"analysis pending\"\n  },\n  \"metadata\": {\n    \"summarizedAt\": \"2025-06-07T02:32:47.740Z\",\n    \"format\": \"technical\",\n    \"audience\": \"developer\"\n  },\n  \"details\": {\n    \"structure\": \"Structure analysis not yet implemented\",\n    \"patterns\": [],\n    \"conventions\": {},\n    \"dependencie"
+          "content": "Tool results:\n\nTool: internal:project\nResult: {\n  \"summary\": {\n    \"overview\": \"This is a placeholder implementation that will be enhanced with real project summarization\",\n    \"technologies\": [],\n    \"keyFeatures\": [],\n    \"architecture\": \"unknown\",\n    \"status\": \"analysis pending\"\n  },\n  \"metadata\": {\n    \"summarizedAt\": \"2025-06-07T22:27:58.430Z\",\n    \"format\": \"technical\",\n    \"audience\": \"developer\"\n  },\n  \"details\": {\n    \"structure\": \"Structure analysis not yet implemented\",\n    \"patterns\": [],\n    \"conventions\": {},\n    \"dependencie"
         },
         {
           "role": "user",
@@ -321,24 +282,24 @@
     "status": 200,
     "response": {
       "model": "llama3.1:8b",
-      "created_at": "2025-06-07T02:32:49.403762Z",
+      "created_at": "2025-06-07T22:27:59.95476Z",
       "message": {
         "role": "assistant",
         "content": "{ \n  \"technologies\": [],\n  \"keyFeatures\": [],\n  \"architecture\": \"unknown\",\n  \"status\": \"analysis pending\"\n}"
       },
       "done_reason": "stop",
       "done": true,
-      "total_duration": 1661513542,
-      "load_duration": 11094625,
+      "total_duration": 1519561792,
+      "load_duration": 12501875,
       "prompt_eval_count": 407,
-      "prompt_eval_duration": 902621541,
+      "prompt_eval_duration": 793606250,
       "eval_count": 31,
-      "eval_duration": 746394625
+      "eval_duration": 711907333
     },
     "rawHeaders": {
-      "content-length": "419",
+      "content-length": "418",
       "content-type": "application/json; charset=utf-8",
-      "date": "Sat, 07 Jun 2025 02:32:49 GMT"
+      "date": "Sat, 07 Jun 2025 22:27:59 GMT"
     },
     "responseIsBinary": false
   }
