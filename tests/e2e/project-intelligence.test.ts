@@ -28,7 +28,10 @@ describe('Project Intelligence E2E Tests', () => {
     );
 
     // Register project intelligence tool
-    const projectIntelligenceTool = new ProjectIntelligenceTool(workspaceSecurity);
+    const projectIntelligenceTool = new ProjectIntelligenceTool(workspaceSecurity, {
+      ...config.ollama,
+      retries: 0,
+    });
     toolRegistry.registerInternalTool(
       'project',
       projectIntelligenceTool.definition,

@@ -3,14 +3,31 @@ import { WorkspaceSecurity } from '../../src/security/workspace.js';
 import { getDefaultConfig } from '../../src/config/defaults.js';
 import { TEST_WORKSPACE } from '../setup.js';
 
+// Mock the OllamaClient to prevent real API calls in unit tests
+jest.mock('../../src/core/client.js', () => ({
+  OllamaClient: jest.fn().mockImplementation(() => ({
+    generate: jest.fn().mockResolvedValue({
+      response: JSON.stringify({
+        primaryLanguage: 'TypeScript',
+        languages: ['TypeScript', 'JavaScript'],
+        frameworks: ['Jest', 'Node.js'],
+        technologies: ['npm', 'Git', 'ESLint'],
+      }),
+    }),
+  })),
+}));
+
 describe('ProjectIntelligenceTool', () => {
   let projectIntelligenceTool: ProjectIntelligenceTool;
   let workspaceSecurity: WorkspaceSecurity;
 
   beforeEach(() => {
-    const securityConfig = getDefaultConfig(TEST_WORKSPACE).security;
-    workspaceSecurity = new WorkspaceSecurity(securityConfig, TEST_WORKSPACE);
-    projectIntelligenceTool = new ProjectIntelligenceTool(workspaceSecurity);
+    const config = getDefaultConfig(TEST_WORKSPACE);
+    workspaceSecurity = new WorkspaceSecurity(config.security, TEST_WORKSPACE);
+    projectIntelligenceTool = new ProjectIntelligenceTool(workspaceSecurity, {
+      ...config.ollama,
+      retries: 0,
+    });
   });
 
   describe('Basic Structure', () => {
