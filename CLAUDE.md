@@ -299,3 +299,5 @@ export class ExampleTool {
 ## Memories
 
 - Stop trying to estimate effort in days, weeks, whatever, I don't care - also we have a numbering system for tasks and a natural sequence, stop using "phases", they are useless
+- never call things complete if you didn't verify tests are working by running a full test suite
+- never add conditionals on env vars, they make the code brittle

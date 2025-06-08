@@ -6,6 +6,7 @@ import { spawn } from 'child_process';
  * Default allowed commands for basic operations
  */
 export const DEFAULT_ALLOWED_COMMANDS = [
+  'echo',
   'ls',
   'cat',
   'head',

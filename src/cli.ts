@@ -16,6 +16,7 @@ import { ToolRegistry } from './core/registry.js';
 import { QCodeEngine, createQCodeEngine, EngineOptions } from './core/engine.js';
 import { FilesTool } from './tools/files.js';
 import { ProjectIntelligenceTool } from './tools/project-intelligence.js';
+import { ShellTool } from './tools/shell.js';
 import { WorkspaceSecurity } from './security/workspace.js';
 import { initializeLogger } from './utils/logger.js';
 
@@ -150,6 +151,14 @@ class QCodeCLI {
         'project',
         projectIntelligenceTool.definition,
         projectIntelligenceTool.execute.bind(projectIntelligenceTool)
+      );
+
+      // Register internal ShellTool
+      const shellTool = new ShellTool(this.workspaceSecurity);
+      this.toolRegistry.registerInternalTool(
+        'shell',
+        shellTool.toOllamaFormat(),
+        shellTool.execute.bind(shellTool)
       );
 
       // Initialize QCode engine with progress callback

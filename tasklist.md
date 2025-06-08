@@ -690,12 +690,14 @@ QCode CLI → LLM Engine → Tool Registry → MCP Client (stdio only) → Exter
 ### 2.5 Tool Integration Pipeline
 
 - [ ] Tool Discovery via SDK:
+
   - [ ] Use SDK's `client.listTools()` method
   - [ ] Tool metadata extraction and caching
   - [ ] Namespace assignment (`server-name.tool-name`)
   - [ ] Tool schema validation using SDK schemas
 
 - [ ] Tool Execution via SDK:
+
   - [ ] Use SDK's `client.callTool()` method
   - [ ] Parameter validation and transformation
   - [ ] Result handling and formatting
@@ -765,6 +767,7 @@ QCode CLI → LLM Engine → Tool Registry → MCP Client (stdio only) → Exter
 ### 2.13 MCP Configuration (Simplified)
 
 Stdio Server Configuration Schema:
+
 ```json
 {
   "mcpServers": {
@@ -1159,6 +1162,7 @@ The transformation from rule-based to LLM-centric architecture represents a **fu
    - Shell execution with project-aware commands
 
 2. **Test-Driven Iteration Capability** (NEW PRIORITY):
+
    - Technology-agnostic test execution and failure analysis
    - LLM-orchestrated code modification based on test feedback
    - Iterative test-fix cycles with intelligent exit conditions
