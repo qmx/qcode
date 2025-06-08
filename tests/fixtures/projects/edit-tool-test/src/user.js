@@ -1,0 +1,1 @@
+function updateUserProfile(id, name, email) { // function implementation }

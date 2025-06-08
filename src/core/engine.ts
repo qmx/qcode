@@ -481,8 +481,27 @@ Be specific and focused in your answers. If asked about technologies, list them 
           content: `Tool results:\n\n${toolCallResults.join('\n\n')}`,
         });
 
-        // Check if we should continue (simple heuristic: if we have useful results, try to get final answer)
-        if (toolResults.length > 0 && toolResults.some(r => r.success)) {
+        // Check if we should continue - improved logic to prevent infinite loops
+        // Stop if:
+        // 1. We've made significant progress (multiple successful tools OR one very successful result)
+        // 2. We're getting repeated tool failures 
+        // 3. We've reached a reasonable number of iterations
+        
+        const successfulResults = toolResults.filter(r => r.success);
+        const recentFailures = toolResults.slice(-3).filter(r => !r.success);
+        
+        if (
+          // Stop if we have multiple successful tool calls
+          successfulResults.length >= 2 ||
+          // Stop if we have 3 recent failures in a row (tool errors)
+          recentFailures.length >= 3 ||
+          // Stop if we've reached 5+ iterations (reasonable limit)
+          iterationCount >= 5 ||
+          // Stop if we have at least one successful result and this iteration had issues
+          (successfulResults.length > 0 && 
+            toolResults.slice(-functionCalls.length).some(tr => !tr.success)
+          )
+        ) {
           toolPhaseComplete = true;
         }
       }

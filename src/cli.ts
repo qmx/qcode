@@ -15,6 +15,7 @@ import { OllamaClient } from './core/client.js';
 import { ToolRegistry } from './core/registry.js';
 import { QCodeEngine, createQCodeEngine, EngineOptions } from './core/engine.js';
 import { FilesTool } from './tools/files.js';
+import { EditTool } from './tools/edit.js';
 import { ProjectIntelligenceTool } from './tools/project-intelligence.js';
 import { ShellTool } from './tools/shell.js';
 import { WorkspaceSecurity } from './security/workspace.js';
@@ -142,6 +143,14 @@ class QCodeCLI {
         filesTool.execute.bind(filesTool)
       );
 
+      // Register internal EditTool
+      const editTool = new EditTool(this.workspaceSecurity);
+      this.toolRegistry.registerInternalTool(
+        'edit',
+        editTool.definition,
+        editTool.execute.bind(editTool)
+      );
+
       // Register internal ProjectIntelligenceTool
       const projectIntelligenceTool = new ProjectIntelligenceTool(
         this.workspaceSecurity,
@@ -171,11 +180,76 @@ class QCodeCLI {
         enableWorkflowState: true,
         maxWorkflowDepth: 5,
         // Add progress callback to show tool execution
-        onToolExecution: (toolName: string, _args: Record<string, any>) => {
+        onToolExecution: (toolName: string, args: Record<string, any>) => {
           if (!this.options.debug) {
-            // Show tool execution to user in non-debug mode
+            // Show tool execution to user in non-debug mode with context
             const toolNameFormatted = toolName.replace('internal:', '').replace('internal.', '');
-            console.log(chalk.cyan(`🔧 Executing: ${toolNameFormatted}`));
+            
+            // Format tool execution with context based on tool and operation
+            let contextInfo = '';
+            
+            if (toolName.includes('edit')) {
+              const operation = args.operation || 'unknown';
+              const file = args.file || 'unknown';
+              
+              switch (operation) {
+                case 'insert_line':
+                  contextInfo = `inserting line ${args.line_number || '?'} in ${file}`;
+                  break;
+                case 'replace':
+                  contextInfo = `replacing "${(args.search || '').substring(0, 20)}${(args.search || '').length > 20 ? '...' : ''}" in ${file}`;
+                  break;
+                case 'replace_lines':
+                  contextInfo = `replacing lines ${args.start_line || '?'}-${args.end_line || '?'} in ${file}`;
+                  break;
+                case 'delete_lines':
+                  contextInfo = `deleting lines ${args.start_line || '?'}-${args.end_line || '?'} in ${file}`;
+                  break;
+                case 'create_file':
+                  contextInfo = `creating file ${file}`;
+                  break;
+                case 'rollback':
+                  contextInfo = `rolling back ${file}`;
+                  break;
+                default:
+                  contextInfo = `${operation} on ${file}`;
+              }
+            } else if (toolName.includes('files')) {
+              const operation = args.operation || 'unknown';
+              const path = args.path || args.file || 'unknown';
+              
+              switch (operation) {
+                case 'read':
+                  contextInfo = `reading ${path}`;
+                  if (args.startLine && args.endLine) {
+                    contextInfo += ` (lines ${args.startLine}-${args.endLine})`;
+                  }
+                  break;
+                case 'write':
+                  contextInfo = `writing to ${path}`;
+                  break;
+                case 'list':
+                  contextInfo = `listing ${path}`;
+                  break;
+                case 'search':
+                  const query = args.query || args.pattern || '';
+                  contextInfo = `searching for "${query.substring(0, 20)}${query.length > 20 ? '...' : ''}" in ${path}`;
+                  break;
+                default:
+                  contextInfo = `${operation} on ${path}`;
+              }
+            } else if (toolName.includes('project')) {
+              contextInfo = 'analyzing project structure';
+            } else if (toolName.includes('shell')) {
+              const command = args.command || 'unknown';
+              const cmdArgs = args.args ? ` ${args.args.slice(0, 3).join(' ')}${args.args.length > 3 ? '...' : ''}` : '';
+              contextInfo = `running "${command}${cmdArgs}"`;
+            } else {
+              // Generic fallback
+              contextInfo = `with ${Object.keys(args).length} parameters`;
+            }
+            
+            console.log(chalk.cyan(`🔧 Executing: ${toolNameFormatted}`) + chalk.gray(` (${contextInfo})`));
           }
         },
       };

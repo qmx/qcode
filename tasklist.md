@@ -352,17 +352,19 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 **Concrete Editing Operations**:
 
 - **Line-Based Operations**:
+
   ```javascript
   // LLM calls: internal.edit with operation "insert_line"
   {
     "file": "src/auth.js",
-    "operation": "insert_line", 
+    "operation": "insert_line",
     "line_number": 15,
     "content": "  if (!user) throw new Error('User not found');"
   }
   ```
 
 - **Search and Replace**:
+
   ```javascript
   // LLM calls: internal.edit with operation "replace"
   {
@@ -375,10 +377,11 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 - **Line Range Replacement**:
+
   ```javascript
   // LLM calls: internal.edit with operation "replace_lines"
   {
-    "file": "src/config.js", 
+    "file": "src/config.js",
     "operation": "replace_lines",
     "start_line": 10,
     "end_line": 15,
@@ -391,18 +394,20 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   // LLM calls: internal.edit with operation "delete_lines"
   {
     "file": "src/old.js",
-    "operation": "delete_lines", 
+    "operation": "delete_lines",
     "start_line": 20,
     "end_line": 25
   }
   ```
 
 **Concrete Use Cases**:
+
 - **User says**: "Add error handling to line 15 of auth.js" → **LLM calls**: `internal.edit` with `insert_line`
 - **User says**: "Replace all getUserData with fetchUserProfile" → **LLM calls**: `internal.edit` with `replace` using regex
 - **User says**: "Remove the debug console.log statements" → **LLM calls**: `internal.edit` with `delete_lines` or `replace`
 
 **Implementation Tasks**:
+
 - [ ] Create `src/tools/edit.ts` basic class structure with NamespacedTool interface
 - [ ] Implement Zod schema for editing parameters (file path, content, operation type)
 - [ ] Add WorkspaceSecurity integration for safe file path validation
@@ -414,6 +419,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 **Concrete Text Manipulation Operations**:
 
 - **Line Insertion**:
+
   ```javascript
   // User: "Add console.log('debug') after line 10"
   // LLM calls: internal.edit
@@ -425,9 +431,10 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 - **Text Search & Replace**:
+
   ```javascript
   // User: "Change all 'var' to 'const' in this file"
-  // LLM calls: internal.edit  
+  // LLM calls: internal.edit
   {
     "operation": "replace",
     "search": "\\bvar\\b",
@@ -448,17 +455,19 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 **Implementation Tasks**:
+
 - [ ] Add dependency: `npm install diff jsdiff` for language-agnostic diff generation
 - [ ] Implement line-based editing (insert, replace, delete specific lines)
 - [ ] Implement search-and-replace with regex support (works with any text)
 - [ ] Create diff-based editing using existing `node-diff3` library
 - [ ] Add basic text validation (encoding, line endings, etc.)
 
-### 1.7.11 File Creation Operations  
+### 1.7.11 File Creation Operations
 
 **Concrete File Creation Operations**:
 
 - **New File with Directory Creation**:
+
   ```javascript
   // User: "Create a new React component UserProfile"
   // LLM calls: internal.edit
@@ -471,12 +480,13 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 - **Template-Based Creation**:
+
   ```javascript
   // User: "Create a new Express route for users"
   // LLM calls: internal.edit (after analyzing project structure)
   {
     "operation": "create_from_template",
-    "file": "routes/users.js", 
+    "file": "routes/users.js",
     "template": "express_route",
     "variables": {
       "resource": "users",
@@ -498,11 +508,13 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 **Concrete Use Cases**:
+
 - **User says**: "Create a new React component UserProfile" → **LLM calls**: `internal.edit` with `create_file` in `src/components/`
 - **User says**: "Add a new API endpoint for posts" → **LLM calls**: `internal.edit` creating appropriate route file based on project framework
 - **User says**: "Create a test file for the auth module" → **LLM calls**: `internal.edit` creating test file with proper naming and structure
 
 **Implementation Tasks**:
+
 - [ ] Implement new file creation with directory structure support
 - [ ] Add template-based file generation (language-agnostic templates)
 - [ ] Integrate with project intelligence for context-aware file creation
@@ -513,6 +525,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 **Concrete Advanced Operations**:
 
 - **Conflict Resolution**:
+
   ```javascript
   // User: "Merge the changes from feature branch"
   // LLM calls: internal.edit when conflicts detected
@@ -521,7 +534,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
     "file": "src/auth.js",
     "conflict_markers": {
       "start": 15,
-      "middle": 18, 
+      "middle": 18,
       "end": 22
     },
     "resolution": "accept_both", // or "accept_current", "accept_incoming", "custom"
@@ -530,6 +543,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 - **Rollback from Backup**:
+
   ```javascript
   // User: "Undo the last changes to auth.js"
   // LLM calls: internal.edit
@@ -554,11 +568,13 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 **Concrete Use Cases**:
+
 - **User says**: "Undo my last edit to auth.js" → **LLM calls**: `internal.edit` with `rollback` operation
 - **User says**: "Fix merge conflicts in the authentication module" → **LLM calls**: `internal.edit` with `resolve_conflict`
 - **User says**: "Rename getUserData to fetchUserProfile everywhere" → **LLM calls**: `internal.edit` with `batch_replace`
 
 **Implementation Tasks**:
+
 - [ ] Implement conflict resolution using `node-diff3` for merge scenarios
 - [ ] Add rollback capability to restore from backups
 - [ ] Create batch editing for multiple files
@@ -569,6 +585,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 **Concrete LLM-Enhanced Operations**:
 
 - **Context-Aware Code Generation**:
+
   ```javascript
   // User: "Add authentication middleware to this Express app"
   // LLM first calls: internal.project (detects Express + JWT pattern)
@@ -582,6 +599,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 - **Style-Consistent Code**:
+
   ```javascript
   // User: "Add a new function to handle user validation"
   // LLM calls: internal.project (detects ESLint + Prettier config)
@@ -622,11 +640,13 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 **Concrete Use Cases**:
+
 - **User says**: "Add error handling that matches this project's style" → **LLM calls**: `internal.edit` with context-aware generation
 - **User says**: "Fix the linting errors in auth.js" → **LLM calls**: `internal.edit` with `fix_errors` based on project's ESLint rules
 - **User says**: "Add a React component that follows the existing patterns" → **LLM calls**: `internal.edit` generating code that matches project structure
 
 **Implementation Tasks**:
+
 - [ ] Context-aware code generation based on project analysis (language-agnostic)
 - [ ] Integration with MCP language server tools (when available via Phase 2)
 - [ ] Code style consistency using project's existing formatters
@@ -637,6 +657,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 **Concrete Test Scenarios**:
 
 - **Line-Based Editing Tests**:
+
   ```javascript
   // Test: Insert line at specific position
   // Setup: File with 20 lines
@@ -646,6 +667,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 - **Search & Replace Tests**:
+
   ```javascript
   // Test: Regex replacement across file
   // Setup: JavaScript file with 'var' declarations
@@ -655,12 +677,13 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 - **Multi-Language Creation Tests**:
+
   ```javascript
   // Test: Python class creation
   // Action: internal.edit create_file for Python class
   // Verify: Proper Python syntax and indentation
-  
-  // Test: Rust struct creation  
+
+  // Test: Rust struct creation
   // Action: internal.edit create_file for Rust struct
   // Verify: Proper Rust syntax and conventions
   ```
@@ -674,6 +697,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 **Implementation Tasks**:
+
 - [ ] Test text editing operations (line-based, search-replace, diff application)
 - [ ] Test file creation across different languages (Python, Rust, Java, Go, etc.)
 - [ ] Test conflict resolution and merge scenarios
@@ -686,6 +710,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 **Concrete Git Operations**:
 
 - **Status Check**:
+
   ```javascript
   // User: "What's the current git status?"
   // LLM calls: internal.git
@@ -697,6 +722,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 - **Intelligent Commit**:
+
   ```javascript
   // User: "Commit these authentication changes"
   // LLM first calls: internal.git diff, then generates message
@@ -709,6 +735,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 - **Diff Analysis**:
+
   ```javascript
   // User: "Show me what changed in the auth module"
   // LLM calls: internal.git
@@ -733,11 +760,13 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 **Concrete Use Cases**:
+
 - **User says**: "Commit my changes with a good message" → **LLM calls**: `internal.git` diff analysis + intelligent commit message generation
 - **User says**: "What files have changed?" → **LLM calls**: `internal.git` with status operation
 - **User says**: "Create a feature branch for login improvements" → **LLM calls**: `internal.git` with contextual branch naming
 
 **Implementation Tasks**:
+
 - [ ] Implement `src/tools/git.ts` with common git commands
 - [ ] Support for `git status`, `git diff`, `git add`, `git commit`
 - [ ] Integration with `WorkspaceSecurity` for repository boundary enforcement
@@ -756,6 +785,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 **Concrete Shell Operations**:
 
 - **Package Manager Commands**:
+
   ```javascript
   // User: "Install the lodash dependency"
   // LLM calls: internal.shell (after detecting npm in project)
@@ -768,11 +798,12 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 - **Build & Test Commands**:
+
   ```javascript
   // User: "Run the tests"
   // LLM calls: internal.shell (after detecting test script)
   {
-    "operation": "execute", 
+    "operation": "execute",
     "command": "npm",
     "args": ["test"],
     "stream_output": true // Real-time test results
@@ -785,20 +816,22 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   // LLM calls: internal.shell
   {
     "operation": "execute",
-    "command": "git", 
+    "command": "git",
     "args": ["status", "--porcelain"],
     "capture_output": true
   }
   ```
 
 **Security Restrictions**:
+
 - ❌ **Blocked**: `rm`, `mv`, `cp`, `chmod` (file system commands)
-- ❌ **Blocked**: `curl`, `wget`, `ssh` (network commands)  
+- ❌ **Blocked**: `curl`, `wget`, `ssh` (network commands)
 - ❌ **Blocked**: `sudo`, `systemctl` (system commands)
 - ❌ **Blocked**: Shell operators (`&&`, `||`, `;`, `|`)
 - ✅ **Allowed**: Package managers, build tools, linting, testing
 
 **Implementation Tasks**:
+
 - [x] Implement `src/tools/shell.ts` with command validation
 - [x] **Strict command allowlist/whitelist** - only predetermined safe commands allowed
 - [x] Integration with existing `src/security/commands.ts` validation
@@ -811,39 +844,43 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 **Concrete Allowed Command Examples**:
 
 - **Package Managers**:
+
   ```javascript
   // User: "Add React to the project"
-  // LLM calls: internal.shell 
+  // LLM calls: internal.shell
   { "command": "npm", "args": ["install", "react", "react-dom"] }
-  
-  // User: "Install Python dependencies"  
+
+  // User: "Install Python dependencies"
   // LLM calls: internal.shell
   { "command": "pip", "args": ["install", "-r", "requirements.txt"] }
   ```
 
 - **Build Tools**:
+
   ```javascript
   // User: "Build the project"
   // LLM calls: internal.shell (detects Maven project)
   { "command": "mvn", "args": ["clean", "compile"] }
-  
+
   // User: "Compile the Rust code"
-  // LLM calls: internal.shell  
+  // LLM calls: internal.shell
   { "command": "cargo", "args": ["build", "--release"] }
   ```
 
 - **Testing Commands**:
+
   ```javascript
   // User: "Run the test suite"
   // LLM calls: internal.shell (detects Jest config)
   { "command": "npm", "args": ["run", "test"] }
-  
+
   // User: "Run Python tests"
   // LLM calls: internal.shell
   { "command": "pytest", "args": ["tests/", "-v"] }
   ```
 
 **Implementation Status**:
+
 - [x] **Package managers**: `npm`, `yarn`, `pnpm`, `pip`, `poetry`, `bundle`, `gem`, `cargo`, `go mod`
 - [x] **Build tools**: `make`, `cmake`, `gradle`, `mvn`, `swift build`, `dotnet build`
 - [x] **Version control**: `git status`, `git diff`, `git log`, `git branch` (read-only git commands)
@@ -856,6 +893,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 **Concrete Security Examples**:
 
 - **Blocked File System Commands**:
+
   ```javascript
   // User: "Delete the old files"
   // LLM CANNOT call: internal.shell with rm command
@@ -864,6 +902,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 - **Blocked Network Commands**:
+
   ```javascript
   // User: "Download the latest config"
   // LLM CANNOT call: internal.shell with curl
@@ -872,6 +911,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 - **Blocked Shell Operators**:
+
   ```javascript
   // User: "Run tests and then build"
   // LLM CANNOT call: internal.shell with chained commands
@@ -888,6 +928,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 **Implementation Status**:
+
 - [x] No file system commands (`rm`, `mv`, `cp`, `chmod`, etc.)
 - [x] No network commands (`curl`, `wget`, `ssh`, etc.)
 - [x] No system commands (`sudo`, `su`, `systemctl`, etc.)
@@ -900,6 +941,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 **Concrete Intelligence Examples**:
 
 - **Script Detection & Execution**:
+
   ```javascript
   // User: "Run the development server"
   // LLM first calls: internal.files (reads package.json)
@@ -913,19 +955,21 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 - **Test Framework Detection**:
+
   ```javascript
   // User: "Run the tests"
   // LLM first calls: internal.project (analyzes test setup)
   // Detects: Jest config + test files in __tests__/
   // LLM calls: internal.shell
   {
-    "command": "npm", 
+    "command": "npm",
     "args": ["test", "--", "--watch"], // Adds watch mode for development
     "stream_output": true
   }
   ```
 
 - **Build Tool Intelligence**:
+
   ```javascript
   // User: "Build the project"
   // LLM first calls: internal.files (checks for build configs)
@@ -952,11 +996,13 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   ```
 
 **Concrete Use Cases**:
+
 - **User says**: "Start the dev server" → **LLM detects**: Next.js project → **Calls**: `npm run dev`
 - **User says**: "Run tests in watch mode" → **LLM detects**: Jest config → **Calls**: `npm test -- --watch`
 - **User says**: "Install packages" → **LLM detects**: `yarn.lock` → **Calls**: `yarn install` (not npm)
 
 **Implementation Status**:
+
 - [x] Detect available scripts from package.json, Makefile, etc.
 - [x] Suggest appropriate test commands based on project structure
 - [x] Build command detection and execution (from allowlist only)
@@ -1837,3 +1883,57 @@ qcode "run the tests and fix any failures"
 qcode "fix the failing authentication tests"
 # → LLM identifies specific test subset, analyzes failures, makes targeted fixes
 ```
+
+### 5.2 Edit Tool Backup System Design
+
+**Goal**: Design and implement a proper backup system for the File Editing Tool that doesn't pollute workspaces while providing safety and rollback capabilities for users working with version-controlled codebases.
+
+#### 5.2.1 Backup Strategy Research
+
+- [ ] Research industry best practices for code editing tool backups
+- [ ] Analyze how existing tools (VS Code, IDEs) handle file versioning
+- [ ] Determine optimal balance between safety and workspace cleanliness
+- [ ] Study user workflows and expectations around file recovery
+
+#### 5.2.2 Global Backup Architecture
+
+- [ ] Design `~/.qcode/backups/` directory structure
+- [ ] Implement workspace identification and organization
+- [ ] Create timestamp-based versioning system
+- [ ] Design efficient storage and cleanup policies
+
+#### 5.2.3 Integration with Version Control
+
+- [ ] Detect Git/version control presence in workspaces
+- [ ] Disable or minimize backups in version-controlled projects
+- [ ] Provide user configuration options for backup behavior
+- [ ] Create backup system that complements rather than duplicates VCS
+
+#### 5.2.4 Smart Backup Triggers
+
+- [ ] Implement selective backup (only for significant changes)
+- [ ] Create configurable backup frequency settings
+- [ ] Design rollback interface for easy recovery
+- [ ] Add backup cleanup and retention policies
+
+#### 5.2.5 User Experience Design
+
+- [ ] Create clear configuration options for backup preferences
+- [ ] Design intuitive rollback commands and interfaces
+- [ ] Implement backup status and history visibility
+- [ ] Add documentation for backup system usage
+
+**Design Considerations**:
+
+- **Clean Workspaces**: Zero pollution of user project directories
+- **VCS Integration**: Smart detection and deference to existing version control
+- **User Choice**: Configurable backup behavior based on user preferences
+- **Performance**: Efficient storage and minimal overhead
+- **Recovery**: Easy rollback and restoration capabilities
+
+**Research Questions**:
+
+- Should backups be disabled by default in Git repositories?
+- What's the optimal cleanup/retention policy for backup files?
+- How should backup configuration be exposed to users?
+- What's the right balance between safety and workspace cleanliness?
