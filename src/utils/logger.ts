@@ -60,13 +60,20 @@ export function initializeLogger(config: LoggingConfig): winston.Logger {
 
 /**
  * Get the current logger instance
- * Throws error if logger hasn't been initialized
+ * Auto-initializes with default config if not already initialized
  */
 export function getLogger(): winston.Logger {
   if (!loggerInstance) {
-    throw new Error('Logger not initialized. Call initializeLogger() first.');
+    // Auto-initialize with default configuration
+    const defaultConfig: LoggingConfig = {
+      level: 'warn',
+      console: true,
+      colors: true,
+      timestamp: false,
+    };
+    initializeLogger(defaultConfig);
   }
-  return loggerInstance;
+  return loggerInstance!;
 }
 
 /**

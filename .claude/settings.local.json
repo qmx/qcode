@@ -18,7 +18,8 @@
       "Bash(npm run tc:*)",
       "Bash(rg:*)",
       "Bash(mv:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": []
   }

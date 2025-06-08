@@ -1,1 +1,3 @@
 .claude/
+tests/fixtures/recordings/
+tests/fixtures/projects/test-workspace/

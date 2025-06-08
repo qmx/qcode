@@ -10,9 +10,10 @@ import {
 } from '../security/commands.js';
 import { spawn } from 'child_process';
 import { getLogger } from '../utils/logger.js';
-import { zodToJsonSchema } from 'zod-to-json-schema';
 
 const logger = getLogger();
+import { zodToJsonSchema } from 'zod-to-json-schema';
+
 
 /**
  * Zod schema for shell command execution parameters
