@@ -295,3 +295,7 @@ export class ExampleTool {
 - ESLint + Prettier for code quality
 - Jest for testing with ts-jest transform
 - Module resolution supports both `.ts` and `.js` extensions for flexibility
+
+## Memories
+
+- Stop trying to estimate effort in days, weeks, whatever, I don't care - also we have a numbering system for tasks and a natural sequence, stop using "phases", they are useless
