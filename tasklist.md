@@ -345,29 +345,51 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   - [ ] Test architectural pattern recognition (MVC, MVVM, microservices)
   - [ ] Test code quality assessment consistency across languages
 
-### 1.7.9 File Editing Tool (LLM-Guided)
+### 1.7.9 File Editing Tool Foundation
 
-- [ ] Implement `src/tools/edit.ts` with LLM-guided editing
-- [ ] Support for creating new files with appropriate content
-- [ ] Support for modifying existing files with surgical precision
-- [ ] Integration with existing `WorkspaceSecurity` for safe operations
-- [ ] Atomic operations with backup and rollback capabilities
+- [ ] Create `src/tools/edit.ts` basic class structure with NamespacedTool interface
+- [ ] Implement Zod schema for editing parameters (file path, content, operation type)
+- [ ] Add WorkspaceSecurity integration for safe file path validation
+- [ ] Create backup functionality with timestamp-based file versioning
+- [ ] Implement atomic write operations (write to temp file, then rename)
 
-### 1.7.10 LLM-Assisted Editing Features
+### 1.7.10 Text Editing Operations
 
-- [ ] Context-aware code generation based on project analysis
-- [ ] Smart imports and dependency management
-- [ ] Code style consistency with existing project patterns
-- [ ] Intelligent error detection and fixing suggestions
+- [ ] Add dependency: `npm install diff jsdiff` for language-agnostic diff generation
+- [ ] Implement line-based editing (insert, replace, delete specific lines)
+- [ ] Implement search-and-replace with regex support (works with any text)
+- [ ] Create diff-based editing using existing `node-diff3` library
+- [ ] Add basic text validation (encoding, line endings, etc.)
 
-### 1.7.11 File Editing Tests
+### 1.7.11 File Creation Operations  
 
-- [ ] Test creating new React components in project style
-- [ ] Test modifying existing Rails controllers with proper conventions
-- [ ] Test Swift view creation following MVVM patterns
-- [ ] Test Python function modification with FastAPI patterns
+- [ ] Implement new file creation with directory structure support
+- [ ] Add template-based file generation (language-agnostic templates)
+- [ ] Integrate with project intelligence for context-aware file creation
+- [ ] Support for any file type based on extension and project context
 
-### 1.7.12 Git Integration Tool
+### 1.7.12 Advanced Editing Features
+
+- [ ] Implement conflict resolution using `node-diff3` for merge scenarios
+- [ ] Add rollback capability to restore from backups
+- [ ] Create batch editing for multiple files
+- [ ] Design MCP language server integration (defer to Phase 2 MCP work)
+
+### 1.7.13 LLM-Assisted Editing Features
+
+- [ ] Context-aware code generation based on project analysis (language-agnostic)
+- [ ] Integration with MCP language server tools (when available via Phase 2)
+- [ ] Code style consistency using project's existing formatters
+- [ ] Language-agnostic error detection through LLM analysis
+
+### 1.7.14 File Editing Tests
+
+- [ ] Test text editing operations (line-based, search-replace, diff application)
+- [ ] Test file creation across different languages (Python, Rust, Java, Go, etc.)
+- [ ] Test conflict resolution and merge scenarios
+- [ ] Test language server integration with multiple language servers
+
+### 1.7.15 Git Integration Tool
 
 - [ ] Implement `src/tools/git.ts` with common git commands
 - [ ] Support for `git status`, `git diff`, `git add`, `git commit`
@@ -378,7 +400,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 - [ ] Branch naming suggestions based on feature context
 - [ ] Merge conflict resolution assistance
 
-### 1.7.13 Shell Execution Tool
+### 1.7.16 Shell Execution Tool
 
 **Status: ✅ COMPLETED - Full shell execution with comprehensive security controls**
 
@@ -389,7 +411,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 - [x] Real-time output streaming for long-running commands
 - [x] Command argument sanitization and validation
 
-### 1.7.14 Shell Command Categories
+### 1.7.17 Shell Command Categories
 
 - [x] **Package managers**: `npm`, `yarn`, `pnpm`, `pip`, `poetry`, `bundle`, `gem`, `cargo`, `go mod`
 - [x] **Build tools**: `make`, `cmake`, `gradle`, `mvn`, `swift build`, `dotnet build`
@@ -398,7 +420,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 - [x] **Linting/formatting**: `eslint`, `prettier`, `black`, `rubocop`, `swiftformat`
 - [x] **Project scripts**: Commands defined in package.json scripts, Makefile targets, etc.
 
-### 1.7.15 Shell Security Restrictions
+### 1.7.18 Shell Security Restrictions
 
 - [x] No file system commands (`rm`, `mv`, `cp`, `chmod`, etc.)
 - [x] No network commands (`curl`, `wget`, `ssh`, etc.)
@@ -407,7 +429,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
 - [x] No variable expansion or command substitution
 - [x] Workspace boundary enforcement - commands only run within project directory
 
-### 1.7.16 Project-Specific Shell Intelligence
+### 1.7.19 Project-Specific Shell Intelligence
 
 - [x] Detect available scripts from package.json, Makefile, etc.
 - [x] Suggest appropriate test commands based on project structure
@@ -577,7 +599,7 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   - [x] Context-aware help where LLM provides project-specific assistance and suggestions
   - [x] Progressive disclosure where CLI shows tool execution progress and rich results
 
-- [ ] **After 1.7.8-1.7.16 (Supporting Tools)**:
+- [ ] **After 1.7.8-1.7.19 (Supporting Tools)**:
 
   - [ ] **Smart file editing**: Can modify code intelligently using project context
   - [ ] **Git integration**: Generates meaningful commit messages based on actual changes
@@ -828,6 +850,15 @@ Stdio Server Configuration Schema:
 - [ ] Multi-step workflows with MCP tools
 - [ ] Error recovery and user guidance
 
+### 2.21 MCP Language Server Integration
+
+- [ ] Design MCP wrapper architecture for language servers
+- [ ] Create reference implementation: TypeScript language server MCP wrapper
+- [ ] Implement LSP-to-MCP protocol bridge
+- [ ] Add configuration for multiple language servers via MCP
+- [ ] Test language server tools: diagnostics, formatting, code completion
+- [ ] Document language server MCP integration patterns
+
 **Phase 2 Acceptance Criteria**:
 
 - [ ] **After 2.5 (Tool Integration Pipeline)**:
@@ -844,9 +875,10 @@ Stdio Server Configuration Schema:
   - [ ] Tool execution routes correctly to MCP clients
   - [ ] LLM can call both internal and external tools transparently
 
-- [ ] **After 2.20 (Complete MCP Testing)**:
+- [ ] **After 2.21 (Complete MCP Testing + Language Servers)**:
   - [ ] `qcode "use github tool to list repositories"` works end-to-end
   - [ ] Multiple MCP servers can be configured and used together
+  - [ ] Language server integration via MCP wrappers works
   - [ ] Error handling provides clear guidance for server issues
   - [ ] Configuration system allows easy server setup
 
