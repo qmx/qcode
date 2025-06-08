@@ -649,195 +649,203 @@ QCode CLI → LLM Engine → Tool Registry → MCP Client (stdio only) → Exter
 
 ### 2.1 MCP SDK Integration Foundation
 
-- [ ] **2.1.1 SDK Setup and Wrapper**
-  - [ ] Install and configure `@modelcontextprotocol/sdk` dependency
-  - [ ] Create `src/mcp/sdk-wrapper.ts`:
-    - [ ] Wrapper around existing `Client` from SDK
-    - [ ] Adapter to fit QCode's tool registry interface
-    - [ ] Error handling and logging integration
-    - [ ] Configuration management for SDK clients
-  - [ ] Implement `src/mcp/types.ts`:
-    - [ ] QCode-specific MCP types that extend SDK types
-    - [ ] Tool namespace mapping interfaces
-    - [ ] Server configuration and status types
-    - [ ] **Keep minimal** - leverage SDK types where possible
-  - [ ] **Testing Requirements**:
-    - [ ] SDK integration and wrapper functionality tests
-    - [ ] Configuration and error handling tests
+- [ ] Install and configure `@modelcontextprotocol/sdk` dependency
+- [ ] Create `src/mcp/sdk-wrapper.ts`:
+  - [ ] Wrapper around existing `Client` from SDK
+  - [ ] Adapter to fit QCode's tool registry interface
+  - [ ] Error handling and logging integration
+  - [ ] Configuration management for SDK clients
+- [ ] Implement `src/mcp/types.ts`:
+  - [ ] QCode-specific MCP types that extend SDK types
+  - [ ] Tool namespace mapping interfaces
+  - [ ] Server configuration and status types
+  - [ ] Keep minimal - leverage SDK types where possible
+- [ ] Testing Requirements:
+  - [ ] SDK integration and wrapper functionality tests
+  - [ ] Configuration and error handling tests
 
-### 2.2 MCP Stdio Transport (SDK-Based)
+### 2.2 Stdio Client Implementation
 
-- [ ] **2.2.1 Stdio Client Implementation**
+- [ ] Implement `src/mcp/stdio-client.ts`:
+  - [ ] Use `StdioClientTransport` from existing SDK
+  - [ ] Wrap SDK client with QCode-specific functionality
+  - [ ] Process management using SDK's built-in capabilities
+  - [ ] Connection lifecycle management via SDK
+  - [ ] No custom JSON-RPC implementation - use SDK entirely
 
-  - [ ] Implement `src/mcp/stdio-client.ts`:
-    - [ ] Use `StdioClientTransport` from existing SDK
-    - [ ] Wrap SDK client with QCode-specific functionality
-    - [ ] Process management using SDK's built-in capabilities
-    - [ ] Connection lifecycle management via SDK
-    - [ ] **No custom JSON-RPC implementation** - use SDK entirely
-  - [ ] **Process Configuration**:
-    - [ ] Server command/args configuration from QCode config
-    - [ ] Environment variable passing to servers
-    - [ ] Working directory configuration
-    - [ ] Process resource monitoring (basic)
-  - [ ] **Error Handling**:
-    - [ ] SDK error handling integration
-    - [ ] Process crash detection and recovery
-    - [ ] Connection timeout handling
-    - [ ] Graceful shutdown procedures
+### 2.3 Process Configuration
 
-- [ ] **2.2.2 Tool Integration Pipeline**
-  - [ ] **Tool Discovery via SDK**:
-    - [ ] Use SDK's `client.listTools()` method
-    - [ ] Tool metadata extraction and caching
-    - [ ] Namespace assignment (`server-name.tool-name`)
-    - [ ] Tool schema validation using SDK schemas
-  - [ ] **Tool Execution via SDK**:
-    - [ ] Use SDK's `client.callTool()` method
-    - [ ] Parameter validation and transformation
-    - [ ] Result handling and formatting
-    - [ ] Error recovery and fallback
-  - [ ] **Testing Requirements**:
-    - [ ] Tool discovery and execution tests with real SDK
-    - [ ] Process lifecycle tests using SDK transport
-    - [ ] Error handling and recovery validation
+- [ ] Server command/args configuration from QCode config
+- [ ] Environment variable passing to servers
+- [ ] Working directory configuration
+- [ ] Process resource monitoring (basic)
 
-### 2.3 ~~MCP HTTP Transport~~ **→ MOVED TO PHASE 4**
+### 2.4 Error Handling
 
-**HTTP/SSE transport moved to Phase 4 - focusing on stdio foundation first**
+- [ ] SDK error handling integration
+- [ ] Process crash detection and recovery
+- [ ] Connection timeout handling
+- [ ] Graceful shutdown procedures
 
-### 2.4 MCP Discovery and Configuration
+### 2.5 Tool Integration Pipeline
 
-- [ ] **2.4.1 Server Configuration System**
+- [ ] Tool Discovery via SDK:
+  - [ ] Use SDK's `client.listTools()` method
+  - [ ] Tool metadata extraction and caching
+  - [ ] Namespace assignment (`server-name.tool-name`)
+  - [ ] Tool schema validation using SDK schemas
 
-  - [ ] Extend `src/config/` with MCP server definitions:
-    - [ ] `MCPServerConfig` interface for stdio servers
-    - [ ] Configuration validation with Zod schemas
-    - [ ] Server discovery from config files
-    - [ ] **Simple stdio-only configuration** - no HTTP complexity
-  - [ ] **Configuration Sources**:
-    - [ ] Project-level MCP configuration (`.qcode/mcp-servers.json`)
-    - [ ] User-level MCP configuration (`~/.qcode/mcp-servers.json`)
-    - [ ] Environment-based configuration (`QCODE_MCP_*`)
-    - [ ] Runtime configuration via CLI flags
+- [ ] Tool Execution via SDK:
+  - [ ] Use SDK's `client.callTool()` method
+  - [ ] Parameter validation and transformation
+  - [ ] Result handling and formatting
+  - [ ] Error recovery and fallback
 
-- [ ] **2.4.2 Server Registry and Management**
-  - [ ] Implement `src/mcp/server-registry.ts`:
-    - [ ] Track configured MCP servers
-    - [ ] Server status monitoring (connected/disconnected/error)
-    - [ ] Basic health checking via SDK ping
-    - [ ] Server lifecycle management
-    - [ ] **Keep simple** - advanced features in later phases
+- [ ] Testing Requirements:
+  - [ ] Tool discovery and execution tests with real SDK
+  - [ ] Process lifecycle tests using SDK transport
+  - [ ] Error handling and recovery validation
 
-### 2.5 Enhanced Tool Registry (MCP Integration)
+**Note**: HTTP/SSE transport moved to Phase 4 - focusing on stdio foundation first
 
-- [ ] **2.5.1 Registry Extension for MCP**
+### 2.6 Server Configuration System
 
-  - [ ] Extend existing `src/core/registry.ts`:
-    - [ ] **MCP tool integration** alongside internal tools
-    - [ ] **Namespace conflict resolution** with clear precedence
-    - [ ] **Tool execution routing** to appropriate MCP clients
-    - [ ] **Dynamic tool loading** when servers connect
-    - [ ] Server failure graceful degradation
-  - [ ] **Namespace Management**:
-    - [ ] Enforce namespace isolation (`internal.files.read` vs `github.list_repos`)
-    - [ ] Simple collision detection and resolution
-    - [ ] Tool listing by namespace
-    - [ ] **No complex aliasing** - keep simple for Phase 2
+- [ ] Extend `src/config/` with MCP server definitions:
+  - [ ] `MCPServerConfig` interface for stdio servers
+  - [ ] Configuration validation with Zod schemas
+  - [ ] Server discovery from config files
+  - [ ] Simple stdio-only configuration - no HTTP complexity
 
-- [ ] **2.5.2 Tool Execution Pipeline**
-  - [ ] **MCP Tool Execution**:
-    - [ ] Route tool calls to appropriate MCP client
-    - [ ] Parameter validation before SDK call
-    - [ ] Result transformation for QCode engine
-    - [ ] Error handling and user-friendly messages
-  - [ ] **Integration with Existing Engine**:
-    - [ ] Seamless integration with LLM orchestration engine
-    - [ ] LLM can call both internal and MCP tools transparently
-    - [ ] Consistent result formatting with `ContextManager`
-    - [ ] **Reuse existing LLM orchestration** from Phase 1
+### 2.7 Configuration Sources
 
-### 2.6 Configuration for MCP (Simplified)
+- [ ] Project-level MCP configuration (`.qcode/mcp-servers.json`)
+- [ ] User-level MCP configuration (`~/.qcode/mcp-servers.json`)
+- [ ] Environment-based configuration (`QCODE_MCP_*`)
+- [ ] Runtime configuration via CLI flags
 
-- [ ] **2.6.1 Simple MCP Configuration**
-  - [ ] **Stdio Server Configuration Schema**:
-    ```json
-    {
-      "mcpServers": {
-        "github": {
-          "command": "npx",
-          "args": ["@modelcontextprotocol/server-github"],
-          "env": { "GITHUB_TOKEN": "..." }
-        }
-      }
+### 2.8 Server Registry and Management
+
+- [ ] Implement `src/mcp/server-registry.ts`:
+  - [ ] Track configured MCP servers
+  - [ ] Server status monitoring (connected/disconnected/error)
+  - [ ] Basic health checking via SDK ping
+  - [ ] Server lifecycle management
+  - [ ] Keep simple - advanced features in later phases
+
+### 2.9 Registry Extension for MCP
+
+- [ ] Extend existing `src/core/registry.ts`:
+  - [ ] MCP tool integration alongside internal tools
+  - [ ] Namespace conflict resolution with clear precedence
+  - [ ] Tool execution routing to appropriate MCP clients
+  - [ ] Dynamic tool loading when servers connect
+  - [ ] Server failure graceful degradation
+
+### 2.10 Namespace Management
+
+- [ ] Enforce namespace isolation (`internal.files.read` vs `github.list_repos`)
+- [ ] Simple collision detection and resolution
+- [ ] Tool listing by namespace
+- [ ] No complex aliasing - keep simple for Phase 2
+
+### 2.11 MCP Tool Execution
+
+- [ ] Route tool calls to appropriate MCP client
+- [ ] Parameter validation before SDK call
+- [ ] Result transformation for QCode engine
+- [ ] Error handling and user-friendly messages
+
+### 2.12 Integration with Existing Engine
+
+- [ ] Seamless integration with LLM orchestration engine
+- [ ] LLM can call both internal and MCP tools transparently
+- [ ] Consistent result formatting with `ContextManager`
+- [ ] Reuse existing LLM orchestration from Phase 1
+
+### 2.13 MCP Configuration (Simplified)
+
+Stdio Server Configuration Schema:
+```json
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_TOKEN": "..." }
     }
-    ```
-  - [ ] **Configuration Validation**:
-    - [ ] Basic Zod schema for server definitions
-    - [ ] Required fields validation
-    - [ ] Environment variable validation
-  - [ ] **No hot reloading** - restart required (keep simple)
+  }
+}
+```
 
-### 2.7 CLI for MCP (Essential Commands)
+- [ ] Configuration Validation:
+  - [ ] Basic Zod schema for server definitions
+  - [ ] Required fields validation
+  - [ ] Environment variable validation
+- [ ] No hot reloading - restart required (keep simple)
 
-- [ ] **2.7.1 Basic MCP CLI Commands**
-  - [ ] Essential MCP management commands:
-    - [ ] `qcode mcp list` - Show configured MCP servers
-    - [ ] `qcode mcp status` - Display server connection status
-    - [ ] `qcode mcp tools [server]` - List tools by server
-    - [ ] `qcode mcp test <server>` - Test connection to server
-  - [ ] **Simple Status Display**:
-    - [ ] Server connection status (connected/error)
-    - [ ] Tool count per server
-    - [ ] Basic error messages
-    - [ ] **No complex metrics** - keep minimal
+### 2.14 Essential MCP Management Commands
 
-### 2.8 MCP Testing (SDK-Based)
+- [ ] `qcode mcp list` - Show configured MCP servers
+- [ ] `qcode mcp status` - Display server connection status
+- [ ] `qcode mcp tools [server]` - List tools by server
+- [ ] `qcode mcp test <server>` - Test connection to server
 
-- [ ] **2.8.1 SDK-Based Test Infrastructure**
+### 2.15 Simple Status Display
 
-  - [ ] **Use existing SDK test patterns**:
-    - [ ] Create test MCP servers using SDK server classes
-    - [ ] Test client connections using SDK client
-    - [ ] Mock server implementations for unit tests
-    - [ ] **Leverage SDK examples and patterns**
-  - [ ] **VCR Testing for MCP**:
-    - [ ] Record real MCP interactions with test servers
-    - [ ] Deterministic replay for CI/CD
-    - [ ] **Reuse VCR patterns from Phase 1**
+- [ ] Server connection status (connected/error)
+- [ ] Tool count per server
+- [ ] Basic error messages
+- [ ] No complex metrics - keep minimal
 
-- [ ] **2.8.2 Integration Test Scenarios**
-  - [ ] **Stdio Transport Tests**:
-    - [ ] Server spawning and connection via SDK
-    - [ ] Tool discovery and execution tests
-    - [ ] Process crash recovery tests
-    - [ ] Configuration loading tests
-  - [ ] **Tool Registry Integration Tests**:
-    - [ ] External tools work alongside internal tools
-    - [ ] Namespace resolution correctness
-    - [ ] Error handling and graceful degradation
-  - [ ] **End-to-End Workflow Tests**:
-    - [ ] "Use external tool to list something" end-to-end
-    - [ ] Multi-step workflows with MCP tools
-    - [ ] Error recovery and user guidance
+### 2.16 SDK Test Patterns
+
+- [ ] Create test MCP servers using SDK server classes
+- [ ] Test client connections using SDK client
+- [ ] Mock server implementations for unit tests
+- [ ] Leverage SDK examples and patterns
+
+### 2.17 VCR Testing for MCP
+
+- [ ] Record real MCP interactions with test servers
+- [ ] Deterministic replay for CI/CD
+- [ ] Reuse VCR patterns from Phase 1
+
+### 2.18 Stdio Transport Tests
+
+- [ ] Server spawning and connection via SDK
+- [ ] Tool discovery and execution tests
+- [ ] Process crash recovery tests
+- [ ] Configuration loading tests
+
+### 2.19 Tool Registry Integration Tests
+
+- [ ] External tools work alongside internal tools
+- [ ] Namespace resolution correctness
+- [ ] Error handling and graceful degradation
+
+### 2.20 End-to-End Workflow Tests
+
+- [ ] "Use external tool to list something" end-to-end
+- [ ] Multi-step workflows with MCP tools
+- [ ] Error recovery and user guidance
 
 **Phase 2 Acceptance Criteria**:
 
-- [ ] **After 2.2 (Stdio Integration)**:
+- [ ] **After 2.5 (Tool Integration Pipeline)**:
 
   - [ ] Can spawn and communicate with MCP servers via stdio using SDK
   - [ ] SDK client integration works correctly
   - [ ] Process management handles server lifecycle
   - [ ] Tool discovery works via SDK methods
 
-- [ ] **After 2.5 (Tool Registry Integration)**:
+- [ ] **After 2.12 (Integration with Existing Engine)**:
 
   - [ ] External MCP tools integrate seamlessly with internal tools
   - [ ] Namespace conflict resolution works correctly
   - [ ] Tool execution routes correctly to MCP clients
   - [ ] LLM can call both internal and external tools transparently
 
-- [ ] **After 2.8 (Complete MCP Testing)**:
+- [ ] **After 2.20 (Complete MCP Testing)**:
   - [ ] `qcode "use github tool to list repositories"` works end-to-end
   - [ ] Multiple MCP servers can be configured and used together
   - [ ] Error handling provides clear guidance for server issues
@@ -876,21 +884,23 @@ QCode CLI → LLM Engine → Tool Registry → MCP Client (stdio only) → Exter
   - [ ] Multi-file batch operations
   - [ ] Smart merge conflict resolution
 
-### 3.2 Additional Phase 3 Features
+### 3.2 Context-Aware Project Analysis
 
-- [ ] **Advanced LLM-Orchestrated Features (EXTENSION OF 1.8)**
-  - [ ] **Context-Aware Project Analysis**:
-    - [ ] LLM-driven framework detection and specialized workflows
-    - [ ] Cross-file dependency analysis via LLM
-    - [ ] Architecture pattern recognition through LLM analysis
-  - [ ] **Complex Multi-Tool Orchestration**:
-    - [ ] LLM-managed workflow patterns with conditional branching
-    - [ ] Parallel tool execution coordination by LLM
-    - [ ] Workflow interruption and resumption capabilities managed by LLM
-  - [ ] **Complex Query Examples**:
-    - [ ] "Analyze the project structure and find potential issues"
-    - [ ] "Find all React components and check their props usage"
-    - [ ] "Review recent changes and suggest improvements"
+- [ ] LLM-driven framework detection and specialized workflows
+- [ ] Cross-file dependency analysis via LLM
+- [ ] Architecture pattern recognition through LLM analysis
+
+### 3.3 Complex Multi-Tool Orchestration
+
+- [ ] LLM-managed workflow patterns with conditional branching
+- [ ] Parallel tool execution coordination by LLM
+- [ ] Workflow interruption and resumption capabilities managed by LLM
+
+### 3.4 Complex Query Examples
+
+- [ ] "Analyze the project structure and find potential issues"
+- [ ] "Find all React components and check their props usage"
+- [ ] "Review recent changes and suggest improvements"
 
 ---
 
@@ -899,173 +909,176 @@ QCode CLI → LLM Engine → Tool Registry → MCP Client (stdio only) → Exter
 **Goal**: Implement advanced features, integrations, and HTTP MCP transport  
 **Deliverable**: Full-featured QCode with web-based MCP server support
 
-### 4.1 HTTP MCP Transport (SDK-Based)
+### 4.1 HTTP Client Implementation
 
 **Note**: This extends Phase 2's stdio-only MCP foundation with web-based server support
 
-- [ ] **4.1.1 Streamable HTTP Implementation (SDK-Based)**
+- [ ] Implement `src/mcp/http-client.ts`:
+  - [ ] Use existing SDK's HTTP transport classes
+  - [ ] Streamable HTTP transport only (stateless HTTP standard)
+  - [ ] Single HTTP endpoint for bidirectional communication
+  - [ ] POST requests for client-to-server messages
+  - [ ] Stateless HTTP protocol for server-to-client streaming
+  - [ ] Session management using SDK capabilities
 
-  - [ ] Implement `src/mcp/http-client.ts`:
-    - [ ] Use existing SDK's HTTP transport classes
-    - [ ] **Streamable HTTP transport only** (stateless HTTP standard)
-    - [ ] Single HTTP endpoint for bidirectional communication
-    - [ ] POST requests for client-to-server messages
-    - [ ] Stateless HTTP protocol for server-to-client streaming
-    - [ ] Session management using SDK capabilities
-  - [ ] **HTTP Protocol Integration**:
-    - [ ] Leverage SDK's HTTP transport implementation
-    - [ ] Proper Accept headers (`application/json`)
-    - [ ] HTTP status code handling via SDK
-    - [ ] Session ID management (`Mcp-Session-Id` header)
-    - [ ] Connection multiplexing for parallel requests
+### 4.2 HTTP Protocol Integration
 
-- [ ] **4.1.2 HTTP Server Discovery and Configuration**
+- [ ] Leverage SDK's HTTP transport implementation
+- [ ] Proper Accept headers (`application/json`)
+- [ ] HTTP status code handling via SDK
+- [ ] Session ID management (`Mcp-Session-Id` header)
+- [ ] Connection multiplexing for parallel requests
 
-  - [ ] Extend MCP configuration for HTTP servers:
-    - [ ] HTTP server configuration schema
-    - [ ] URL-based server definitions
-    - [ ] Authentication configuration (if supported by SDK)
-    - [ ] Connection timeout and retry settings
-  - [ ] **HTTP Server Registry**:
-    - [ ] HTTP server tracking alongside stdio servers
-    - [ ] Health checking via HTTP ping
-    - [ ] Connection state management
-    - [ ] Graceful degradation for network issues
+### 4.3 HTTP Server Configuration
 
-- [ ] **4.1.3 HTTP MCP Testing**
-  - [ ] **SDK-Based HTTP Testing**:
-    - [ ] Test HTTP transport using SDK test patterns
-    - [ ] Mock HTTP MCP servers for testing
-    - [ ] Connection lifecycle tests
-    - [ ] Session management validation
-  - [ ] **Real-World HTTP Server Tests**:
-    - [ ] Test with web-based MCP servers
-    - [ ] Authentication flow testing
-    - [ ] Network failure recovery tests
-    - [ ] Multiple concurrent HTTP connections
+- [ ] HTTP server configuration schema
+- [ ] URL-based server definitions
+- [ ] Authentication configuration (if supported by SDK)
+- [ ] Connection timeout and retry settings
 
-### 4.2 Advanced Features
+### 4.4 HTTP Server Registry
+
+- [ ] HTTP server tracking alongside stdio servers
+- [ ] Health checking via HTTP ping
+- [ ] Connection state management
+- [ ] Graceful degradation for network issues
+
+### 4.5 SDK-Based HTTP Testing
+
+- [ ] Test HTTP transport using SDK test patterns
+- [ ] Mock HTTP MCP servers for testing
+- [ ] Connection lifecycle tests
+- [ ] Session management validation
+
+### 4.6 Real-World HTTP Server Tests
+
+- [ ] Test with web-based MCP servers
+- [ ] Authentication flow testing
+- [ ] Network failure recovery tests
+- [ ] Multiple concurrent HTTP connections
+
+### 4.7 Advanced Features
 
 - [ ] Implement `src/features/advanced.ts`:
   - [ ] Advanced feature implementation
   - [ ] Integration with existing system components
 
-### 4.3 Integration with External Systems
+### 4.8 Integration with External Systems
 
 - [ ] Implement `src/integrations/external.ts`:
   - [ ] Integration with external systems
   - [ ] Cross-system data sharing
 
-### 4.4 User Feedback and Analytics
+### 4.9 User Feedback and Analytics
 
 - [ ] Implement `src/analytics/user-feedback.ts`:
   - [ ] User feedback collection
   - [ ] Analytics integration
 
-### 4.5 Security and Compliance
+### 4.10 Security and Compliance
 
 - [ ] Implement `src/security/compliance.ts`:
   - [ ] Security compliance implementation
   - [ ] Compliance reporting
 
-### 4.6 Performance and Scalability
+### 4.11 Performance and Scalability
 
 - [ ] Implement `src/performance/scalability.ts`:
   - [ ] Performance optimization
   - [ ] Scalability implementation
 
-### 4.7 User Interface and Experience
+### 4.12 User Interface and Experience
 
 - [ ] Implement `src/ui/user-interface.ts`:
   - [ ] User interface implementation
   - [ ] Interactive design
 
-### 4.8 Documentation and User Guide
+### 4.13 Documentation and User Guide
 
 - [ ] Implement `src/docs/user-guide.ts`:
   - [ ] User guide implementation
   - [ ] Documentation integration
 
-### 4.9 Testing and Validation
+### 4.14 Testing and Validation
 
 - [ ] Implement `src/tests/validation.ts`:
   - [ ] Testing and validation implementation
   - [ ] Integration with CI/CD pipelines
 
-### 4.10 Deployment and Release
+### 4.15 Deployment and Release
 
 - [ ] Implement `src/deployment/release.ts`:
   - [ ] Deployment implementation
   - [ ] Release management
 
-### 4.11 Post-Deployment Support
+### 4.16 Post-Deployment Support
 
 - [ ] Implement `src/support/post-deployment.ts`:
   - [ ] Post-deployment support implementation
   - [ ] User support integration
 
-### 4.12 Continuous Improvement
+### 4.17 Continuous Improvement
 
 - [ ] Implement `src/improvement/continuous.ts`:
   - [ ] Continuous improvement implementation
   - [ ] Feedback loop integration
 
-### 4.13 Final Acceptance Testing
+### 4.18 Final Acceptance Testing
 
 - [ ] Implement `src/tests/acceptance.ts`:
   - [ ] Acceptance testing implementation
   - [ ] Integration with deployment pipelines
 
-### 4.14 Final Deployment
+### 4.19 Final Deployment
 
 - [ ] Implement `src/deployment/final.ts`:
   - [ ] Final deployment implementation
   - [ ] Integration with deployment pipelines
 
-### 4.15 Post-Deployment Review
+### 4.20 Post-Deployment Review
 
 - [ ] Implement `src/review/post-deployment.ts`:
   - [ ] Post-deployment review implementation
   - [ ] Integration with deployment pipelines
 
-### 4.16 Project Closure
+### 4.21 Project Closure
 
 - [ ] Implement `src/closure/project.ts`:
   - [ ] Project closure implementation
   - [ ] Integration with deployment pipelines
 
-### 4.17 Knowledge Transfer
+### 4.22 Knowledge Transfer
 
 - [ ] Implement `src/transfer/knowledge.ts`:
   - [ ] Knowledge transfer implementation
   - [ ] Integration with deployment pipelines
 
-### 4.18 Project Evaluation
+### 4.23 Project Evaluation
 
 - [ ] Implement `src/evaluation/project.ts`:
   - [ ] Project evaluation implementation
   - [ ] Integration with deployment pipelines
 
-### 4.19 Project Archive
+### 4.24 Project Archive
 
 - [ ] Implement `src/archive/project.ts`:
   - [ ] Project archive implementation
   - [ ] Integration with deployment pipelines
 
-### 4.20 Project Cleanup
+### 4.25 Project Cleanup
 
 - [ ] Implement `src/cleanup/project.ts`:
   - [ ] Project cleanup implementation
   - [ ] Integration with deployment pipelines
 
-### 4.21 Project Documentation
+### 4.26 Project Documentation
 
 - [ ] Implement `src/docs/project.ts`:
   - [ ] Project documentation implementation
 
 **Phase 4 Acceptance Criteria**:
 
-- [ ] **After 4.1 (HTTP MCP Transport)**:
+- [ ] **After 4.6 (HTTP MCP Transport)**:
 
   - [ ] Can connect to web-based MCP servers via stateless HTTP
   - [ ] Session management and connection multiplexing works
@@ -1073,7 +1086,7 @@ QCode CLI → LLM Engine → Tool Registry → MCP Client (stdio only) → Exter
   - [ ] Authentication integration (if supported)
   - [ ] Stateless HTTP transport only
 
-- [ ] **After 4.21 (Complete Advanced Features)**:
+- [ ] **After 4.26 (Complete Advanced Features)**:
   - [ ] All advanced QCode features implemented
   - [ ] Full ecosystem connectivity (stdio + HTTP MCP)
   - [ ] Production-ready deployment and monitoring
@@ -1145,7 +1158,13 @@ The transformation from rule-based to LLM-centric architecture represents a **fu
    - Git integration with intelligent commit messages
    - Shell execution with project-aware commands
 
-2. **Phase 2 MCP Integration** (2.1-2.8):
+2. **Test-Driven Iteration Capability** (NEW PRIORITY):
+   - Technology-agnostic test execution and failure analysis
+   - LLM-orchestrated code modification based on test feedback
+   - Iterative test-fix cycles with intelligent exit conditions
+   - Universal project test suite discovery and execution
+
+3. **Phase 2 MCP Integration** (2.1-2.8):
    - External tool integration via stdio
    - LLM-orchestrated external tool usage
    - Ecosystem connectivity with standardized protocols
@@ -1167,3 +1186,96 @@ qcode "what testing framework is this project using and how is it configured?"
 ```
 
 **Status**: Phase 1 delivers a **true AI coding agent** with LLM intelligence at its core, representing a significant advancement over traditional rule-based approaches.
+
+### 5.1 Test-Driven Iteration Tool
+
+**Goal**: Enable QCode to understand any project's test suite, execute tests, analyze failures, and iteratively modify code until tests pass - all orchestrated by LLM intelligence without hardcoded technology assumptions.
+
+#### 5.1.1 Technology-Agnostic Test Discovery
+
+- [ ] LLM-powered analysis of project structure to identify test patterns
+- [ ] Universal test file discovery (any naming convention, any language)
+- [ ] Automatic test framework detection through project analysis
+- [ ] Configuration file analysis to understand test setup
+
+#### 5.1.2 Abstract Test Execution Interface
+
+- [ ] Generic test execution that works with any project's test commands
+- [ ] Integration with existing shell execution security framework
+- [ ] Streaming test output capture and real-time progress
+- [ ] Universal test result parsing (success/failure/error states)
+
+#### 5.1.3 Failure Analysis Engine
+
+- [ ] LLM-powered test output interpretation across any format
+- [ ] Context extraction from test failure messages
+- [ ] Root cause analysis using project intelligence
+- [ ] Failure categorization (logic errors, missing implementations, configuration issues)
+
+#### 5.1.4 Test-Context Code Analysis
+
+- [ ] LLM analysis of failing tests to understand expected behavior
+- [ ] Code-test relationship mapping through project intelligence
+- [ ] Impact analysis to identify which code changes affect which tests
+- [ ] Safe modification boundary detection
+
+#### 5.1.5 Targeted Code Modification
+
+- [ ] Enhance existing edit tool with test-driven context
+- [ ] Surgical code changes based on test failure analysis
+- [ ] Multi-file modification coordination when needed
+- [ ] Preservation of working functionality during modifications
+
+#### 5.1.6 Modification Strategy Generation
+
+- [ ] LLM-generated fix strategies based on failure analysis
+- [ ] Priority-based fix ordering (simple fixes first)
+- [ ] Alternative approach generation when initial fixes fail
+- [ ] Rollback capability when modifications cause regressions
+
+#### 5.1.7 Workflow Coordination
+
+- [ ] LLM-orchestrated test-fix-retest cycles
+- [ ] Progress tracking across multiple iteration rounds
+- [ ] Dynamic strategy adjustment based on iteration results
+- [ ] Parallel test execution when beneficial
+
+#### 5.1.8 Intelligent Exit Conditions
+
+- [ ] Success criteria detection (all tests passing)
+- [ ] Progress stagnation detection (no improvement across iterations)
+- [ ] Maximum iteration limits with intelligent reasoning
+- [ ] Resource usage monitoring and limits
+
+#### 5.1.9 Safety and Rollback Systems
+
+- [ ] Working state preservation before modifications
+- [ ] Automatic rollback when iterations cause regressions
+- [ ] Scope limitation to prevent breaking working functionality
+- [ ] User confirmation for potentially destructive changes
+
+#### 5.1.10 Project Intelligence Integration
+
+- [ ] Leverage existing project analysis for test context
+- [ ] Technology detection enhancement for test frameworks
+- [ ] Architecture understanding for test organization patterns
+- [ ] Dependency analysis for test-related tooling
+
+#### 5.1.11 Multi-Language Test Fixtures
+
+- [ ] Create intentionally broken test suites across different languages
+- [ ] Varied failure scenarios (syntax, logic, missing implementations)
+- [ ] Different test framework patterns for validation
+- [ ] Complex multi-file scenarios with interdependent tests
+
+**Real-World Usage Scenarios**:
+
+```bash
+# Universal test-driven development
+qcode "run the tests and fix any failures"
+# → LLM discovers test framework, executes tests, analyzes failures, iteratively fixes code
+
+# Targeted test fixing
+qcode "fix the failing authentication tests"
+# → LLM identifies specific test subset, analyzes failures, makes targeted fixes
+```
