@@ -274,6 +274,4 @@ describe('EditTool', () => {
       ).rejects.toThrow('invalid-line-number');
     });
   });
-
-
 });

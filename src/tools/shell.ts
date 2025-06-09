@@ -14,7 +14,6 @@ import { getLogger } from '../utils/logger.js';
 const logger = getLogger();
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
-
 /**
  * Zod schema for shell command execution parameters
  */

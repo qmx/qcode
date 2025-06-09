@@ -484,12 +484,12 @@ Be specific and focused in your answers. If asked about technologies, list them 
         // Check if we should continue - improved logic to prevent infinite loops
         // Stop if:
         // 1. We've made significant progress (multiple successful tools OR one very successful result)
-        // 2. We're getting repeated tool failures 
+        // 2. We're getting repeated tool failures
         // 3. We've reached a reasonable number of iterations
-        
+
         const successfulResults = toolResults.filter(r => r.success);
         const recentFailures = toolResults.slice(-3).filter(r => !r.success);
-        
+
         if (
           // Stop if we have multiple successful tool calls
           successfulResults.length >= 2 ||
@@ -498,9 +498,8 @@ Be specific and focused in your answers. If asked about technologies, list them 
           // Stop if we've reached 5+ iterations (reasonable limit)
           iterationCount >= 5 ||
           // Stop if we have at least one successful result and this iteration had issues
-          (successfulResults.length > 0 && 
-            toolResults.slice(-functionCalls.length).some(tr => !tr.success)
-          )
+          (successfulResults.length > 0 &&
+            toolResults.slice(-functionCalls.length).some(tr => !tr.success))
         ) {
           toolPhaseComplete = true;
         }

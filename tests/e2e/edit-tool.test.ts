@@ -66,7 +66,10 @@ describe('EditTool E2E Tests', () => {
 
       // If edit tool was used, verify file was modified; otherwise check that LLM provided the solution
       if (usedEdit) {
-        const modifiedContent = await fs.readFile(join(EDIT_TOOL_FIXTURE, 'src', 'auth.js'), 'utf8');
+        const modifiedContent = await fs.readFile(
+          join(EDIT_TOOL_FIXTURE, 'src', 'auth.js'),
+          'utf8'
+        );
         vcr.recordingLog('📝 Modified file content:', modifiedContent);
         expect(modifiedContent).toMatch(/validation|validate|empty/i);
       } else {
@@ -103,8 +106,8 @@ describe('EditTool E2E Tests', () => {
 
       // This test REQUIRES EditTool's replace_lines operation - FilesTool cannot do line-specific replacements
       expect(usedEdit).toBe(true);
-      
-      // Verify the file was actually modified with the new function  
+
+      // Verify the file was actually modified with the new function
       const modifiedContent = await fs.readFile(join(EDIT_TOOL_FIXTURE, 'src', 'user.js'), 'utf8');
       vcr.recordingLog('📝 Modified file content:', modifiedContent);
       expect(modifiedContent).toMatch(/updateUserProfile/i);
