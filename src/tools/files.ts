@@ -11,7 +11,6 @@ import { getLogger } from '../utils/logger.js';
 
 const logger = getLogger();
 
-
 /**
  * Zod schemas for file operation parameters
  */
@@ -544,7 +543,13 @@ export class FilesTool implements NamespacedTool {
    * Write file operation - Implementation for step 1.7.3
    */
   private async writeFile(params: WriteFileParams): Promise<WriteFileResult> {
-    const { path: filePath, content, encoding = 'utf8', backup = true, createDirs = true } = params;
+    const {
+      path: filePath,
+      content,
+      encoding = 'utf8',
+      backup = false,
+      createDirs = true,
+    } = params;
 
     try {
       // Validate the file path with security checks
