@@ -16,7 +16,7 @@ app.get('/health', (req, res) => {
 // Authentication endpoint
 app.post('/auth/login', (req, res) => {
   const { username, password } = req.body;
-  
+
   if (authenticateUser(username, password)) {
     res.json({ success: true, message: 'Login successful' });
   } else {

@@ -6,34 +6,34 @@ const config = {
   server: {
     port: 3000,
     host: 'localhost',
-    env: 'development'
+    env: 'development',
   },
-  
+
   database: {
     host: 'localhost',
     port: 5432,
     name: 'myapp_dev',
     user: 'postgres',
-    password: 'password'
+    password: 'password',
   },
-  
+
   auth: {
     secretKey: 'your-secret-key',
     tokenExpiry: '24h',
-    saltRounds: 10
+    saltRounds: 10,
   },
-  
+
   logging: {
     level: 'debug',
     file: 'app.log',
-    console: true
+    console: true,
   },
-  
+
   features: {
     userRegistration: true,
     emailVerification: false,
-    socialLogin: false
-  }
+    socialLogin: false,
+  },
 };
 
 function getConfig() {
@@ -49,5 +49,5 @@ function updateConfig(section, key, value) {
 module.exports = {
   config,
   getConfig,
-  updateConfig
+  updateConfig,
 };

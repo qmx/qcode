@@ -15,9 +15,9 @@ function findUser(username) {
   // Simulated user lookup
   const users = [
     { username: 'admin', password: 'admin123' },
-    { username: 'user', password: 'user123' }
+    { username: 'user', password: 'user123' },
   ];
-  
+
   return users.find(u => u.username === username);
 }
 
@@ -34,5 +34,5 @@ module.exports = {
   authenticateUser,
   findUser,
   hashPassword,
-  verifyPassword
+  verifyPassword,
 };

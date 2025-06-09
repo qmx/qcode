@@ -5,7 +5,7 @@ This is a test fixture project designed specifically for testing EditTool operat
 ## Purpose
 
 - Test line insertion operations
-- Test line replacement operations  
+- Test line replacement operations
 - Test search and replace operations
 - Test file creation operations
 - Test rollback operations
