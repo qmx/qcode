@@ -8,7 +8,6 @@ import { getLogger } from '../utils/logger.js';
 const logger = getLogger();
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
-
 /**
  * Zod schemas for edit operation parameters
  */
@@ -57,7 +56,6 @@ const CreateFileSchema = z.object({
 });
 
 // Rollback operation schema
-
 
 // Union schema for all edit operations
 const EditOperationSchema = z.discriminatedUnion('operation', [
@@ -203,35 +201,31 @@ IMPORTANT: Always use exact parameter names as shown above. Line numbers are 1-b
     filePath: string,
     operation: z.infer<typeof InsertLineSchema>
   ): Promise<ToolResult> {
-    try {
-      const content = await fs.readFile(filePath, 'utf8');
-      const lines = content.split('\n');
+    const content = await fs.readFile(filePath, 'utf8');
+    const lines = content.split('\n');
 
-      // Validate line number (1-based indexing, can insert at end + 1)
-      if (operation.line_number < 1 || operation.line_number > lines.length + 1) {
-        throw new QCodeError(
-          'invalid-line-number',
-          `Line number ${operation.line_number} is out of range (1-${lines.length + 1})`
-        );
-      }
-
-      // Insert line (convert to 0-based indexing)
-      const insertIndex = operation.line_number - 1;
-      lines.splice(insertIndex, 0, operation.content);
-
-      // Write atomically
-      await this.writeAtomic(filePath, lines.join('\n'));
-
-      return this.createToolResult(true, {
-        operation: 'insert_line',
-        file: operation.file,
-        line_number: operation.line_number,
-        content: operation.content,
-        lines_after: lines.length,
-      });
-    } catch (error) {
-      throw error;
+    // Validate line number (1-based indexing, can insert at end + 1)
+    if (operation.line_number < 1 || operation.line_number > lines.length + 1) {
+      throw new QCodeError(
+        'invalid-line-number',
+        `Line number ${operation.line_number} is out of range (1-${lines.length + 1})`
+      );
     }
+
+    // Insert line (convert to 0-based indexing)
+    const insertIndex = operation.line_number - 1;
+    lines.splice(insertIndex, 0, operation.content);
+
+    // Write atomically
+    await this.writeAtomic(filePath, lines.join('\n'));
+
+    return this.createToolResult(true, {
+      operation: 'insert_line',
+      file: operation.file,
+      line_number: operation.line_number,
+      content: operation.content,
+      lines_after: lines.length,
+    });
   }
 
   /**
@@ -241,48 +235,44 @@ IMPORTANT: Always use exact parameter names as shown above. Line numbers are 1-b
     filePath: string,
     operation: z.infer<typeof ReplaceSchema>
   ): Promise<ToolResult> {
-    try {
-      const content = await fs.readFile(filePath, 'utf8');
+    const content = await fs.readFile(filePath, 'utf8');
 
-      let newContent: string;
-      let matchCount = 0;
+    let newContent: string;
+    let matchCount = 0;
 
-      if (operation.regex) {
-        const flags = operation.global ? 'g' : '';
-        const regex = new RegExp(operation.search, flags);
-        newContent = content.replace(regex, () => {
-          matchCount++;
-          return operation.replace;
-        });
+    if (operation.regex) {
+      const flags = operation.global ? 'g' : '';
+      const regex = new RegExp(operation.search, flags);
+      newContent = content.replace(regex, () => {
+        matchCount++;
+        return operation.replace;
+      });
+    } else {
+      // Simple string replacement
+      if (operation.global) {
+        const parts = content.split(operation.search);
+        matchCount = parts.length - 1;
+        newContent = parts.join(operation.replace);
       } else {
-        // Simple string replacement
-        if (operation.global) {
-          const parts = content.split(operation.search);
-          matchCount = parts.length - 1;
-          newContent = parts.join(operation.replace);
+        if (content.includes(operation.search)) {
+          matchCount = 1;
+          newContent = content.replace(operation.search, operation.replace);
         } else {
-          if (content.includes(operation.search)) {
-            matchCount = 1;
-            newContent = content.replace(operation.search, operation.replace);
-          } else {
-            newContent = content;
-          }
+          newContent = content;
         }
       }
-
-      // Write atomically
-      await this.writeAtomic(filePath, newContent);
-
-      return this.createToolResult(true, {
-        operation: 'replace',
-        file: operation.file,
-        search: operation.search,
-        replace: operation.replace,
-        matches_found: matchCount,
-      });
-    } catch (error) {
-      throw error;
     }
+
+    // Write atomically
+    await this.writeAtomic(filePath, newContent);
+
+    return this.createToolResult(true, {
+      operation: 'replace',
+      file: operation.file,
+      search: operation.search,
+      replace: operation.replace,
+      matches_found: matchCount,
+    });
   }
 
   /**
@@ -292,48 +282,44 @@ IMPORTANT: Always use exact parameter names as shown above. Line numbers are 1-b
     filePath: string,
     operation: z.infer<typeof ReplaceLinesSchema>
   ): Promise<ToolResult> {
-    try {
-      const content = await fs.readFile(filePath, 'utf8');
-      const lines = content.split('\n');
+    const content = await fs.readFile(filePath, 'utf8');
+    const lines = content.split('\n');
 
-      // Validate line numbers
-      if (operation.start_line < 1 || operation.start_line > lines.length) {
-        throw new QCodeError(
-          'invalid-line-number',
-          `Start line ${operation.start_line} is out of range (1-${lines.length})`
-        );
-      }
-
-      if (operation.end_line < operation.start_line || operation.end_line > lines.length) {
-        throw new QCodeError(
-          'invalid-line-number',
-          `End line ${operation.end_line} is invalid (must be ${operation.start_line}-${lines.length})`
-        );
-      }
-
-      // Replace lines (convert to 0-based indexing)
-      const startIndex = operation.start_line - 1;
-      const endIndex = operation.end_line - 1;
-      const linesReplaced = endIndex - startIndex + 1;
-
-      // Split new content into lines and replace
-      const newLines = operation.content.split('\n');
-      lines.splice(startIndex, linesReplaced, ...newLines);
-
-      // Write atomically
-      await this.writeAtomic(filePath, lines.join('\n'));
-
-      return this.createToolResult(true, {
-        operation: 'replace_lines',
-        file: operation.file,
-        start_line: operation.start_line,
-        end_line: operation.end_line,
-        lines_replaced: linesReplaced,
-        new_lines_count: newLines.length,
-      });
-    } catch (error) {
-      throw error;
+    // Validate line numbers
+    if (operation.start_line < 1 || operation.start_line > lines.length) {
+      throw new QCodeError(
+        'invalid-line-number',
+        `Start line ${operation.start_line} is out of range (1-${lines.length})`
+      );
     }
+
+    if (operation.end_line < operation.start_line || operation.end_line > lines.length) {
+      throw new QCodeError(
+        'invalid-line-number',
+        `End line ${operation.end_line} is invalid (must be ${operation.start_line}-${lines.length})`
+      );
+    }
+
+    // Replace lines (convert to 0-based indexing)
+    const startIndex = operation.start_line - 1;
+    const endIndex = operation.end_line - 1;
+    const linesReplaced = endIndex - startIndex + 1;
+
+    // Split new content into lines and replace
+    const newLines = operation.content.split('\n');
+    lines.splice(startIndex, linesReplaced, ...newLines);
+
+    // Write atomically
+    await this.writeAtomic(filePath, lines.join('\n'));
+
+    return this.createToolResult(true, {
+      operation: 'replace_lines',
+      file: operation.file,
+      start_line: operation.start_line,
+      end_line: operation.end_line,
+      lines_replaced: linesReplaced,
+      new_lines_count: newLines.length,
+    });
   }
 
   /**
@@ -343,46 +329,42 @@ IMPORTANT: Always use exact parameter names as shown above. Line numbers are 1-b
     filePath: string,
     operation: z.infer<typeof DeleteLinesSchema>
   ): Promise<ToolResult> {
-    try {
-      const content = await fs.readFile(filePath, 'utf8');
-      const lines = content.split('\n');
+    const content = await fs.readFile(filePath, 'utf8');
+    const lines = content.split('\n');
 
-      // Validate line numbers
-      if (operation.start_line < 1 || operation.start_line > lines.length) {
-        throw new QCodeError(
-          'invalid-line-number',
-          `Start line ${operation.start_line} is out of range (1-${lines.length})`
-        );
-      }
-
-      if (operation.end_line < operation.start_line || operation.end_line > lines.length) {
-        throw new QCodeError(
-          'invalid-line-number',
-          `End line ${operation.end_line} is invalid (must be ${operation.start_line}-${lines.length})`
-        );
-      }
-
-      // Delete lines (convert to 0-based indexing)
-      const startIndex = operation.start_line - 1;
-      const endIndex = operation.end_line - 1;
-      const linesDeleted = endIndex - startIndex + 1;
-
-      lines.splice(startIndex, linesDeleted);
-
-      // Write atomically
-      await this.writeAtomic(filePath, lines.join('\n'));
-
-      return this.createToolResult(true, {
-        operation: 'delete_lines',
-        file: operation.file,
-        start_line: operation.start_line,
-        end_line: operation.end_line,
-        lines_deleted: linesDeleted,
-        lines_remaining: lines.length,
-      });
-    } catch (error) {
-      throw error;
+    // Validate line numbers
+    if (operation.start_line < 1 || operation.start_line > lines.length) {
+      throw new QCodeError(
+        'invalid-line-number',
+        `Start line ${operation.start_line} is out of range (1-${lines.length})`
+      );
     }
+
+    if (operation.end_line < operation.start_line || operation.end_line > lines.length) {
+      throw new QCodeError(
+        'invalid-line-number',
+        `End line ${operation.end_line} is invalid (must be ${operation.start_line}-${lines.length})`
+      );
+    }
+
+    // Delete lines (convert to 0-based indexing)
+    const startIndex = operation.start_line - 1;
+    const endIndex = operation.end_line - 1;
+    const linesDeleted = endIndex - startIndex + 1;
+
+    lines.splice(startIndex, linesDeleted);
+
+    // Write atomically
+    await this.writeAtomic(filePath, lines.join('\n'));
+
+    return this.createToolResult(true, {
+      operation: 'delete_lines',
+      file: operation.file,
+      start_line: operation.start_line,
+      end_line: operation.end_line,
+      lines_deleted: linesDeleted,
+      lines_remaining: lines.length,
+    });
   }
 
   /**

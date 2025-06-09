@@ -184,14 +184,14 @@ class QCodeCLI {
           if (!this.options.debug) {
             // Show tool execution to user in non-debug mode with context
             const toolNameFormatted = toolName.replace('internal:', '').replace('internal.', '');
-            
+
             // Format tool execution with context based on tool and operation
             let contextInfo = '';
-            
+
             if (toolName.includes('edit')) {
               const operation = args.operation || 'unknown';
               const file = args.file || 'unknown';
-              
+
               switch (operation) {
                 case 'insert_line':
                   contextInfo = `inserting line ${args.line_number || '?'} in ${file}`;
@@ -217,7 +217,7 @@ class QCodeCLI {
             } else if (toolName.includes('files')) {
               const operation = args.operation || 'unknown';
               const path = args.path || args.file || 'unknown';
-              
+
               switch (operation) {
                 case 'read':
                   contextInfo = `reading ${path}`;
@@ -231,10 +231,11 @@ class QCodeCLI {
                 case 'list':
                   contextInfo = `listing ${path}`;
                   break;
-                case 'search':
+                case 'search': {
                   const query = args.query || args.pattern || '';
                   contextInfo = `searching for "${query.substring(0, 20)}${query.length > 20 ? '...' : ''}" in ${path}`;
                   break;
+                }
                 default:
                   contextInfo = `${operation} on ${path}`;
               }
@@ -242,14 +243,18 @@ class QCodeCLI {
               contextInfo = 'analyzing project structure';
             } else if (toolName.includes('shell')) {
               const command = args.command || 'unknown';
-              const cmdArgs = args.args ? ` ${args.args.slice(0, 3).join(' ')}${args.args.length > 3 ? '...' : ''}` : '';
+              const cmdArgs = args.args
+                ? ` ${args.args.slice(0, 3).join(' ')}${args.args.length > 3 ? '...' : ''}`
+                : '';
               contextInfo = `running "${command}${cmdArgs}"`;
             } else {
               // Generic fallback
               contextInfo = `with ${Object.keys(args).length} parameters`;
             }
-            
-            console.log(chalk.cyan(`🔧 Executing: ${toolNameFormatted}`) + chalk.gray(` (${contextInfo})`));
+
+            console.log(
+              chalk.cyan(`🔧 Executing: ${toolNameFormatted}`) + chalk.gray(` (${contextInfo})`)
+            );
           }
         },
       };
