@@ -461,34 +461,27 @@ describe('FilesTool', () => {
         expect(result2.error).toMatch(/Path traversal detected|workspace|security/);
       });
 
-      it('should overwrite existing file with backup functionality', async () => {
+      it('should overwrite existing file', async () => {
         const testFile = path.join(tempDir, 'overwrite-test.txt');
-        const originalContent = 'original content that should be backed up';
+        const originalContent = 'original content';
         const newContent = 'new content that overwrites the original';
 
         // Create original file in temp directory
         await fs.writeFile(testFile, originalContent, 'utf8');
 
-        // Overwrite with backup enabled
+        // Overwrite file
         const result = await filesTool.execute({
           operation: 'write',
           path: testFile,
           content: newContent,
-          backup: true,
         });
 
         expect(result.success).toBe(true);
         expect(result.data.created).toBe(false); // File existed
-        expect(result.data.backup).toBeDefined();
-        expect(result.data.backup).toMatch(/\.backup-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}/);
 
         // Verify new content was written
         const currentContent = await fs.readFile(testFile, 'utf8');
         expect(currentContent).toBe(newContent);
-
-        // Verify backup contains original content
-        const backupContent = await fs.readFile(result.data.backup, 'utf8');
-        expect(backupContent).toBe(originalContent);
       });
 
       it('should perform atomic write operations preventing corruption', async () => {

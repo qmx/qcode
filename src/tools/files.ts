@@ -42,7 +42,6 @@ const WriteFileSchema = z.object({
   path: z.string().min(1, 'File path is required'),
   content: z.string(),
   encoding: z.enum(['utf8', 'utf-8', 'ascii', 'base64', 'hex']).default('utf8').optional(),
-  backup: z.coerce.boolean().default(true).optional(),
   createDirs: z.coerce.boolean().default(true).optional(),
 });
 
@@ -100,7 +99,6 @@ export interface ReadFileResult {
 export interface WriteFileResult {
   path: string;
   size: number;
-  backup?: string;
   created: boolean;
 }
 
@@ -222,11 +220,6 @@ export class FilesTool implements NamespacedTool {
             type: 'boolean',
             description: 'Whether search should be case sensitive',
             default: false,
-          },
-          backup: {
-            type: 'boolean',
-            description: 'Whether to create backup before overwriting files',
-            default: true,
           },
           createDirs: {
             type: 'boolean',
@@ -543,13 +536,7 @@ export class FilesTool implements NamespacedTool {
    * Write file operation - Implementation for step 1.7.3
    */
   private async writeFile(params: WriteFileParams): Promise<WriteFileResult> {
-    const {
-      path: filePath,
-      content,
-      encoding = 'utf8',
-      backup = false,
-      createDirs = true,
-    } = params;
+    const { path: filePath, content, encoding = 'utf8', createDirs = true } = params;
 
     try {
       // Validate the file path with security checks
@@ -557,20 +544,12 @@ export class FilesTool implements NamespacedTool {
 
       // Check if file already exists
       let fileExists = false;
-      let backupPath: string | undefined;
 
       try {
         await fs.access(validatedPath);
         fileExists = true;
       } catch {
         // File doesn't exist - this is fine for write operations
-      }
-
-      // Create backup if file exists and backup is requested
-      if (fileExists && backup) {
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        backupPath = `${validatedPath}.backup-${timestamp}`;
-        await fs.copyFile(validatedPath, backupPath);
       }
 
       // Create parent directories if they don't exist and createDirs is true
@@ -610,16 +589,6 @@ export class FilesTool implements NamespacedTool {
           // Ignore cleanup errors
         }
 
-        // If backup was created and write failed, restore the original file
-        if (backupPath && fileExists) {
-          try {
-            await fs.copyFile(backupPath, validatedPath);
-            await fs.unlink(backupPath);
-          } catch {
-            // If restore fails, keep the backup
-          }
-        }
-
         throw new QCodeError(
           `Failed to write file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`,
           'FILE_WRITE_ERROR'
@@ -634,10 +603,6 @@ export class FilesTool implements NamespacedTool {
         size: stats.size,
         created: !fileExists,
       };
-
-      if (backupPath) {
-        result.backup = backupPath;
-      }
 
       return result;
     } catch (error) {
