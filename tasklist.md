@@ -568,18 +568,6 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   }
   ```
 
-- **Rollback from Backup**:
-
-  ```javascript
-  // User: "Undo the last changes to auth.js"
-  // LLM calls: internal.edit
-  {
-    "operation": "rollback",
-    "file": "src/auth.js",
-    "backup_timestamp": "2025-01-08T10:30:00Z" // or "latest"
-  }
-  ```
-
 - **Batch Multi-File Editing**:
   ```javascript
   // User: "Rename all instances of 'oldFunction' to 'newFunction' across all files"
@@ -593,17 +581,28 @@ The tool has been validated with comprehensive test coverage and demonstrates:
   }
   ```
 
+- **Multi-File Diff Application**:
+  ```javascript
+  // User: "Apply this patch to multiple files"
+  // LLM calls: internal.edit for each file
+  {
+    "operation": "apply_diff",
+    "file": "src/auth.js",
+    "diff": "@@ -10,3 +10,4 @@\n function authenticate() {\n+  console.log('auth start');\n   return validateToken();\n }"
+  }
+  ```
+
 **Concrete Use Cases**:
 
-- **User says**: "Undo my last edit to auth.js" → **LLM calls**: `internal.edit` with `rollback` operation
 - **User says**: "Fix merge conflicts in the authentication module" → **LLM calls**: `internal.edit` with `resolve_conflict`
 - **User says**: "Rename getUserData to fetchUserProfile everywhere" → **LLM calls**: `internal.edit` with `batch_replace`
+- **User says**: "Apply this patch across the affected files" → **LLM calls**: multiple `internal.edit` with `apply_diff`
 
 **Implementation Tasks**:
 
 - [ ] Implement conflict resolution using `node-diff3` for merge scenarios
-- [ ] Add rollback capability to restore from backups
 - [ ] Create batch editing for multiple files
+- [ ] Add multi-file diff application capabilities
 - [ ] Design MCP language server integration (defer to Phase 2 MCP work)
 
 ### 1.7.13 LLM-Assisted Editing Features
