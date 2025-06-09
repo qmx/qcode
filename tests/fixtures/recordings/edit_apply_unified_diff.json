@@ -1,0 +1,339 @@
+[
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "Use the edit tool to apply this diff to src/auth.js: \"@@ -5,2 +5,4 @@\\n   return null;\\n }\\n+\\n+// Added error logging\\n+console.error('Authentication failed:', error);\""
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0.1
+      },
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "internal:edit",
+            "description": "SURGICAL FILE EDITING TOOL - Use for precise, line-level file modifications.\n\nWHEN TO USE THIS TOOL (vs files tool):\n- Insert lines at specific positions without rewriting entire file\n- Replace specific text patterns or line ranges \n- Delete specific lines by number\n- Create new files (alternative to files tool)\n- Rollback to previous versions\n\nAVAILABLE OPERATIONS:\n\n1. insert_line: Insert content at specific line number\n   Parameters: { operation: \"insert_line\", file: \"path\", line_number: 1, content: \"new line\" }\n   Use when: Adding code/content at precise location\n\n2. replace: Search and replace text (supports regex)  \n   Parameters: { operation: \"replace\", file: \"path\", search: \"old\", replace: \"new\", regex: false, global: true }\n   Use when: Changing function names, variables, or text patterns\n\n3. replace_lines: Replace specific line ranges\n   Parameters: { operation: \"replace_lines\", file: \"path\", start_line: 5, end_line: 10, content: \"new content\" }\n   Use when: Replacing entire functions, blocks, or sections\n\n4. delete_lines: Delete specific line ranges\n   Parameters: { operation: \"delete_lines\", file: \"path\", start_line: 5, end_line: 10 }\n   Use when: Removing specific code blocks or lines\n\n5. create_file: Create new file with content\n   Parameters: { operation: \"create_file\", file: \"path\", content: \"file content\", create_directories: true }\n   Use when: Creating new files (alternative to files tool)\n\n6. apply_diff: Apply unified diff to file\n   Parameters: { operation: \"apply_diff\", file: \"path\", diff: \"@@ -10,3 +10,4 @@\\n function test() {\\n+  console.log('new line');\\n   return true;\\n }\", validate: true }\n   Use when: Applying patches, diffs, or complex multi-line changes from version control\n\nADVANTAGES over files tool:\n- Precise line-level operations without rewriting entire file  \n- Atomic operations (fail-safe)\n- Diff-based editing for complex patches\n- Text validation and encoding handling\n- No workspace pollution (users should rely on version control for safety)\n\nIMPORTANT: Always use exact parameter names as shown above. Line numbers are 1-based (line 1 = first line). Diffs must be in unified diff format.",
+            "parameters": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "operation": {
+                      "type": "string",
+                      "const": "insert_line"
+                    },
+                    "file": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "line_number": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "content": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "operation",
+                    "file",
+                    "line_number",
+                    "content"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "operation": {
+                      "type": "string",
+                      "const": "replace"
+                    },
+                    "file": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "search": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "replace": {
+                      "type": "string"
+                    },
+                    "regex": {
+                      "type": "boolean",
+                      "default": false
+                    },
+                    "global": {
+                      "type": "boolean",
+                      "default": true
+                    }
+                  },
+                  "required": [
+                    "operation",
+                    "file",
+                    "search",
+                    "replace"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "operation": {
+                      "type": "string",
+                      "const": "replace_lines"
+                    },
+                    "file": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "start_line": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "end_line": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "content": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "operation",
+                    "file",
+                    "start_line",
+                    "end_line",
+                    "content"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "operation": {
+                      "type": "string",
+                      "const": "delete_lines"
+                    },
+                    "file": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "start_line": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    "end_line": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    }
+                  },
+                  "required": [
+                    "operation",
+                    "file",
+                    "start_line",
+                    "end_line"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "operation": {
+                      "type": "string",
+                      "const": "create_file"
+                    },
+                    "file": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "create_directories": {
+                      "type": "boolean",
+                      "default": true
+                    }
+                  },
+                  "required": [
+                    "operation",
+                    "file",
+                    "content"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "operation": {
+                      "type": "string",
+                      "const": "apply_diff"
+                    },
+                    "file": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "diff": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "validate": {
+                      "type": "boolean",
+                      "default": true
+                    }
+                  },
+                  "required": [
+                    "operation",
+                    "file",
+                    "diff"
+                  ],
+                  "additionalProperties": false
+                }
+              ],
+              "$schema": "http://json-schema.org/draft-07/schema#"
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "internal:files",
+            "description": "Perform file operations including read, write, list, and search files within the workspace",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "operation": {
+                  "type": "string",
+                  "enum": [
+                    "read",
+                    "write",
+                    "list",
+                    "search"
+                  ],
+                  "description": "The type of file operation to perform"
+                },
+                "path": {
+                  "type": "string",
+                  "description": "For read/write: file path. For list: directory path to search in (default: current directory)"
+                },
+                "content": {
+                  "type": "string",
+                  "description": "Content to write (for write operation)"
+                },
+                "query": {
+                  "type": "string",
+                  "description": "Search query text or pattern (for search operation)"
+                },
+                "pattern": {
+                  "type": "string",
+                  "description": "Glob pattern to filter files (e.g., \"**/*.ts\", \"*.swift\"). Use this to find files by extension or name pattern."
+                },
+                "startLine": {
+                  "type": "number",
+                  "description": "Starting line number for partial file read (1-indexed)"
+                },
+                "endLine": {
+                  "type": "number",
+                  "description": "Ending line number for partial file read (1-indexed, inclusive)"
+                },
+                "recursive": {
+                  "type": "boolean",
+                  "description": "Whether to search/list recursively in subdirectories",
+                  "default": false
+                },
+                "includeHidden": {
+                  "type": "boolean",
+                  "description": "Whether to include hidden files (starting with .)",
+                  "default": false
+                },
+                "includeMetadata": {
+                  "type": "boolean",
+                  "description": "Whether to include file metadata (size, dates, permissions)",
+                  "default": false
+                },
+                "useRegex": {
+                  "type": "boolean",
+                  "description": "Whether to treat search query as a regular expression",
+                  "default": false
+                },
+                "caseSensitive": {
+                  "type": "boolean",
+                  "description": "Whether search should be case sensitive",
+                  "default": false
+                },
+                "createDirs": {
+                  "type": "boolean",
+                  "description": "Whether to create parent directories if they don't exist",
+                  "default": true
+                },
+                "encoding": {
+                  "type": "string",
+                  "enum": [
+                    "utf8",
+                    "utf-8",
+                    "ascii",
+                    "base64",
+                    "hex"
+                  ],
+                  "description": "File encoding for read/write operations",
+                  "default": "utf8"
+                },
+                "maxResults": {
+                  "type": "number",
+                  "description": "Maximum number of search results to return",
+                  "default": 100
+                },
+                "includeContext": {
+                  "type": "boolean",
+                  "description": "Whether to include context lines around search matches",
+                  "default": true
+                }
+              },
+              "required": [
+                "operation"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-09T03:41:45.800264Z",
+      "message": {
+        "role": "assistant",
+        "content": "{\"name\": \"internal:edit\", \"parameters\": {\"operation\": \"apply_diff\", \"file\": \"src/auth.js\", \"diff\": \"@@ -5,2 +5,4 @@\\n   return null;\\n }\\n+\\n+// Added error logging\\n+console.error('Authentication failed:', error);\", \"validate\": true}}"
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 7550690541,
+      "load_duration": 2980101125,
+      "prompt_eval_count": 1277,
+      "prompt_eval_duration": 2824199708,
+      "eval_count": 73,
+      "eval_duration": 1727729792
+    },
+    "rawHeaders": {
+      "content-length": "560",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Mon, 09 Jun 2025 03:41:45 GMT"
+    },
+    "responseIsBinary": false
+  }
+]
