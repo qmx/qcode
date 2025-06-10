@@ -147,675 +147,283 @@ qcode "add user authentication"
 - [x] **Flexible Tool Name Handling** - Supports both dot and colon notations seamlessly
 - [x] **Backward Compatibility** - Maintains compatibility with existing tool definitions while supporting new formats
 
-### 1.7 Internal File Operations Tool
+## 1.7 File Operations Tools
 
-#### 1.7.1 Basic FilesTool Class Structure
+**Goal**: Provide comprehensive file system operations through LLM-orchestrated tools  
+**Strategic Context**: Essential foundation for all code analysis, editing, and project intelligence capabilities
 
-- [x] Create `src/tools/files.ts` foundation:
-  - [x] Basic `FilesTool` class structure
-  - [x] Zod schema definitions for all operations
-  - [x] Tool interface and registration structure
-  - [x] Security integration setup with `WorkspaceSecurity`
-  - [x] Basic error handling framework
+### 1.7.1 File Reading Tool
 
-#### 1.7.2 Read File Operation
-
-- [x] Implement read file functionality:
-
-  - [x] Basic file reading with UTF-8 encoding
-  - [x] Line range support (e.g., lines 10-50 of large file)
-  - [x] Handle special characters and encoding issues
-  - [x] Error handling for non-existent files
-  - [x] Binary file detection and graceful handling
-  - [x] Large file reading with memory management
-
-- [x] **Read File Operation Tests**:
-  - [x] Single file read (small text file)
-  - [x] Large file read (>1MB) with chunking
-  - [x] Line-range reading (lines 10-50 of large file)
-  - [x] Binary file handling (should fail gracefully)
-  - [x] Non-existent file error handling
-  - [x] UTF-8 encoding with special characters
-  - [x] Security validation (path traversal attempts)
-
-#### 1.7.3 Write File Operation
-
-- [x] Implement write file functionality:
-
-  - [x] File writing with security validation
-  - [x] Atomic write operations to prevent corruption
-  - [x] Directory creation when needed
-  - [x] Backup functionality for existing files
-  - [x] Handle write permissions and read-only scenarios
-  - [x] File overwrite protection and confirmation
-
-- [x] **Write File Operation Tests (Critical Scenarios)**:
-  - [x] **Security validation (workspace boundary enforcement)** - Path traversal prevention
-  - [x] **Overwrite existing file with backup** - Backup functionality with timestamp
-  - [x] **Atomic write operations** - Corruption prevention during failures
-  - [x] **Create new file in existing directory** - Basic file creation
-
-#### 1.7.4 List Files Operation
-
-- [x] Implement file listing functionality:
-
-  - [x] Basic directory listing
-  - [x] Glob pattern support (`**/*.ts`, `src/**/*.{js,ts}`)
-  - [x] Hidden file handling (`.env`, `.git/`)
-  - [x] Recursive directory traversal
-  - [x] File metadata inclusion (size, dates, permissions)
-  - [x] **NEW**: Smart glob pattern detection in path parameter
-  - [x] **NEW**: Context-aware working directory resolution
-  - [x] **NEW**: Enhanced error handling with specific error codes
-  - [x] **NEW**: Comprehensive security validation with workspace boundaries
-
-- [x] **List Files Operation Tests**:
-  - [x] Simple directory listing
-  - [x] Glob pattern matching (`**/*.ts`, `src/**/*.{js,ts}`)
-  - [x] Hidden file handling (`.env`, `.git/`)
-  - [x] Nested directory recursion
-  - [x] File metadata accuracy
-  - [x] Security validation (workspace boundary enforcement)
-  - [x] Error handling for inaccessible directories
-  - [x] **NEW**: Smart pattern detection tests
-  - [x] **NEW**: Context working directory tests
-  - [x] **NEW**: Enhanced error message validation
-
-#### 1.7.5 Search Files Operation
-
-- [x] Implement file search functionality:
-
-  - [x] Simple text search across files
-  - [x] Regex pattern search with capture groups
-  - [x] Case-sensitive vs insensitive search options
-  - [x] Binary file exclusion during search
-  - [x] Search result ranking and context
-  - [x] **NEW**: Glob pattern support for file filtering
-  - [x] **NEW**: Context lines before and after matches
-  - [x] **NEW**: Result truncation with maxResults parameter
-  - [x] **NEW**: Performance optimization for large codebases
-  - [x] **NEW**: UTF-8 and special character support
-
-- [x] **Search Files Operation Tests**:
-
-  - [x] Simple text search across files
-  - [x] Regex pattern search with groups
-  - [x] Case-sensitive vs insensitive search
-  - [x] Binary file exclusion during search
-  - [x] Large codebase search performance
-  - [x] Search result accuracy and ranking
-  - [x] Security validation (workspace boundary enforcement)
-  - [x] Memory usage during large searches
-  - [x] **NEW**: Context line functionality tests
-  - [x] **NEW**: Result truncation and pagination tests
-  - [x] **NEW**: UTF-8 and special character handling tests
-  - [x] **NEW**: Error handling for invalid regex patterns
-  - [x] **NEW**: Performance benchmarks and timing tests
-
-#### 1.7.6 Error Handling & Integration
-
-- [x] Complete FilesTool integration:
-
-  - [x] Comprehensive error handling for all operations
-  - [x] Integration with `WorkspaceSecurity` validation
-  - [x] Tool registry integration and registration
-  - [x] Tool definition formatting for Ollama function calling
-  - [x] Result formatting and standardization
-  - [x] Performance monitoring and optimization
-  - [x] **NEW**: Enhanced error codes and messages
-  - [x] **NEW**: Context-aware path resolution
-
-#### 1.7.7 **🧠 LLM-Powered Project Intelligence Tool**
-
-**Status: ✅ COMPLETED - LLM-centric project analysis with comprehensive test coverage**
-
-- [x] **LLM-Powered Analysis Engine** - `src/tools/project-intelligence.ts` implemented
-- [x] **Dynamic Project Discovery** - Automatically discovers project files and structure
-- [x] **Intelligent Technology Detection** - LLM analyzes actual project content to identify frameworks and patterns
-- [x] **Context-Aware Project Understanding** - Understands project-specific conventions and architectural decisions
-- [x] **Structured Analysis Output** - Comprehensive project analysis with overview, structure, dependencies, and code quality metrics
-- [x] **CLI Integration** - Full integration with `qcode` command-line interface
-- [x] **Enhanced Context Formatting** - Rich, structured output formatting for project analysis results
-- [x] **Complete E2E Test Coverage** - 18 comprehensive test scenarios covering all project intelligence use cases
-- [x] **VCR-Based Test Recording** - Deterministic test behavior using recorded LLM interactions
-- [x] **Multi-Tool Integration Testing** - Validates seamless operation with file operations and context management
-
-**Capabilities delivered:**
-
-1. **Multi-Language Intelligence**: Correctly identifies React, Rails, Swift, Python, and other project types through LLM analysis
-2. **Framework Detection**: Detects specific frameworks (Next.js, Rails, SwiftUI, FastAPI) through content analysis rather than file patterns
-3. **Technology Stack Analysis**: Identifies databases, testing frameworks, state management, and architectural patterns
-4. **Code Quality Assessment**: LLM-powered code quality analysis with scoring and recommendations
-5. **Project Structure Understanding**: Maps directory organization, entry points, and configuration files
-6. **Dependency Analysis**: Analyzes package managers and dependency relationships
-7. **Real-World Scenario Support**: New developer onboarding, architectural decisions, migration planning, code quality assessment
-
-**Technical implementation:**
-
-- **Tool Structure**: Follows `NamespacedTool` pattern with `internal.project` namespace
-- **LLM Integration**: Uses `OllamaClient.functionCall()` for structured project analysis
-- **Security Integration**: Full `WorkspaceSecurity` integration for safe file access
-- **Context Management**: Integrates with enhanced `ContextManager` for rich result formatting
-- **Error Handling**: Comprehensive error handling with graceful degradation
-- **Test Coverage**: Complete E2E test suite with 18 scenarios in `tests/e2e/project-intelligence.test.ts`
-
-**Real-world validation:**
-
-The tool has been validated with comprehensive test coverage and demonstrates:
-
-- Accurate project analysis across different project types
-- Proper framework and technology identification
-- Contextual understanding that improves with LLM analysis
-- Rich, structured output that provides actionable project insights
-- Performance within acceptable limits (under 30 seconds for complex analysis)
-- Graceful error handling for edge cases and ambiguous queries
-
-#### 1.7.8 E2E Test Fixtures and Project Analysis Validation
-
-- [ ] **Create comprehensive test project fixtures**:
-
-  - [ ] `tests/fixtures/projects/react-cra/` - Create React App with standard structure
-    - [ ] `src/App.js`, `src/components/`, `package.json`, `public/index.html`
-    - [ ] Include common dependencies: React Router, styled-components, Jest
-    - [ ] Test `"analyze this React project"` workflow with VCR recording
-  - [ ] `tests/fixtures/projects/rails-api/` - Rails 7 API-only application
-    - [ ] `app/controllers/`, `app/models/`, `Gemfile`, `config/routes.rb`
-    - [ ] Include common gems: devise, sidekiq, rspec-rails
-    - [ ] Test `"analyze this Rails project"` workflow with VCR recording
-  - [ ] `tests/fixtures/projects/swift-ios/` - SwiftUI iOS application
-    - [ ] `ContentView.swift`, `App.swift`, `Package.swift`, `Info.plist`
-    - [ ] Include common patterns: MVVM, Core Data, Combine
-    - [ ] Test `"analyze this Swift project"` workflow with VCR recording
-  - [ ] `tests/fixtures/projects/python-fastapi/` - FastAPI web application
-    - [ ] `main.py`, `requirements.txt`, `models/`, `routers/`
-    - [ ] Include common dependencies: SQLAlchemy, Pydantic, pytest
-    - [ ] Test `"analyze this Python project"` workflow with VCR recording
-
-- [ ] **LLM reasoning VCR recordings**:
-
-  - [ ] `tests/fixtures/recordings/llm_reasoning_react.json` - LLM analysis of React project
-  - [ ] `tests/fixtures/recordings/llm_reasoning_rails.json` - LLM analysis of Rails project
-  - [ ] `tests/fixtures/recordings/llm_reasoning_swift.json` - LLM analysis of Swift project
-  - [ ] `tests/fixtures/recordings/llm_reasoning_python.json` - LLM analysis of Python project
-  - [ ] Each recording should capture the LLM's step-by-step reasoning process
-
-- [ ] **Cross-language validation tests**:
-  - [ ] Test framework detection accuracy across all project types
-  - [ ] Test dependency analysis correctness for each package manager
-  - [ ] Test architectural pattern recognition (MVC, MVVM, microservices)
-  - [ ] Test code quality assessment consistency across languages
-
-### 1.7.9 File Editing Tool Foundation
-
-**Status: ✅ COMPLETED - Surgical file editing with comprehensive operations and zero workspace pollution**
-
-**Tool Name**: `internal.edit` - Surgical file modification operations
-
-**Concrete Editing Operations**:
-
-- **Line-Based Operations**:
-
-  ```javascript
-  // LLM calls: internal.edit with operation "insert_line"
-  {
-    "file": "src/auth.js",
-    "operation": "insert_line",
-    "line_number": 15,
-    "content": "  if (!user) throw new Error('User not found');"
-  }
-  ```
-
-- **Search and Replace**:
-
-  ```javascript
-  // LLM calls: internal.edit with operation "replace"
-  {
-    "file": "src/user.js",
-    "operation": "replace",
-    "search": "function getUserData\\(",
-    "replace": "function fetchUserProfile(",
-    "regex": true
-  }
-  ```
-
-- **Line Range Replacement**:
-
-  ```javascript
-  // LLM calls: internal.edit with operation "replace_lines"
-  {
-    "file": "src/config.js",
-    "operation": "replace_lines",
-    "start_line": 10,
-    "end_line": 15,
-    "content": "const config = {\n  apiUrl: process.env.API_URL,\n  timeout: 5000\n};"
-  }
-  ```
-
-- **Delete Operations**:
-  ```javascript
-  // LLM calls: internal.edit with operation "delete_lines"
-  {
-    "file": "src/old.js",
-    "operation": "delete_lines",
-    "start_line": 20,
-    "end_line": 25
-  }
-  ```
-
-**Concrete Use Cases**:
-
-- **User says**: "Add error handling to line 15 of auth.js" → **LLM calls**: `internal.edit` with `insert_line`
-- **User says**: "Replace all getUserData with fetchUserProfile" → **LLM calls**: `internal.edit` with `replace` using regex
-- **User says**: "Remove the debug console.log statements" → **LLM calls**: `internal.edit` with `delete_lines` or `replace`
-
-**Implementation Tasks**:
-
-- [x] Create `src/tools/edit.ts` basic class structure with NamespacedTool interface
-- [x] Implement Zod schema for editing parameters (file path, content, operation type)
-- [x] Add WorkspaceSecurity integration for safe file path validation
-- [x] ~~Create backup functionality with timestamp-based file versioning~~ **REMOVED** - No workspace pollution principle
-- [x] Implement atomic write operations (write to temp file, then rename)
-
-**Delivered Features**:
-
-- [x] **Five Core Operations**: insert_line, replace, replace_lines, delete_lines, create_file
-- [x] **Comprehensive Parameter Validation**: Zod schemas for all operations with proper error handling
-- [x] **Security Integration**: Full WorkspaceSecurity integration for path validation
-- [x] **Atomic Operations**: Temporary file writes with atomic rename for corruption prevention
-- [x] **CLI Integration**: Fully registered and available in LLM orchestration
-- [x] **Zero Workspace Pollution**: No backup files created, users rely on version control
-- [x] **Complete Test Coverage**: 13 unit tests + 2 E2E tests covering all operations
-- [x] **Production Quality**: All validation passes (TypeScript, ESLint, Prettier)
-
-### 1.7.10 Text Editing Operations
-
-**Status: ✅ COMPLETED - Enhanced text editing with diff operations, validation, and smart formatting**
-
-**Concrete Text Manipulation Operations**:
-
-- **Line Insertion**:
-
-  ```javascript
-  // User: "Add console.log('debug') after line 10"
-  // LLM calls: internal.edit
-  {
-    "operation": "insert_line",
-    "line_number": 11,  // Insert after line 10
-    "content": "  console.log('debug');"
-  }
-  ```
-
-- **Text Search & Replace**:
-
-  ```javascript
-  // User: "Change all 'var' to 'const' in this file"
-  // LLM calls: internal.edit
-  {
-    "operation": "replace",
-    "search": "\\bvar\\b",
-    "replace": "const",
-    "regex": true,
-    "global": true
-  }
-  ```
-
-- **Diff-Based Editing**:
-  ```javascript
-  // User: "Apply this diff to the file"
-  // LLM calls: internal.edit
-  {
-    "operation": "apply_diff",
-    "diff": "@@ -10,3 +10,4 @@\n function test() {\n+  console.log('new line');\n   return true;\n }"
-  }
-  ```
-
-**Implementation Tasks**:
-
-- [x] Add dependency: `npm install diff jsdiff` for language-agnostic diff generation
-- [x] Implement line-based editing (insert, replace, delete specific lines)
-- [x] Implement search-and-replace with regex support (works with any text)
-- [x] Create diff-based editing using existing `node-diff3` library
-- [x] Add basic text validation (encoding, line endings, etc.)
-
-**Delivered Features**:
-
-- [x] **Apply Diff Operation**: Full unified diff and simple hunk diff support with `apply_diff` operation
-- [x] **Enhanced Line Editing**: Smart indentation, line ending preservation, and comprehensive validation
-- [x] **Text Validation**: Encoding validation, binary content detection, line length limits
-- [x] **Line Ending Support**: Automatic detection and preservation of Windows (CRLF), Unix (LF), and Mac (CR) line endings
-- [x] **Smart Indentation**: Automatic indentation matching based on surrounding context
-- [x] **Comprehensive Error Handling**: Detailed error messages for diff parsing, context mismatches, and validation failures
-- [x] **Complete Test Coverage**: 13 new tests covering all diff operations, validation, and edge cases
-- [x] **Production Quality**: All validation passes with atomic operations and proper error handling
-
-### 1.7.11 File Creation Operations (REMOVED)
-
-**Status: ❌ REMOVED - Unnecessary complexity, LLM orchestration is superior**
-
-**Original Plan**: Add template-based file generation with static templates for common file types (React components, Express routes, etc.) and framework-specific creation patterns.
-
-**Why Removed**: 
-- **Static templates become outdated** - Frameworks evolve, patterns change
-- **LLM is already superior** - Can analyze actual project context and generate appropriate content
-- **Maintenance burden** - Would require constant template updates
-- **Less flexible** - Templates can't adapt to project-specific conventions
-- **Already solved** - Current `create_file` operation + LLM orchestration provides better results
-
-**Better Approach**: LLM calls `internal.project` to understand project context, then `internal.edit` with `create_file` operation using dynamically generated content that matches the actual project's patterns and conventions.
-
-### 1.7.12 Advanced Editing Features
-
-**Concrete Advanced Operations**:
-
-- **Conflict Resolution**:
-
-  ```javascript
-  // User: "Merge the changes from feature branch"
-  // LLM calls: internal.edit when conflicts detected
-  {
-    "operation": "resolve_conflict",
-    "file": "src/auth.js",
-    "conflict_markers": {
-      "start": 15,
-      "middle": 18,
-      "end": 22
-    },
-    "resolution": "accept_both", // or "accept_current", "accept_incoming", "custom"
-    "custom_content": "merged code here..."
-  }
-  ```
-
-- **Batch Multi-File Editing**:
-  ```javascript
-  // User: "Rename all instances of 'oldFunction' to 'newFunction' across all files"
-  // LLM calls: internal.edit
-  {
-    "operation": "batch_replace",
-    "files": ["src/auth.js", "src/user.js", "tests/auth.test.js"],
-    "search": "\\boldFunction\\b",
-    "replace": "newFunction",
-    "regex": true
-  }
-  ```
-
-- **Multi-File Diff Application**:
-  ```javascript
-  // User: "Apply this patch to multiple files"
-  // LLM calls: internal.edit for each file
-  {
-    "operation": "apply_diff",
-    "file": "src/auth.js",
-    "diff": "@@ -10,3 +10,4 @@\n function authenticate() {\n+  console.log('auth start');\n   return validateToken();\n }"
-  }
-  ```
-
-**Concrete Use Cases**:
-
-- **User says**: "Fix merge conflicts in the authentication module" → **LLM calls**: `internal.edit` with `resolve_conflict`
-- **User says**: "Rename getUserData to fetchUserProfile everywhere" → **LLM calls**: `internal.edit` with `batch_replace`
-- **User says**: "Apply this patch across the affected files" → **LLM calls**: multiple `internal.edit` with `apply_diff`
-
-**Implementation Tasks**:
-
-- [ ] Implement conflict resolution using `node-diff3` for merge scenarios
-- [ ] Create batch editing for multiple files
-- [ ] Add multi-file diff application capabilities
-- [ ] Design MCP language server integration (defer to Phase 2 MCP work)
-
-### 1.7.13 LLM-Assisted Editing Features
-
-**Concrete LLM-Enhanced Operations**:
-
-- **Context-Aware Code Generation**:
-
-  ```javascript
-  // User: "Add authentication middleware to this Express app"
-  // LLM first calls: internal.project (detects Express + JWT pattern)
-  // Then calls: internal.edit
-  {
-    "operation": "generate_code",
-    "file": "middleware/auth.js",
-    "context": "express_jwt_auth",
-    "generated_content": "const jwt = require('jsonwebtoken');\n\nmodule.exports = (req, res, next) => {\n  // Generated based on project patterns\n};"
-  }
-  ```
-
-- **Style-Consistent Code**:
-
-  ```javascript
-  // User: "Add a new function to handle user validation"
-  // LLM calls: internal.project (detects ESLint + Prettier config)
-  // Then calls: internal.edit with style-aware generation
-  {
-    "operation": "insert_function",
-    "file": "src/validation.js",
-    "function_name": "validateUser",
-    "style": {
-      "indent": "2_spaces", // detected from .editorconfig
-      "quotes": "single",    // detected from ESLint config
-      "semicolons": true     // detected from project style
-    }
-  }
-  ```
-
-- **Error Detection & Fix**:
-  ```javascript
-  // User: "Fix the syntax errors in this file"
-  // LLM calls: internal.edit after analyzing code
-  {
-    "operation": "fix_errors",
-    "file": "src/broken.js",
-    "fixes": [
-      {
-        "line": 15,
-        "error": "missing_semicolon",
-        "fix": "add_semicolon"
-      },
-      {
-        "line": 22,
-        "error": "undefined_variable",
-        "fix": "add_declaration",
-        "content": "const user = "
-      }
-    ]
-  }
-  ```
-
-**Concrete Use Cases**:
-
-- **User says**: "Add error handling that matches this project's style" → **LLM calls**: `internal.edit` with context-aware generation
-- **User says**: "Fix the linting errors in auth.js" → **LLM calls**: `internal.edit` with `fix_errors` based on project's ESLint rules
-- **User says**: "Add a React component that follows the existing patterns" → **LLM calls**: `internal.edit` generating code that matches project structure
-
-**Implementation Tasks**:
-
-- [ ] Context-aware code generation based on project analysis (language-agnostic)
-- [ ] Integration with MCP language server tools (when available via Phase 2)
-- [ ] Code style consistency using project's existing formatters
-- [ ] Language-agnostic error detection through LLM analysis
-
-### 1.7.14 File Editing Tests
-
-**Concrete Test Scenarios**:
-
-- **Line-Based Editing Tests**:
-
-  ```javascript
-  // Test: Insert line at specific position
-  // Setup: File with 20 lines
-  // Action: internal.edit with insert_line at line 10
-  // Verify: Line inserted at correct position, other lines shifted
-  // Verify: Backup created with timestamp
-  ```
-
-- **Search & Replace Tests**:
-
-  ```javascript
-  // Test: Regex replacement across file
-  // Setup: JavaScript file with 'var' declarations
-  // Action: internal.edit with replace operation (var → const)
-  // Verify: All 'var' changed to 'const', other text unchanged
-  // Verify: Valid JavaScript syntax maintained
-  ```
-
-- **Multi-Language Creation Tests**:
-
-  ```javascript
-  // Test: Python class creation
-  // Action: internal.edit create_file for Python class
-  // Verify: Proper Python syntax and indentation
-
-  // Test: Rust struct creation
-  // Action: internal.edit create_file for Rust struct
-  // Verify: Proper Rust syntax and conventions
-  ```
-
-- **Conflict Resolution Tests**:
-  ```javascript
-  // Test: Git merge conflict resolution
-  // Setup: File with conflict markers <<<< ==== >>>>
-  // Action: internal.edit with resolve_conflict
-  // Verify: Conflict markers removed, content merged correctly
-  ```
-
-**Implementation Tasks**:
-
-- [ ] Test text editing operations (line-based, search-replace, diff application)
-- [ ] Test file creation across different languages (Python, Rust, Java, Go, etc.)
-- [ ] Test conflict resolution and merge scenarios
-- [ ] Test language server integration with multiple language servers
-
-### 1.7.15 Git Integration Tool Foundation
-
-**Tool Name**: `internal.git.status` - Git status and working directory analysis
-**Tool Name**: `internal.git.diff` - Git diff analysis and change detection  
-**Tool Name**: `internal.git.log` - Git history and commit log analysis
-**Tool Name**: `internal.git.commit` - Git commit operations
-
-**Architecture Principle**: **Granular, single-purpose git tools** rather than one monolithic git tool
+**Tool Name**: `internal.files.read` - Read file contents with line range support
 
 **High-Level Commands Enabled**:
 
 ```bash
-# Diff analysis and change understanding
-qcode "what changes have I made to the authentication module?"
-qcode "show me the diff for the last commit"
-qcode "analyze the changes in src/auth.js and explain what they do"
+# File content reading
+qcode "show me the package.json file"
+qcode "read the main configuration file"
+qcode "display lines 10-50 of the large log file"
 
-# Commit history and log analysis  
-qcode "show me the recent commits related to user authentication"
-qcode "find commits that modified the database schema"
-qcode "what was changed in commit abc123?"
-
-# Intelligent committing
-qcode "commit my authentication changes with a good message"
-qcode "stage and commit the files I've been working on"
-qcode "commit just the auth.js changes with an appropriate message"
-
-# Working directory status
-qcode "what's the current status of my git repository?"
-qcode "what files have been modified but not committed?"
-qcode "show me untracked files and what they contain"
+# Project exploration
+qcode "what's in the src directory's main entry point?"
+qcode "show me the authentication module code"
 ```
 
-**Real-World Workflow Examples**:
+**Implementation Tasks**:
+
+- [x] Implement `src/tools/files.ts` with read functionality:
+  - [x] Basic file reading with UTF-8 encoding
+  - [x] Line range support for large files
+  - [x] Binary file detection and graceful handling
+  - [x] Large file reading with memory management
+- [x] Security and validation:
+  - [x] Integration with `WorkspaceSecurity` for path validation
+  - [x] Path traversal prevention
+  - [x] Error handling for non-existent files
+- [x] Tool registry integration and CLI availability
+- [x] **Unit Tests** (`tests/unit/tools/files.test.ts`):
+  - [x] Single file read (small text file)
+  - [x] Large file read (>1MB) with chunking
+  - [x] Line-range reading (lines 10-50 of large file)
+  - [x] Binary file handling (graceful failure)
+  - [x] Security validation (path traversal attempts)
+- [x] **E2E Tests** (`tests/e2e/cli-file-reads.test.ts`):
+  - [x] Test: `qcode "show me package.json"`
+  - [x] Test: `qcode "read the main config file"`
+  - [x] Test: `qcode "display specific line range"`
+
+### 1.7.2 File Writing Tool
+
+**Tool Name**: `internal.files.write` - Write file contents with atomic operations
+
+**High-Level Commands Enabled**:
 
 ```bash
-# Development workflow
-qcode "show me what I've changed since the last commit"
-# → LLM calls internal.git.diff + internal.git.status for comprehensive view
+# File creation and modification
+qcode "create a new config file with these settings"
+qcode "update the package.json with this dependency"
+qcode "write this content to a new module"
 
-# Code review preparation  
-qcode "analyze my changes and suggest a commit message"
-# → LLM calls internal.git.diff → analyzes changes → calls internal.git.commit
-
-# Understanding project history
-qcode "show me how the authentication system evolved"
-# → LLM calls internal.git.log with path filtering → analyzes commit patterns
+# Safe file operations
+qcode "backup and then modify this important file"
 ```
 
-- [ ] Create `src/tools/git/` directory structure for multiple git tools
-- [ ] Implement `src/tools/git/base.ts` with shared git utilities:
-  - [ ] Git repository detection and validation
-  - [ ] Common git command execution framework
-  - [ ] Working directory and repository boundary enforcement
-  - [ ] Git command security validation (read-only operations only initially)
-  - [ ] Error handling for git command failures and non-git directories
-- [ ] Integration with `WorkspaceSecurity` for repository boundary enforcement
-- [ ] Git availability detection and user guidance for missing git
-- [ ] Implement safe git command execution utilities:
-  - [ ] Command argument sanitization and validation
-  - [ ] Git working directory management within workspace boundaries
-  - [ ] Standard error code interpretation and user-friendly messages
-  - [ ] Command timeout handling for long-running operations
-  - [ ] Git configuration detection (user.name, user.email) for commit operations
+**Implementation Tasks**:
 
-### 1.7.16 Git Status and Working Directory Tool
+- [x] Implement write functionality in `src/tools/files.ts`:
+  - [x] Atomic write operations to prevent corruption
+  - [x] Directory creation when needed
+  - [x] Backup functionality for existing files
+  - [x] File overwrite protection and confirmation
+- [x] Security integration:
+  - [x] Workspace boundary enforcement
+  - [x] Write permissions validation
+  - [x] Read-only scenario handling
+- [x] **Unit Tests** (`tests/unit/tools/files.test.ts`):
+  - [x] Security validation (workspace boundary enforcement)
+  - [x] Overwrite existing file with backup
+  - [x] Atomic write operations (corruption prevention)
+  - [x] Create new file in existing directory
 
-**Tool Name**: `internal.git.status` - Analyze working directory and staging area
+### 1.7.3 File Listing Tool
 
-**Concrete Operations**:
+**Tool Name**: `internal.files.list` - List files and directories with glob pattern support
 
-- **Working Directory Status**:
-  ```javascript
-  // User: "What's the current status of my repository?"
-  // LLM calls: internal.git.status
-  {
-    "operation": "status",
-    "include_untracked": true,
-    "porcelain": false,  // Human-readable format
-    "show_ignored": false
-  }
-  ```
+**High-Level Commands Enabled**:
 
-- **Staging Area Analysis**:
-  ```javascript
-  // User: "What files are staged for commit?"
-  // LLM calls: internal.git.status  
-  {
-    "operation": "staged",
-    "detailed": true // Include file change statistics
-  }
-  ```
+```bash
+# Directory exploration
+qcode "list all files in the src directory"
+qcode "show me all TypeScript files in this project"
+qcode "find all configuration files"
 
-- **File Change Summary**:
-  ```javascript
-  // User: "Summarize what files I've been working on"
-  // LLM calls: internal.git.status
-  {
-    "operation": "summary",
-    "group_by": "type", // modified, added, deleted, renamed
-    "include_stats": true
-  }
-  ```
+# Pattern-based discovery
+qcode "list all test files"
+qcode "show me all JavaScript and TypeScript files"
+```
 
-- [ ] Implement `src/tools/git/status.ts`:
-  - [ ] `git status` command wrapper with parsing
-  - [ ] Working directory change detection and categorization
-  - [ ] Staging area analysis and file state tracking
-  - [ ] Untracked file discovery and analysis
-  - [ ] File modification statistics and change metrics
-- [ ] Structured status result formatting:
-  - [ ] Modified files with change summaries
-  - [ ] Staged files with commit-ready status
-  - [ ] Untracked files with recommendations
-  - [ ] Deleted files with safety confirmations
-  - [ ] Renamed files with move detection
-- [ ] Repository state validation and health checks:
-  - [ ] Clean working directory detection
-  - [ ] Merge conflict detection and reporting
-  - [ ] Detached HEAD state detection and guidance
-  - [ ] Repository integrity checks
-- [ ] **Git Status Tool Tests** (`tests/unit/tools/git/status.test.ts`):
-  - [ ] Working directory status parsing and categorization
-  - [ ] Staging area analysis accuracy
-  - [ ] Untracked file detection and handling
-  - [ ] Repository state validation and health checks
-  - [ ] Error handling for non-git directories and corrupted repositories
+**Implementation Tasks**:
 
-### 1.7.17 Git Status Tool
+- [x] Implement listing functionality in `src/tools/files.ts`:
+  - [x] Basic directory listing with metadata
+  - [x] Glob pattern support (`**/*.ts`, `src/**/*.{js,ts}`)
+  - [x] Hidden file handling (`.env`, `.git/`)
+  - [x] Recursive directory traversal
+  - [x] Smart glob pattern detection in path parameter
+- [x] **Unit Tests** (`tests/unit/tools/files.test.ts`):
+  - [x] Simple directory listing
+  - [x] Glob pattern matching
+  - [x] Hidden file handling
+  - [x] Security validation (workspace boundary enforcement)
+- [x] **E2E Tests** (`tests/e2e/file-list-workflow.test.ts`):
+  - [x] Test: `qcode "list all files in src"`
+  - [x] Test: `qcode "show TypeScript files"`
+  - [x] Test: `qcode "find config files"`
 
-**Tool Name**: `internal.git.status` - Show git working directory status
+### 1.7.4 File Search Tool
+
+**Tool Name**: `internal.files.search` - Search file contents with regex and context
+
+**High-Level Commands Enabled**:
+
+```bash
+# Code search and analysis
+qcode "find all functions named 'authenticate'"
+qcode "search for TODO comments across the codebase"
+qcode "find all imports of lodash"
+
+# Pattern-based code discovery
+qcode "find all React components"
+qcode "search for error handling patterns"
+```
+
+**Implementation Tasks**:
+
+- [x] Implement search functionality in `src/tools/files.ts`:
+  - [x] Text and regex pattern search with capture groups
+  - [x] Case-sensitive/insensitive options
+  - [x] Binary file exclusion during search
+  - [x] Context lines before and after matches
+  - [x] Result truncation with maxResults parameter
+  - [x] Performance optimization for large codebases
+- [x] **Unit Tests** (`tests/unit/tools/files.test.ts`):
+  - [x] Simple text search across files
+  - [x] Regex pattern search with groups
+  - [x] Case-sensitive vs insensitive search
+  - [x] Context line functionality tests
+  - [x] Performance benchmarks and timing tests
+- [x] **E2E Tests** (`tests/e2e/cli-search.test.ts`):
+  - [x] Test: `qcode "find function named authenticate"`
+  - [x] Test: `qcode "search for TODO comments"`
+  - [x] Test: `qcode "find imports of specific module"`
+
+### 1.7.5 Project Intelligence Tool
+
+**Tool Name**: `internal.project` - LLM-powered comprehensive project analysis
+
+**High-Level Commands Enabled**:
+
+```bash
+# Project understanding and analysis
+qcode "analyze this project and tell me about its architecture"
+qcode "what technologies and frameworks are used here?"
+qcode "explain the project structure and organization"
+
+# Technology-specific insights
+qcode "how is testing set up in this project?"
+qcode "what's the deployment strategy for this application?"
+qcode "analyze the code quality and suggest improvements"
+
+# Onboarding and exploration
+qcode "I'm new to this codebase, give me an overview"
+qcode "what are the main entry points and key modules?"
+```
+
+**Implementation Tasks**:
+
+- [x] **Core Analysis Engine** (`src/tools/project-intelligence.ts`):
+  - [x] LLM-powered project file discovery and analysis
+  - [x] Technology and framework detection through content analysis
+  - [x] Architecture pattern recognition and documentation
+  - [x] Code quality assessment with scoring and recommendations
+- [x] **Project Understanding Capabilities**:
+  - [x] Multi-language intelligence (React, Rails, Swift, Python, etc.)
+  - [x] Framework-specific analysis (Next.js, Rails, SwiftUI, FastAPI)
+  - [x] Dependency analysis and package manager detection
+  - [x] Directory organization and entry point mapping
+- [x] **Integration and Security**:
+  - [x] Full `WorkspaceSecurity` integration for safe file access
+  - [x] Integration with enhanced `ContextManager` for rich formatting
+  - [x] Tool registry integration with `internal.project` namespace
+- [x] **Unit Tests** (`tests/unit/tools/project-intelligence.test.ts`):
+  - [x] Project discovery and file analysis accuracy
+  - [x] Technology detection across different project types
+  - [x] Security boundary validation and error handling
+  - [x] Performance benchmarks for complex project analysis
+- [x] **E2E Tests** (`tests/e2e/project-intelligence.test.ts`):
+  - [x] Test: `qcode "analyze this React project"`
+  - [x] Test: `qcode "what technologies are used here?"`
+  - [x] Test: `qcode "explain the project architecture"`
+  - [x] Test: `qcode "assess code quality and suggest improvements"`
+
+**Real-World Validation:**
+
+- [x] **18 comprehensive E2E test scenarios** covering all project intelligence use cases
+- [x] **VCR-based test recording** for deterministic LLM behavior validation
+- [x] **Multi-tool integration testing** with file operations and context management
+- [x] **Performance validation** (under 30 seconds for complex analysis)
+- [x] **Cross-language validation** across React, Rails, Swift, Python projects
+
+### 1.7.6 File Editing Tool
+
+**Tool Name**: `internal.edit` - Surgical file modification with atomic operations
+
+**High-Level Commands Enabled**:
+
+```bash
+# Code modification and fixes
+qcode "add error handling to line 15 of auth.js"
+qcode "replace all instances of getUserData with fetchUserProfile"
+qcode "remove the debug console.log statements from this file"
+
+# Diff-based editing
+qcode "apply this diff to the authentication module"
+qcode "make these specific changes to the configuration file"
+
+# File creation with context
+qcode "create a new React component that follows project patterns"
+qcode "add a new route handler for user authentication"
+```
+
+**Implementation Tasks**:
+
+- [x] **Core Editing Operations** (`src/tools/edit.ts`):
+  - [x] Five core operations: insert_line, replace, replace_lines, delete_lines, create_file
+  - [x] Line-based editing with smart indentation and line ending preservation
+  - [x] Search and replace with regex support and global/local scope
+  - [x] Diff-based editing with unified diff and simple hunk diff support
+- [x] **Advanced Text Processing**:
+  - [x] Text validation (encoding, binary content detection, line length limits)
+  - [x] Line ending support (Windows CRLF, Unix LF, Mac CR detection and preservation)
+  - [x] Smart indentation matching based on surrounding context
+  - [x] Comprehensive error handling for diff parsing and validation failures
+- [x] **Security and Safety**:
+  - [x] Full `WorkspaceSecurity` integration for path validation
+  - [x] Atomic write operations (temporary file writes with atomic rename)
+  - [x] Zero workspace pollution (no backup files, users rely on version control)
+  - [x] Comprehensive parameter validation with Zod schemas
+- [x] **Unit Tests** (`tests/unit/tools/edit.test.ts`):
+  - [x] All five core operations with comprehensive validation
+  - [x] Diff operations, validation, and edge cases (13 test scenarios)
+  - [x] Security boundary tests and error handling
+  - [x] Atomic operation corruption prevention tests
+- [x] **E2E Tests** (`tests/e2e/file-edit-workflow.test.ts`):
+  - [x] Test: `qcode "add line to specific file"`
+  - [x] Test: `qcode "replace function name across file"`
+  - [x] Test: `qcode "apply diff to file"`
+  - [x] Test: `qcode "create new file with content"`
+
+**Advanced Features (Future Implementation)**:
+
+- [ ] **Multi-File Operations**:
+  - [ ] Batch editing across multiple files
+  - [ ] Cross-file refactoring with dependency tracking
+  - [ ] Conflict resolution for merge scenarios
+- [ ] **LLM-Enhanced Editing**:
+  - [ ] Context-aware code generation based on project analysis
+  - [ ] Style-consistent code generation using project formatters
+  - [ ] Error detection and fixing through LLM analysis
+
+## 1.8 Git Tools
+
+**Goal**: Provide granular git operations through LLM-orchestrated tools for version control intelligence  
+**Strategic Context**: Essential for understanding project history, managing changes, and creating intelligent commits based on code analysis
+
+**Architecture Principle**: **Granular, single-purpose git tools** rather than one monolithic git tool
+
+### 1.8.1 Git Status Tool
+
+**Tool Name**: `internal.git.status` - Git status and working directory analysis
 
 **High-Level Commands Enabled**:
 
@@ -824,25 +432,22 @@ qcode "show me how the authentication system evolved"
 qcode "what's the current git status?"
 qcode "show me what files have been modified"
 qcode "what files are untracked in this repository?"
-
-# Working directory state inspection
 qcode "is my working directory clean?"
-qcode "what changes do I have that aren't committed yet?"
 ```
 
 **Implementation Tasks**:
 
-- [x] Implement `src/tools/git/status.ts`:
+- [x] **Core Git Status Implementation** (`src/tools/git/status.ts`):
   - [x] Git status command execution with parsing
   - [x] Working directory change detection and categorization
   - [x] File state analysis (modified, added, deleted, renamed, untracked)
   - [x] Clean repository detection and status summary
-- [x] Structured status result formatting:
+- [x] **Structured Result Formatting**:
   - [x] Categorized file lists by change type
   - [x] Repository state summary with change counts
   - [x] Integration with GitBase security validation
 - [x] Tool registry integration and CLI availability
-- [x] **Unit Tests** (`tests/unit/tools/git/status.test.ts`):
+- [ ] **Unit Tests** (`tests/unit/tools/git/status.test.ts`):
   - [ ] Working directory status parsing accuracy
   - [ ] File categorization and state detection
   - [ ] Clean vs dirty repository detection
@@ -852,7 +457,7 @@ qcode "what changes do I have that aren't committed yet?"
   - [ ] Test: `qcode "show me modified files"`
   - [ ] Test: `qcode "is my working directory clean?"`
 
-### 1.7.18 Git Diff Tool
+### 1.8.2 Git Diff Tool
 
 **Tool Name**: `internal.git.diff` - Show working directory changes
 
@@ -871,12 +476,12 @@ qcode "what did I modify in the authentication module?"
 
 **Implementation Tasks**:
 
-- [x] Implement `src/tools/git/diff.ts`:
+- [x] **Core Git Diff Implementation** (`src/tools/git/diff.ts`):
   - [x] Working directory diff generation with file filtering
   - [x] Diff parsing and structured result formatting
   - [x] Change statistics (insertions, deletions, files changed)
   - [x] Context line configuration and whitespace handling
-- [x] Intelligent change analysis:
+- [x] **Intelligent Change Analysis**:
   - [x] File-level change summary with statistics
   - [x] Integration with GitBase security validation
   - [x] Binary file detection and handling
@@ -891,547 +496,161 @@ qcode "what did I modify in the authentication module?"
   - [ ] Test: `qcode "display diff for specific files"`
   - [ ] Test: `qcode "what are my current modifications?"`
 
-### 1.7.19 Git Staged Tool
+### 1.8.3 Additional Git Tools (Future Implementation)
 
-**Tool Name**: `internal.git.staged` - Show staged changes ready for commit
+**Future Git Tool Expansion**:
 
-**High-Level Commands Enabled**:
-
-```bash
-# Staged changes analysis
-qcode "what changes are staged for commit?"
-qcode "show me what's ready to be committed"
-qcode "display the staged diff"
-
-# Pre-commit review
-qcode "review my staged changes before committing"
-qcode "what will be included in the next commit?"
-```
-
-**Implementation Tasks**:
-
-- [ ] Implement `src/tools/git/staged.ts`:
-  - [ ] Staged changes diff generation with `--cached` flag
-  - [ ] Staged file listing and categorization
+- [ ] **Git Staged Tool** (`internal.git.staged`):
+  - [ ] Show staged changes ready for commit
   - [ ] Pre-commit change analysis and validation
-  - [ ] Integration with GitBase security framework
-- [ ] Staging area analysis:
-  - [ ] Staged vs unstaged change comparison
-  - [ ] Commit-ready validation and checks
-  - [ ] File-by-file staging status breakdown
-- [ ] Tool registry integration and CLI availability
-- [ ] **Unit Tests** (`tests/unit/tools/git/staged.test.ts`):
-  - [ ] Staged diff generation and parsing
-  - [ ] Staging area state detection
-  - [ ] Pre-commit validation accuracy
-  - [ ] Error handling for empty staging area
-- [ ] **E2E Tests** (`tests/e2e/git-staged-workflow.test.ts`):
-  - [ ] Test: `qcode "what's staged for commit?"`
-  - [ ] Test: `qcode "review my staged changes"`
-  - [ ] Test: `qcode "show me the staged diff"`
+  - [ ] Staging area vs working directory comparison
 
-### 1.7.20 Git Compare Tool
-
-**Tool Name**: `internal.git.compare` - Compare commits, branches, or ranges
-
-**High-Level Commands Enabled**:
-
-```bash
-# Commit comparisons
-qcode "compare the last two commits"
-qcode "show me what changed between HEAD~1 and HEAD"
-qcode "diff between commit abc123 and def456"
-
-# Branch comparisons
-qcode "compare this branch with main"
-qcode "what are the differences from the master branch?"
-```
-
-**Implementation Tasks**:
-
-- [ ] Implement `src/tools/git/compare.ts`:
-  - [ ] Commit-to-commit diff generation with range support
-  - [ ] Branch comparison with merge base detection
-  - [ ] Commit hash validation and resolution
-  - [ ] Integration with GitBase security framework
-- [ ] Intelligent comparison analysis:
-  - [ ] Change impact assessment between versions
-  - [ ] File modification tracking across commits
-  - [ ] Merge conflict prediction and analysis
-- [ ] Tool registry integration and CLI availability
-- [ ] **Unit Tests** (`tests/unit/tools/git/compare.test.ts`):
-  - [ ] Commit range validation and parsing
-  - [ ] Branch comparison accuracy
-  - [ ] Commit hash resolution and validation
-  - [ ] Error handling for invalid references
-- [ ] **E2E Tests** (`tests/e2e/git-compare-workflow.test.ts`):
-  - [ ] Test: `qcode "compare last two commits"`
-  - [ ] Test: `qcode "diff between specific commits"`
-  - [ ] Test: `qcode "compare with main branch"`
-
-### 1.7.21 Git History Tool
-
-**Tool Name**: `internal.git.history` - Analyze commit history and repository evolution
-
-**High-Level Commands Enabled**:
-
-```bash
-# Recent commit history
-qcode "show me recent commits"
-qcode "what commits were made in the last week?"
-qcode "display the commit history for this project"
-
-# File evolution tracking
-qcode "how has auth.js evolved over time?"
-qcode "show me the history of changes to this file"
-qcode "track the evolution of the user model"
-```
-
-**Implementation Tasks**:
-
-- [ ] Implement `src/tools/git/history.ts`:
-  - [ ] Commit history retrieval with filtering and pagination
+- [ ] **Git History Tool** (`internal.git.history`):
+  - [ ] Commit history retrieval with filtering
   - [ ] File evolution tracking with rename detection
-  - [ ] Commit message search and pattern matching
-  - [ ] Integration with GitBase security framework
-- [ ] Intelligent history processing:
-  - [ ] Commit categorization (features, fixes, refactoring)
-  - [ ] Author contribution analysis and statistics
-  - [ ] Change pattern detection and trend analysis
-- [ ] Tool registry integration and CLI availability
-- [ ] **Unit Tests** (`tests/unit/tools/git/history.test.ts`):
-  - [ ] Commit history retrieval and filtering
-  - [ ] File evolution tracking accuracy
-  - [ ] Search functionality and pattern matching
-  - [ ] Pagination and limit handling
-- [ ] **E2E Tests** (`tests/e2e/git-history-workflow.test.ts`):
-  - [ ] Test: `qcode "show me recent commits"`
-  - [ ] Test: `qcode "track file evolution"`
-  - [ ] Test: `qcode "find commits about authentication"`
+  - [ ] Author contribution analysis
 
-### 1.7.22 Git Commit Tool
+- [ ] **Git Commit Tool** (`internal.git.commit`):
+  - [ ] LLM-powered commit message generation
+  - [ ] Selective file staging and commit operations
+  - [ ] Conventional commit format support
 
-**Tool Name**: `internal.git.commit` - Create commits with intelligent message generation
+**Integration with Shell Tool**:
+
+The Git tools integrate with the Shell Execution Tool for complex git operations that require direct command execution while maintaining security boundaries.
+
+### 1.8.10 Real-World Git Workflow Examples
+
+**Development Workflow Integration**:
+
+```bash
+# Complete feature development cycle
+qcode "show me what I've changed since starting this feature"
+# → LLM calls: internal.git.status + internal.git.diff for comprehensive view
+
+qcode "create a commit for my authentication improvements"  
+# → LLM calls: internal.git.diff → analyzes changes → internal.git.commit (future)
+
+# Code review preparation
+qcode "analyze my changes and suggest improvements before committing"
+# → LLM calls: internal.git.diff → LLM code analysis → recommendations
+```
+
+
+
+## 1.9 Shell Execution Tool
+
+**Goal**: Provide secure command execution for development workflows through LLM-orchestrated operations  
+**Strategic Context**: Essential for package management, testing, building, and development tasks while maintaining strict security boundaries
+
+### 1.9.1 Core Shell Execution
+
+**Tool Name**: `internal.shell` - Secure command execution with allowlist validation
 
 **High-Level Commands Enabled**:
 
 ```bash
-# Intelligent committing
-qcode "commit my changes with a good message"
-qcode "create a commit for my authentication work"
-qcode "commit the staged changes with an appropriate message"
+# Package management
+qcode "install the lodash dependency"
+qcode "update all npm dependencies"
+qcode "add React to this project"
 
-# Selective committing
-qcode "commit just the auth.js file"
-qcode "commit my configuration changes separately"
+# Testing and development
+qcode "run the test suite"
+qcode "start the development server"
+qcode "build the project for production"
+
+# Project setup and maintenance
+qcode "lint the codebase"
+qcode "format the code with prettier"
+qcode "run the CI/CD checks locally"
 ```
 
 **Implementation Tasks**:
 
-- [ ] Implement `src/tools/git/commit.ts`:
-  - [ ] Selective file staging and commit operations
-  - [ ] Working directory commit with automatic staging
-  - [ ] Staged changes commit with validation
-  - [ ] Integration with GitBase security framework
-- [ ] LLM-powered commit message generation:
-  - [ ] Diff analysis and change categorization for messages
-  - [ ] Conventional commit format support (feat:, fix:, etc.)
-  - [ ] Multi-file change summarization and organization
-  - [ ] Breaking change detection and documentation
-- [ ] Pre-commit safety and validation:
-  - [ ] Working directory cleanliness verification
-  - [ ] Conflict detection and resolution guidance
-  - [ ] Commit size analysis and recommendations
-- [ ] Tool registry integration and CLI availability
-- [ ] **Unit Tests** (`tests/unit/tools/git/commit.test.ts`):
-  - [ ] File staging and selective commit operations
-  - [ ] Message generation based on diff analysis
-  - [ ] Pre-commit validation and safety checks
-  - [ ] Error handling for commit failures
-- [ ] **E2E Tests** (`tests/e2e/git-commit-workflow.test.ts`):
-  - [ ] Test: `qcode "commit my changes with good message"`
-  - [ ] Test: `qcode "commit specific files"`
-  - [ ] Test: `qcode "create conventional commit"`
+- [x] **Core Command Execution** (`src/tools/shell.ts`):
+  - [x] Strict command allowlist validation (no arbitrary commands)
+  - [x] Integration with `src/security/commands.ts` security framework
+  - [x] Real-time output streaming for long-running commands
+  - [x] Command argument sanitization and validation
+- [x] **Security Framework Integration**:
+  - [x] Workspace boundary enforcement for all command execution
+  - [x] Blocked file system commands (rm, mv, cp, chmod)
+  - [x] Blocked network commands (curl, wget, ssh)
+  - [x] Blocked system commands (sudo, systemctl)
+  - [x] No shell operators (&&, ||, ;, |) to prevent command injection
+- [x] **Allowed Command Categories**:
+  - [x] Package managers (npm, yarn, pnpm, pip, poetry, bundle, gem, cargo, go mod)
+  - [x] Build tools (make, cmake, gradle, mvn, swift build, dotnet build)
+  - [x] Testing frameworks (npm test, yarn test, pytest, rspec, swift test, cargo test)
+  - [x] Linting and formatting (eslint, prettier, black, rubocop, swiftformat)
+  - [x] Project scripts (package.json scripts, Makefile targets)
+- [x] Tool registry integration and CLI availability
 
-### 1.7.23 Git Test Repository Fixtures
+### 1.9.2 Intelligent Command Detection
 
-- [ ] **Test Repository Creation** (`tests/helpers/git-repository-builder.ts`):
-  - [ ] Dynamic git repository creation for testing
-  - [ ] Controlled commit history generation
-  - [ ] Branch and merge scenario setup
-  - [ ] Conflict simulation and resolution testing
-  - [ ] Multi-author collaboration simulation
+**Tool Enhancement**: LLM-powered project-aware command selection
 
-- [ ] **Git Tool Integration Tests** (`tests/integration/git-tools.test.ts`):
-  - [ ] Cross-tool workflow validation (status → diff → commit)
-  - [ ] Repository boundary enforcement and security validation
-  - [ ] Error propagation and recovery across git operations
-  - [ ] Performance benchmarks for large repositories
-  - [ ] Memory usage monitoring during git operations
+**High-Level Commands Enabled**:
 
-### 1.7.21 Git E2E Testing Plan
+```bash
+# Project-aware script execution
+qcode "start the development server"
+qcode "run the tests in watch mode"
+qcode "install the project dependencies"
 
-- [ ] **Feature Development Workflow** (`tests/e2e/git-feature-workflow.test.ts`):
-  ```bash
-  # Test: Complete feature development cycle
-  qcode "show me what I've changed since starting this feature"
-  # → Validates: internal.git.status + internal.git.diff integration
-  
-  qcode "commit my authentication improvements with a good message"  
-  # → Validates: internal.git.diff → LLM analysis → internal.git.commit
-  
-  qcode "show me the history of changes to the auth module"
-  # → Validates: internal.git.log with path filtering and analysis
-  ```
-
-- [ ] **Code Review Preparation** (`tests/e2e/git-review-prep.test.ts`):
-  ```bash
-  # Test: Preparing changes for code review
-  qcode "analyze my changes and suggest improvements before committing"
-  # → Validates: internal.git.diff → LLM code analysis → recommendations
-  
-  qcode "create a comprehensive commit message for my API changes"
-  # → Validates: internal.git.diff analysis → intelligent message generation
-  ```
-
-### 1.7.22 Git Repository Analysis E2E Tests
-
-- [ ] **Project History Analysis** (`tests/e2e/git-history-analysis.test.ts`):
-  ```bash
-  # Test: Understanding project evolution
-  qcode "how has the authentication system evolved over the last month?"
-  # → Validates: internal.git.log with filtering → trend analysis
-  
-  qcode "find all commits related to security improvements"
-  # → Validates: internal.git.log search → commit categorization
-  
-  qcode "who has been the main contributor to the API module?"
-  # → Validates: internal.git.log author analysis → contribution insights
-  ```
-
-- [ ] **Change Impact Analysis** (`tests/e2e/git-impact-analysis.test.ts`):
-  ```bash
-  # Test: Understanding change implications
-  qcode "what are the implications of my database schema changes?"
-  # → Validates: internal.git.diff → impact analysis → risk assessment
-  
-  qcode "show me how my changes affect the test suite"
-  # → Validates: internal.git.diff + internal.files → test impact analysis
-  ```
-
-### 1.7.23 Git Multi-Tool Workflow E2E Tests
-
-- [ ] **Git + Project Intelligence** (`tests/e2e/git-project-workflow.test.ts`):
-  ```bash
-  # Test: Git operations informed by project context
-  qcode "commit my React component changes with appropriate conventions"
-  # → Validates: internal.project (React detection) → internal.git.diff → 
-  #            → conventional commit generation → internal.git.commit
-  
-  qcode "analyze recent changes to understand the current development focus"
-  # → Validates: internal.git.log → internal.project → development pattern analysis
-  ```
-
-- [ ] **Git + File Operations** (`tests/e2e/git-file-workflow.test.ts`):
-  ```bash
-  # Test: Coordinated git and file operations
-  qcode "show me what changed in the config files and commit them separately"
-  # → Validates: internal.git.diff (config filter) → internal.files → 
-  #            → internal.git.commit (selective)
-  
-  qcode "find and commit all the test files I've been working on"
-  # → Validates: internal.git.status → internal.files (test discovery) → 
-  #            → internal.git.commit (test-specific message)
-  ```
-
-### 1.7.24 Git VCR Test Recordings
-
-- [ ] **Git Command VCR Recordings** (`tests/fixtures/recordings/git/`):
-  - [ ] `git_status_analysis.json` - Status tool LLM interactions
-  - [ ] `git_diff_analysis.json` - Diff analysis and interpretation
-  - [ ] `git_history_analysis.json` - Log analysis and pattern recognition
-  - [ ] `git_commit_generation.json` - Intelligent commit message creation
-  - [ ] `git_multi_tool_workflow.json` - Cross-tool git workflows
-
-- [ ] **Repository State Fixtures** (`tests/fixtures/repositories/`):
-  - [ ] `feature-branch-repo/` - Repository with active feature development
-  - [ ] `merge-conflict-repo/` - Repository with merge conflicts
-  - [ ] `large-history-repo/` - Repository with extensive commit history
-  - [ ] `multi-author-repo/` - Repository with multiple contributors
-  - [ ] `release-tagged-repo/` - Repository with release tags and versioning
-
-### 1.7.25 Git Performance and Scalability Tests
-
-- [ ] **Large Repository Handling** (`tests/e2e/git-performance.test.ts`):
-  - [ ] Git operations on repositories with 1000+ commits
-  - [ ] Large file diff analysis performance
-  - [ ] Memory usage during extensive history analysis
-  - [ ] Timeout handling for slow git operations
-  - [ ] Pagination and chunking for large result sets
-
-- [ ] **Concurrent Git Operations** (`tests/e2e/git-concurrency.test.ts`):
-  - [ ] Multiple simultaneous git tool calls
-  - [ ] Repository lock handling and conflict resolution
-  - [ ] Error recovery from interrupted git operations
-  - [ ] Resource cleanup after operation failures
-
-**Git Tool E2E Acceptance Criteria**:
-
-- [x] **After 1.7.17-1.7.18 (Basic Git Tools)**:
-  - [x] `qcode "what's my git status?"` provides clear working directory insights using `git.status`
-  - [x] `qcode "show me what I've changed"` provides comprehensive diff analysis using `git.diff`
-  - [x] LLM naturally selects appropriate granular tools without complex operation parameters
-  - [x] Tools integrate seamlessly with existing LLM orchestration engine
-
-- [ ] **After 1.7.22 (Complete Git Tools)**:
-  - [ ] `qcode "what's staged for commit?"` shows staged changes using `git.staged`
-  - [ ] `qcode "compare last two commits"` works using `git.compare`
-  - [ ] `qcode "show me recent commits"` displays history using `git.history`
-  - [ ] `qcode "commit my changes with a good message"` creates intelligent commits using `git.commit`
-
-- [ ] **After 1.7.25 (Complete Git E2E Testing)**:
-  - [ ] Complete development workflows work end-to-end with granular tool composition
-  - [ ] Git tools integrate seamlessly with project intelligence and file operations
-  - [ ] Error handling provides clear guidance for git-related issues
-  - [ ] Performance is acceptable for real-world repository sizes
-  - [ ] All git operations respect workspace security boundaries
-
-### 1.7.26 Shell Execution Tool
-
-**Tool Name**: `internal.shell` - Secure command execution
-
-**Concrete Shell Operations**:
-
-- **Package Manager Commands**:
-
-  ```javascript
-  // User: "Install the lodash dependency"
-  // LLM calls: internal.shell (after detecting npm in project)
-  {
-    "operation": "execute",
-    "command": "npm",
-    "args": ["install", "lodash"],
-    "working_directory": "." // workspace root only
-  }
-  ```
-
-- **Build & Test Commands**:
-
-  ```javascript
-  // User: "Run the tests"
-  // LLM calls: internal.shell (after detecting test script)
-  {
-    "operation": "execute",
-    "command": "npm",
-    "args": ["test"],
-    "stream_output": true // Real-time test results
-  }
-  ```
-
-- **Git Commands (Read-Only)**:
-  ```javascript
-  // User: "Show git status"
-  // LLM calls: internal.shell
-  {
-    "operation": "execute",
-    "command": "git",
-    "args": ["status", "--porcelain"],
-    "capture_output": true
-  }
-  ```
-
-**Security Restrictions**:
-
-- ❌ **Blocked**: `rm`, `mv`, `cp`, `chmod` (file system commands)
-- ❌ **Blocked**: `curl`, `wget`, `ssh` (network commands)
-- ❌ **Blocked**: `sudo`, `systemctl` (system commands)
-- ❌ **Blocked**: Shell operators (`&&`, `||`, `;`, `|`)
-- ✅ **Allowed**: Package managers, build tools, linting, testing
+# Framework-specific operations
+qcode "build this React app for production"
+qcode "run the Django migration scripts"
+qcode "compile this Rust project with optimizations"
+```
 
 **Implementation Tasks**:
 
-- [x] Implement `src/tools/shell.ts` with command validation
-- [x] **Strict command allowlist/whitelist** - only predetermined safe commands allowed
-- [x] Integration with existing `src/security/commands.ts` validation
-- [x] No arbitrary command execution - everything must be pre-approved
-- [x] Real-time output streaming for long-running commands
-- [x] Command argument sanitization and validation
+- [x] **Project Context Integration**:
+  - [x] Script detection from package.json, Makefile, etc.
+  - [x] Package manager detection (yarn.lock vs package-lock.json)
+  - [x] Build tool intelligence (prefers Makefile for native projects)
+  - [x] Test framework detection and appropriate command selection
+- [x] **Smart Command Recommendations**:
+  - [x] Development server selection (Next.js dev vs generic start)
+  - [x] Test command enhancement (adds watch mode for development)
+  - [x] Package manager preference based on lock files
+  - [x] Build optimization flags based on project type
+- [ ] **Unit Tests** (`tests/unit/tools/shell.test.ts`):
+  - [ ] Command allowlist validation and security boundary enforcement
+  - [ ] Project-aware command selection accuracy
+  - [ ] Package manager detection across different project types
+  - [ ] Error handling for blocked commands and invalid arguments
+- [ ] **E2E Tests** (`tests/e2e/shell-execution-workflow.test.ts`):
+  - [ ] Test: `qcode "install dependencies"`
+  - [ ] Test: `qcode "run the test suite"`
+  - [ ] Test: `qcode "start development server"`
+  - [ ] Test: `qcode "build for production"`
 
-### 1.7.27 Shell Command Categories
+### 1.9.10 Real-World Shell Workflow Examples
 
-**Concrete Allowed Command Examples**:
+**Development Workflow Integration**:
 
-- **Package Managers**:
+```bash
+# Package management with intelligence
+qcode "add React Router to this project"
+# → LLM detects: yarn.lock → calls internal.shell with yarn add react-router-dom
 
-  ```javascript
-  // User: "Add React to the project"
-  // LLM calls: internal.shell
-  { "command": "npm", "args": ["install", "react", "react-dom"] }
+# Testing with project awareness
+qcode "run the tests and watch for changes"  
+# → LLM detects: Jest config → calls internal.shell with npm test -- --watch
 
-  // User: "Install Python dependencies"
-  // LLM calls: internal.shell
-  { "command": "pip", "args": ["install", "-r", "requirements.txt"] }
-  ```
+# Build optimization
+qcode "build this Rust project for release"
+# → LLM detects: Cargo.toml → calls internal.shell with cargo build --release
+```
 
-- **Build Tools**:
-
-  ```javascript
-  // User: "Build the project"
-  // LLM calls: internal.shell (detects Maven project)
-  { "command": "mvn", "args": ["clean", "compile"] }
-
-  // User: "Compile the Rust code"
-  // LLM calls: internal.shell
-  { "command": "cargo", "args": ["build", "--release"] }
-  ```
-
-- **Testing Commands**:
-
-  ```javascript
-  // User: "Run the test suite"
-  // LLM calls: internal.shell (detects Jest config)
-  { "command": "npm", "args": ["run", "test"] }
-
-  // User: "Run Python tests"
-  // LLM calls: internal.shell
-  { "command": "pytest", "args": ["tests/", "-v"] }
-  ```
-
-**Implementation Status**:
-
-- [x] **Package managers**: `npm`, `yarn`, `pnpm`, `pip`, `poetry`, `bundle`, `gem`, `cargo`, `go mod`
-- [x] **Build tools**: `make`, `cmake`, `gradle`, `mvn`, `swift build`, `dotnet build`
-- [x] **Version control**: `git status`, `git diff`, `git log`, `git branch` (read-only git commands)
-- [x] **Testing**: `npm test`, `yarn test`, `pytest`, `rspec`, `swift test`, `cargo test`
-- [x] **Linting/formatting**: `eslint`, `prettier`, `black`, `rubocop`, `swiftformat`
-- [x] **Project scripts**: Commands defined in package.json scripts, Makefile targets, etc.
-
-### 1.7.28 Shell Security Restrictions
-
-**Concrete Security Examples**:
-
-- **Blocked File System Commands**:
-
-  ```javascript
-  // User: "Delete the old files"
-  // LLM CANNOT call: internal.shell with rm command
-  // ❌ BLOCKED: { "command": "rm", "args": ["-rf", "old/"] }
-  // → LLM must use internal.files or internal.edit instead
-  ```
-
-- **Blocked Network Commands**:
-
-  ```javascript
-  // User: "Download the latest config"
-  // LLM CANNOT call: internal.shell with curl
-  // ❌ BLOCKED: { "command": "curl", "args": ["https://api.example.com/config"] }
-  // → LLM must suggest user do this manually or via MCP tool
-  ```
-
-- **Blocked Shell Operators**:
-
-  ```javascript
-  // User: "Run tests and then build"
-  // LLM CANNOT call: internal.shell with chained commands
-  // ❌ BLOCKED: { "command": "npm test && npm run build" }
-  // → LLM must make separate tool calls for each command
-  ```
-
-- **Workspace Boundary Enforcement**:
-  ```javascript
-  // User: "List files in the parent directory"
-  // LLM CANNOT call: internal.shell with commands outside workspace
-  // ❌ BLOCKED: { "command": "ls", "args": ["../"] }
-  // → All commands restricted to current workspace only
-  ```
-
-**Implementation Status**:
-
-- [x] No file system commands (`rm`, `mv`, `cp`, `chmod`, etc.)
-- [x] No network commands (`curl`, `wget`, `ssh`, etc.)
-- [x] No system commands (`sudo`, `su`, `systemctl`, etc.)
-- [x] No shell operators (`&&`, `||`, `;`, `|`, `>`, `<`)
-- [x] No variable expansion or command substitution
-- [x] Workspace boundary enforcement - commands only run within project directory
-
-### 1.7.29 Shell Intelligence
-
-**Concrete Intelligence Examples**:
-
-- **Script Detection & Execution**:
-
-  ```javascript
-  // User: "Run the development server"
-  // LLM first calls: internal.files (reads package.json)
-  // Detects: { "scripts": { "dev": "next dev", "start": "node server.js" } }
-  // LLM calls: internal.shell
-  {
-    "command": "npm",
-    "args": ["run", "dev"], // Chooses "dev" over "start" for development
-    "stream_output": true
-  }
-  ```
-
-- **Test Framework Detection**:
-
-  ```javascript
-  // User: "Run the tests"
-  // LLM first calls: internal.project (analyzes test setup)
-  // Detects: Jest config + test files in __tests__/
-  // LLM calls: internal.shell
-  {
-    "command": "npm",
-    "args": ["test", "--", "--watch"], // Adds watch mode for development
-    "stream_output": true
-  }
-  ```
-
-- **Build Tool Intelligence**:
-
-  ```javascript
-  // User: "Build the project"
-  // LLM first calls: internal.files (checks for build configs)
-  // Detects: Makefile present + package.json build script
-  // LLM calls: internal.shell (prefers Makefile for native projects)
-  {
-    "command": "make",
-    "args": ["build"],
-    "working_directory": "."
-  }
-  ```
-
-- **Package Manager Detection**:
-  ```javascript
-  // User: "Install the dependencies"
-  // LLM first calls: internal.files (checks lock files)
-  // Detects: yarn.lock present (not package-lock.json)
-  // LLM calls: internal.shell
-  {
-    "command": "yarn", // Uses yarn instead of npm
-    "args": ["install"],
-    "stream_output": true
-  }
-  ```
-
-**Concrete Use Cases**:
-
-- **User says**: "Start the dev server" → **LLM detects**: Next.js project → **Calls**: `npm run dev`
-- **User says**: "Run tests in watch mode" → **LLM detects**: Jest config → **Calls**: `npm test -- --watch`
-- **User says**: "Install packages" → **LLM detects**: `yarn.lock` → **Calls**: `yarn install` (not npm)
-
-**Implementation Status**:
-
-- [x] Detect available scripts from package.json, Makefile, etc.
-- [x] Suggest appropriate test commands based on project structure
-- [x] Build command detection and execution (from allowlist only)
-- [x] Development server startup assistance (from allowlist only)
-- [x] LLM recommends commands but only executes if on allowlist
-
-### 1.8 LLM-Centric Engine (Complete Rewrite)
+### 1.10 LLM-Centric Engine (Complete Rewrite)
 
 **Goal**: Implement LLM-orchestrated query processing with intelligent tool coordination
 
-- [x] **1.8.1 LLM Orchestration Engine (Foundation)**
+- [x] **1.10.1 LLM Orchestration Engine (Foundation)**
 
   - [x] Major rewrite of `src/core/engine.ts` for LLM-centric approach
   - [x] Removed rule-based patterns and hardcoded intent detection
@@ -1439,7 +658,7 @@ qcode "commit my configuration changes separately"
   - [x] Simplified architecture with two-phase approach: tool gathering → final answer synthesis
   - [x] Enhanced tool coordination with LLM intelligently chaining tool calls based on context
 
-- [x] **1.8.2 LLM Function Calling (End-to-end MVP)**
+- [x] **1.10.2 LLM Function Calling (End-to-end MVP)**
 
   - [x] LLM-driven tool selection where LLM decides which tools to call and when
   - [x] Adaptive tool chaining with LLM chaining multiple tool calls as needed
@@ -1447,21 +666,21 @@ qcode "commit my configuration changes separately"
   - [x] Intelligent result synthesis where LLM synthesizes tool results into coherent answers
   - [x] Error recovery where LLM adapts when tools fail or return unexpected results
 
-- [x] **1.8.3 Enhanced Context Management**
+- [x] **1.10.3 Enhanced Context Management**
 
   - [x] Rich result formatting with `ContextManager` providing structured tool result formatting
   - [x] Project analysis integration with special handling for project intelligence results
   - [x] Conversation memory that maintains context across tool calls within a session
   - [x] Memory compression with intelligent context compression for long conversations
 
-- [x] **1.8.4 CLI Integration (Real User Experience)**
+- [x] **1.10.4 CLI Integration (Real User Experience)**
 
   - [x] LLM engine integration where CLI now uses LLM orchestration engine
   - [x] Enhanced progress feedback showing tool execution with `onToolExecution` callback
   - [x] Improved result formatting with rich formatting for different result types
   - [x] Better error handling with context-aware error messages and recovery suggestions
 
-- [x] **1.8.5 Architectural Decision: Replaced Complex Workflow Orchestration**
+- [x] **1.10.5 Architectural Decision: Replaced Complex Workflow Orchestration**
 
   The complex rule-based workflow orchestration system has been replaced with a much more elegant LLM-centric approach where the LLM itself handles all workflow decisions.
 
@@ -1473,7 +692,7 @@ qcode "commit my configuration changes separately"
   - **Context Awareness**: LLM uses actual project data to inform decisions
   - **Self-Directing**: LLM manages its own execution flow based on results
 
-#### 1.8.6 Update Tests After Architectural Changes
+#### 1.10.6 Update Tests After Architectural Changes
 
 - [ ] **Fix broken tests due to engine rewrite**:
 
@@ -1495,7 +714,7 @@ qcode "commit my configuration changes separately"
   - [ ] Verify security validation still works correctly
   - [ ] Test CLI integration with new result formatting
 
-### 1.9 Enhanced CLI Interface (LLM Integration)
+### 1.11 Enhanced CLI Interface (LLM Integration)
 
 - [x] **LLM-integrated CLI implementation**:
 
@@ -1514,7 +733,7 @@ qcode "commit my configuration changes separately"
   - [x] Timeout management with configurable query timeouts and graceful handling
   - [x] Debug mode with comprehensive debug output for development and troubleshooting
 
-### 1.10 Testing Setup
+### 1.12 Testing Setup
 
 - [x] Set up Jest testing framework
 - [x] Create test directory structure
@@ -1532,7 +751,7 @@ qcode "commit my configuration changes separately"
   - [x] `tests/helpers/assertion-helpers.ts` - Custom Jest matchers
   - [x] `scripts/record-vcr.ts` - Script for capturing new LLM interactions
 
-#### 1.10.1 **E2E Test Suite Re-recording and Parallelism Fix**
+#### 1.12.1 **E2E Test Suite Re-recording and Parallelism Fix**
 
 - [x] **Complete E2E Test Re-recording** - All 11 E2E test files re-recorded with updated engine behavior
 - [x] **Sequential Test Execution** - Disabled parallelism with `--runInBand` for reliable Ollama integration
@@ -1573,7 +792,7 @@ qcode "commit my configuration changes separately"
   - [x] Rich output provides comprehensive, structured project analysis
   - [x] Context awareness ensures analysis adapts to specific project characteristics
 
-- [x] **After 1.8 (LLM-centric Engine)**:
+- [x] **After 1.10 (LLM-centric Engine)**:
 
   - [x] Pure LLM orchestration where LLM makes all tool execution decisions
   - [x] Adaptive tool chaining where LLM chains tools intelligently based on context
@@ -1581,7 +800,7 @@ qcode "commit my configuration changes separately"
   - [x] Error recovery with graceful handling of tool failures and LLM adaptation
   - [x] Result synthesis where LLM synthesizes tool results into coherent answers
 
-- [x] **After 1.9 (CLI Integration)**:
+- [x] **After 1.11 (CLI Integration)**:
 
   - [x] Project analysis: `qcode "analyze my project"` works with rich LLM analysis
   - [x] File operations: `qcode "show me package.json"` works with LLM coordination
