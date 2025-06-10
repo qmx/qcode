@@ -813,245 +813,247 @@ qcode "show me how the authentication system evolved"
   - [ ] Repository state validation and health checks
   - [ ] Error handling for non-git directories and corrupted repositories
 
-### 1.7.17 Git Diff Analysis Tool
+### 1.7.17 Git Status Tool
 
-**Tool Name**: `internal.git.diff` - Analyze changes and generate diffs
+**Tool Name**: `internal.git.status` - Show git working directory status
 
-**Concrete Operations**:
+**High-Level Commands Enabled**:
 
-- **Working Directory Diff**:
-  ```javascript
-  // User: "Show me what I've changed in the auth module"  
-  // LLM calls: internal.git.diff
-  {
-    "operation": "working_diff",
-    "paths": ["src/auth.js", "src/auth/"],
-    "context_lines": 3,
-    "word_diff": false
-  }
-  ```
+```bash
+# Repository status analysis
+qcode "what's the current git status?"
+qcode "show me what files have been modified"
+qcode "what files are untracked in this repository?"
 
-- **Staged Changes Diff**:
-  ```javascript
-  // User: "What changes are staged for commit?"
-  // LLM calls: internal.git.diff
-  {
-    "operation": "staged_diff", 
-    "include_stats": true,
-    "unified": true
-  }
-  ```
+# Working directory state inspection
+qcode "is my working directory clean?"
+qcode "what changes do I have that aren't committed yet?"
+```
 
-- **Commit-to-Commit Diff**:
-  ```javascript
-  // User: "Compare the last two commits"
-  // LLM calls: internal.git.diff
-  {
-    "operation": "commit_diff",
-    "from_commit": "HEAD~1", 
-    "to_commit": "HEAD",
-    "paths": [], // All files
-    "ignore_whitespace": false
-  }
-  ```
+**Implementation Tasks**:
 
-- **File History Diff**:
-  ```javascript
-  // User: "How has auth.js changed over time?"
-  // LLM calls: internal.git.diff
-  {
-    "operation": "file_history_diff",
-    "file": "src/auth.js",
-    "commits": 5, // Last 5 commits affecting this file
-    "summarize": true
-  }
-  ```
+- [x] Implement `src/tools/git/status.ts`:
+  - [x] Git status command execution with parsing
+  - [x] Working directory change detection and categorization
+  - [x] File state analysis (modified, added, deleted, renamed, untracked)
+  - [x] Clean repository detection and status summary
+- [x] Structured status result formatting:
+  - [x] Categorized file lists by change type
+  - [x] Repository state summary with change counts
+  - [x] Integration with GitBase security validation
+- [x] Tool registry integration and CLI availability
+- [x] **Unit Tests** (`tests/unit/tools/git/status.test.ts`):
+  - [ ] Working directory status parsing accuracy
+  - [ ] File categorization and state detection
+  - [ ] Clean vs dirty repository detection
+  - [ ] Error handling for non-git directories
+- [ ] **E2E Tests** (`tests/e2e/git-status-workflow.test.ts`):
+  - [ ] Test: `qcode "what's my git status?"`
+  - [ ] Test: `qcode "show me modified files"`
+  - [ ] Test: `qcode "is my working directory clean?"`
 
-- [ ] Implement `src/tools/git/diff.ts`:
-  - [ ] Working directory diff generation with file filtering
-  - [ ] Staged changes diff with context and statistics
-  - [ ] Commit-to-commit diff with range support
-  - [ ] File-specific diff with path filtering
-  - [ ] Diff parsing and structured result formatting
-- [ ] Intelligent change analysis:
-  - [ ] Line addition/deletion statistics and impact assessment
-  - [ ] Function-level change detection and categorization
-  - [ ] Import/dependency change analysis
-  - [ ] Code quality impact assessment (via LLM analysis)
-  - [ ] Binary file change detection and handling
-- [ ] Rich diff formatting for LLM consumption:
-  - [ ] Unified diff format with proper context lines
-  - [ ] Side-by-side comparison for significant changes
-  - [ ] Word-level diff for precise change identification
-  - [ ] Syntax-highlighted diff output
-  - [ ] Change summary statistics and impact metrics
-- [ ] **Git Diff Tool Tests** (`tests/unit/tools/git/diff.test.ts`):
-  - [ ] Working directory diff generation and accuracy
-  - [ ] Staged changes diff with proper context
-  - [ ] Commit-to-commit diff with range validation
-  - [ ] File history diff and evolution tracking
-  - [ ] Binary file handling and change detection
+### 1.7.18 Git Diff Tool
 
-### 1.7.18 Git History and Log Tool
+**Tool Name**: `internal.git.diff` - Show working directory changes
 
-**Tool Name**: `internal.git.log` - Analyze commit history and repository evolution
+**High-Level Commands Enabled**:
 
-**Concrete Operations**:
+```bash
+# Working directory changes
+qcode "show me what I've changed"
+qcode "what modifications have I made to the code?"
+qcode "display the diff for my current changes"
 
-- **Recent Commit History**:
-  ```javascript
-  // User: "Show me recent commits related to authentication"
-  // LLM calls: internal.git.log  
-  {
-    "operation": "recent_commits",
-    "limit": 10,
-    "grep": "auth", // Commit message search
-    "paths": ["src/auth/"], // Path filtering
-    "since": "1 week ago"
-  }
-  ```
+# File-specific changes
+qcode "show me changes in src/auth.js"
+qcode "what did I modify in the authentication module?"
+```
 
-- **File History Analysis**:
-  ```javascript
-  // User: "How has the user model evolved?"
-  // LLM calls: internal.git.log
-  {
-    "operation": "file_history", 
-    "file": "src/models/user.js",
-    "limit": 20,
-    "follow": true, // Follow renames
-    "include_diffs": true
-  }
-  ```
+**Implementation Tasks**:
 
-- **Author and Contribution Analysis**:
-  ```javascript
-  // User: "Who has been working on the API recently?"
-  // LLM calls: internal.git.log
-  {
-    "operation": "author_analysis",
-    "paths": ["src/api/"],
-    "since": "1 month ago",
-    "group_by": "author",
-    "include_stats": true
-  }
-  ```
+- [x] Implement `src/tools/git/diff.ts`:
+  - [x] Working directory diff generation with file filtering
+  - [x] Diff parsing and structured result formatting
+  - [x] Change statistics (insertions, deletions, files changed)
+  - [x] Context line configuration and whitespace handling
+- [x] Intelligent change analysis:
+  - [x] File-level change summary with statistics
+  - [x] Integration with GitBase security validation
+  - [x] Binary file detection and handling
+- [x] Tool registry integration and CLI availability
+- [ ] **Unit Tests** (`tests/unit/tools/git/diff.test.ts`):
+  - [ ] Working directory diff generation accuracy
+  - [ ] File filtering and path sanitization
+  - [ ] Statistics parsing and change metrics
+  - [ ] Context line and whitespace options
+- [ ] **E2E Tests** (`tests/e2e/git-diff-workflow.test.ts`):
+  - [ ] Test: `qcode "show me what I've changed"`
+  - [ ] Test: `qcode "display diff for specific files"`
+  - [ ] Test: `qcode "what are my current modifications?"`
 
-- **Commit Search and Investigation**:
-  ```javascript
-  // User: "Find commits that mention 'bug fix' or 'hotfix'"
-  // LLM calls: internal.git.log
-  {
-    "operation": "search_commits",
-    "query": "bug fix|hotfix", // Regex support
-    "search_in": ["message", "diff"], // Search scope
-    "limit": 50
-  }
-  ```
+### 1.7.19 Git Staged Tool
 
-- [ ] Implement `src/tools/git/log.ts`:
+**Tool Name**: `internal.git.staged` - Show staged changes ready for commit
+
+**High-Level Commands Enabled**:
+
+```bash
+# Staged changes analysis
+qcode "what changes are staged for commit?"
+qcode "show me what's ready to be committed"
+qcode "display the staged diff"
+
+# Pre-commit review
+qcode "review my staged changes before committing"
+qcode "what will be included in the next commit?"
+```
+
+**Implementation Tasks**:
+
+- [ ] Implement `src/tools/git/staged.ts`:
+  - [ ] Staged changes diff generation with `--cached` flag
+  - [ ] Staged file listing and categorization
+  - [ ] Pre-commit change analysis and validation
+  - [ ] Integration with GitBase security framework
+- [ ] Staging area analysis:
+  - [ ] Staged vs unstaged change comparison
+  - [ ] Commit-ready validation and checks
+  - [ ] File-by-file staging status breakdown
+- [ ] Tool registry integration and CLI availability
+- [ ] **Unit Tests** (`tests/unit/tools/git/staged.test.ts`):
+  - [ ] Staged diff generation and parsing
+  - [ ] Staging area state detection
+  - [ ] Pre-commit validation accuracy
+  - [ ] Error handling for empty staging area
+- [ ] **E2E Tests** (`tests/e2e/git-staged-workflow.test.ts`):
+  - [ ] Test: `qcode "what's staged for commit?"`
+  - [ ] Test: `qcode "review my staged changes"`
+  - [ ] Test: `qcode "show me the staged diff"`
+
+### 1.7.20 Git Compare Tool
+
+**Tool Name**: `internal.git.compare` - Compare commits, branches, or ranges
+
+**High-Level Commands Enabled**:
+
+```bash
+# Commit comparisons
+qcode "compare the last two commits"
+qcode "show me what changed between HEAD~1 and HEAD"
+qcode "diff between commit abc123 and def456"
+
+# Branch comparisons
+qcode "compare this branch with main"
+qcode "what are the differences from the master branch?"
+```
+
+**Implementation Tasks**:
+
+- [ ] Implement `src/tools/git/compare.ts`:
+  - [ ] Commit-to-commit diff generation with range support
+  - [ ] Branch comparison with merge base detection
+  - [ ] Commit hash validation and resolution
+  - [ ] Integration with GitBase security framework
+- [ ] Intelligent comparison analysis:
+  - [ ] Change impact assessment between versions
+  - [ ] File modification tracking across commits
+  - [ ] Merge conflict prediction and analysis
+- [ ] Tool registry integration and CLI availability
+- [ ] **Unit Tests** (`tests/unit/tools/git/compare.test.ts`):
+  - [ ] Commit range validation and parsing
+  - [ ] Branch comparison accuracy
+  - [ ] Commit hash resolution and validation
+  - [ ] Error handling for invalid references
+- [ ] **E2E Tests** (`tests/e2e/git-compare-workflow.test.ts`):
+  - [ ] Test: `qcode "compare last two commits"`
+  - [ ] Test: `qcode "diff between specific commits"`
+  - [ ] Test: `qcode "compare with main branch"`
+
+### 1.7.21 Git History Tool
+
+**Tool Name**: `internal.git.history` - Analyze commit history and repository evolution
+
+**High-Level Commands Enabled**:
+
+```bash
+# Recent commit history
+qcode "show me recent commits"
+qcode "what commits were made in the last week?"
+qcode "display the commit history for this project"
+
+# File evolution tracking
+qcode "how has auth.js evolved over time?"
+qcode "show me the history of changes to this file"
+qcode "track the evolution of the user model"
+```
+
+**Implementation Tasks**:
+
+- [ ] Implement `src/tools/git/history.ts`:
   - [ ] Commit history retrieval with filtering and pagination
   - [ ] File evolution tracking with rename detection
-  - [ ] Author contribution analysis and statistics
-  - [ ] Commit message search with regex support
-  - [ ] Branch-aware history analysis
+  - [ ] Commit message search and pattern matching
+  - [ ] Integration with GitBase security framework
 - [ ] Intelligent history processing:
-  - [ ] Commit classification (features, fixes, refactoring, etc.)
+  - [ ] Commit categorization (features, fixes, refactoring)
+  - [ ] Author contribution analysis and statistics
   - [ ] Change pattern detection and trend analysis
-  - [ ] Release milestone identification
-  - [ ] Merge commit handling and branch visualization
-  - [ ] Tag and release history integration
-- [ ] Repository evolution insights:
-  - [ ] Code churn analysis and hotspot identification
-  - [ ] Development velocity and commit frequency analysis
-  - [ ] File stability and change frequency metrics
-  - [ ] Collaboration patterns and team contribution analysis
-- [ ] **Git Log Tool Tests** (`tests/unit/tools/git/log.test.ts`):
-  - [ ] Commit history retrieval with filtering and pagination
-  - [ ] File evolution tracking with rename detection
-  - [ ] Author analysis and contribution statistics
-  - [ ] Commit search and message querying
-  - [ ] Branch-aware history processing
+- [ ] Tool registry integration and CLI availability
+- [ ] **Unit Tests** (`tests/unit/tools/git/history.test.ts`):
+  - [ ] Commit history retrieval and filtering
+  - [ ] File evolution tracking accuracy
+  - [ ] Search functionality and pattern matching
+  - [ ] Pagination and limit handling
+- [ ] **E2E Tests** (`tests/e2e/git-history-workflow.test.ts`):
+  - [ ] Test: `qcode "show me recent commits"`
+  - [ ] Test: `qcode "track file evolution"`
+  - [ ] Test: `qcode "find commits about authentication"`
 
-### 1.7.19 Git Commit Tool
+### 1.7.22 Git Commit Tool
 
 **Tool Name**: `internal.git.commit` - Create commits with intelligent message generation
 
-**Concrete Operations**:
+**High-Level Commands Enabled**:
 
-- **Intelligent Full Commit**:
-  ```javascript
-  // User: "Commit my authentication changes with a good message"
-  // LLM first calls: internal.git.diff, then internal.git.commit
-  {
-    "operation": "commit_all",
-    "auto_add": true, // Stage modified files
-    "generate_message": true, // LLM analyzes diff and creates message
-    "include_stats": true
-  }
-  ```
+```bash
+# Intelligent committing
+qcode "commit my changes with a good message"
+qcode "create a commit for my authentication work"
+qcode "commit the staged changes with an appropriate message"
 
-- **Selective File Commit**:
-  ```javascript
-  // User: "Commit just the auth.js file"
-  // LLM calls: internal.git.commit
-  {
-    "operation": "commit_files",
-    "files": ["src/auth.js"],
-    "message": "Refactor authentication middleware\n\n- Extract token validation logic\n- Add error handling for invalid tokens\n- Improve type safety",
-    "auto_add": true
-  }
-  ```
+# Selective committing
+qcode "commit just the auth.js file"
+qcode "commit my configuration changes separately"
+```
 
-- **Staged Changes Commit**:
-  ```javascript
-  // User: "Commit the staged changes with an appropriate message"
-  // LLM calls: internal.git.diff (staged), analyzes, then internal.git.commit
-  {
-    "operation": "commit_staged",
-    "generate_message": true,
-    "verify_staged": true // Confirm staged changes exist
-  }
-  ```
-
-- **Amendment and Fixup**:
-  ```javascript
-  // User: "Add these changes to the last commit"
-  // LLM calls: internal.git.commit
-  {
-    "operation": "amend",
-    "files": ["src/auth.js"],
-    "update_message": false, // Keep existing message
-    "auto_add": true
-  }
-  ```
+**Implementation Tasks**:
 
 - [ ] Implement `src/tools/git/commit.ts`:
   - [ ] Selective file staging and commit operations
   - [ ] Working directory commit with automatic staging
   - [ ] Staged changes commit with validation
-  - [ ] Commit amendment and fixup capabilities
-  - [ ] Pre-commit validation and safety checks
+  - [ ] Integration with GitBase security framework
 - [ ] LLM-powered commit message generation:
-  - [ ] Diff analysis and change categorization for message content
-  - [ ] Conventional commit format support (feat:, fix:, refactor:, etc.)
+  - [ ] Diff analysis and change categorization for messages
+  - [ ] Conventional commit format support (feat:, fix:, etc.)
   - [ ] Multi-file change summarization and organization
-  - [ ] Impact assessment and scope identification
   - [ ] Breaking change detection and documentation
 - [ ] Pre-commit safety and validation:
   - [ ] Working directory cleanliness verification
   - [ ] Conflict detection and resolution guidance
-  - [ ] Large file and binary file handling
-  - [ ] Commit size analysis and split recommendations
-  - [ ] Git hooks integration and execution
-- [ ] **Git Commit Tool Tests** (`tests/unit/tools/git/commit.test.ts`):
+  - [ ] Commit size analysis and recommendations
+- [ ] Tool registry integration and CLI availability
+- [ ] **Unit Tests** (`tests/unit/tools/git/commit.test.ts`):
   - [ ] File staging and selective commit operations
   - [ ] Message generation based on diff analysis
   - [ ] Pre-commit validation and safety checks
-  - [ ] Amendment and fixup functionality
-  - [ ] Error handling for commit failures and conflicts
+  - [ ] Error handling for commit failures
+- [ ] **E2E Tests** (`tests/e2e/git-commit-workflow.test.ts`):
+  - [ ] Test: `qcode "commit my changes with good message"`
+  - [ ] Test: `qcode "commit specific files"`
+  - [ ] Test: `qcode "create conventional commit"`
 
-### 1.7.20 Git Test Repository Fixtures
+### 1.7.23 Git Test Repository Fixtures
 
 - [ ] **Test Repository Creation** (`tests/helpers/git-repository-builder.ts`):
   - [ ] Dynamic git repository creation for testing
@@ -1175,14 +1177,20 @@ qcode "show me how the authentication system evolved"
 
 **Git Tool E2E Acceptance Criteria**:
 
-- [ ] **After 1.7.19 (Git Commit Tool)**:
-  - [ ] `qcode "commit my changes with a good message"` generates intelligent commits
-  - [ ] `qcode "show me what I've changed"` provides comprehensive diff analysis
-  - [ ] `qcode "find recent commits about authentication"` searches history effectively
-  - [ ] `qcode "what's the status of my repository?"` provides clear working directory insights
+- [x] **After 1.7.17-1.7.18 (Basic Git Tools)**:
+  - [x] `qcode "what's my git status?"` provides clear working directory insights using `git.status`
+  - [x] `qcode "show me what I've changed"` provides comprehensive diff analysis using `git.diff`
+  - [x] LLM naturally selects appropriate granular tools without complex operation parameters
+  - [x] Tools integrate seamlessly with existing LLM orchestration engine
+
+- [ ] **After 1.7.22 (Complete Git Tools)**:
+  - [ ] `qcode "what's staged for commit?"` shows staged changes using `git.staged`
+  - [ ] `qcode "compare last two commits"` works using `git.compare`
+  - [ ] `qcode "show me recent commits"` displays history using `git.history`
+  - [ ] `qcode "commit my changes with a good message"` creates intelligent commits using `git.commit`
 
 - [ ] **After 1.7.25 (Complete Git E2E Testing)**:
-  - [ ] Complete development workflows work end-to-end
+  - [ ] Complete development workflows work end-to-end with granular tool composition
   - [ ] Git tools integrate seamlessly with project intelligence and file operations
   - [ ] Error handling provides clear guidance for git-related issues
   - [ ] Performance is acceptable for real-world repository sizes
