@@ -1,0 +1,237 @@
+[
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "is my working directory clean?"
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0.1
+      },
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "internal:git.status",
+            "description": "Show git working directory status - what files are modified, added, deleted, or untracked",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "includeUntracked": {
+                  "type": "boolean",
+                  "description": "Include untracked files in the status (default: true)"
+                },
+                "porcelain": {
+                  "type": "boolean",
+                  "description": "Use porcelain format for machine-readable output (default: false)"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-10T04:34:12.940747Z",
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "function": {
+              "name": "internal:git.status",
+              "arguments": {
+                "includeUntracked": false,
+                "porcelain": false
+              }
+            }
+          }
+        ]
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 1012391792,
+      "load_duration": 11193875,
+      "prompt_eval_count": 346,
+      "prompt_eval_duration": 480845709,
+      "eval_count": 26,
+      "eval_duration": 519464041
+    },
+    "rawHeaders": {
+      "content-length": "411",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Tue, 10 Jun 2025 04:34:12 GMT"
+    },
+    "responseIsBinary": false
+  },
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "is my working directory clean?"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:git.status\",\"args\":{\"includeUntracked\":false,\"porcelain\":false}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:git.status\nResult: {\n  \"isClean\": true,\n  \"modifiedFiles\": [],\n  \"addedFiles\": [],\n  \"deletedFiles\": [],\n  \"untrackedFiles\": [],\n  \"renamedFiles\": [],\n  \"summary\": \"Working directory is clean\",\n  \"rawOutput\": \"On branch master\\nnothing to commit, working tree clean\"\n}"
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0.1
+      },
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "internal:git.status",
+            "description": "Show git working directory status - what files are modified, added, deleted, or untracked",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "includeUntracked": {
+                  "type": "boolean",
+                  "description": "Include untracked files in the status (default: true)"
+                },
+                "porcelain": {
+                  "type": "boolean",
+                  "description": "Use porcelain format for machine-readable output (default: false)"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-10T04:34:14.104159Z",
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "function": {
+              "name": "internal:git.status",
+              "arguments": {
+                "includeUntracked": true,
+                "porcelain": false
+              }
+            }
+          }
+        ]
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 1133267500,
+      "load_duration": 11658666,
+      "prompt_eval_count": 460,
+      "prompt_eval_duration": 656827333,
+      "eval_count": 22,
+      "eval_duration": 463502209
+    },
+    "rawHeaders": {
+      "content-length": "410",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Tue, 10 Jun 2025 04:34:14 GMT"
+    },
+    "responseIsBinary": false
+  },
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "is my working directory clean?"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:git.status\",\"args\":{\"includeUntracked\":false,\"porcelain\":false}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:git.status\nResult: {\n  \"isClean\": true,\n  \"modifiedFiles\": [],\n  \"addedFiles\": [],\n  \"deletedFiles\": [],\n  \"untrackedFiles\": [],\n  \"renamedFiles\": [],\n  \"summary\": \"Working directory is clean\",\n  \"rawOutput\": \"On branch master\\nnothing to commit, working tree clean\"\n}"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:git.status\",\"args\":{\"includeUntracked\":true,\"porcelain\":false}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:git.status\nResult: {\n  \"isClean\": true,\n  \"modifiedFiles\": [],\n  \"addedFiles\": [],\n  \"deletedFiles\": [],\n  \"untrackedFiles\": [],\n  \"renamedFiles\": [],\n  \"summary\": \"Working directory is clean\",\n  \"rawOutput\": \"On branch master\\nnothing to commit, working tree clean\"\n}"
+        },
+        {
+          "role": "user",
+          "content": "Based on the tool results above, please provide a direct and complete answer to the original question: \"is my working directory clean?\"\n\nDo not call any more tools. Just analyze the information you've gathered and give a clear, comprehensive answer."
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0.1
+      },
+      "tools": []
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-10T04:34:15.287825Z",
+      "message": {
+        "role": "assistant",
+        "content": "{\"result\":\"Yes, your working directory is clean.\"}"
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 1152238750,
+      "load_duration": 12910708,
+      "prompt_eval_count": 433,
+      "prompt_eval_duration": 861996000,
+      "eval_count": 13,
+      "eval_duration": 275273917
+    },
+    "rawHeaders": {
+      "content-length": "349",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Tue, 10 Jun 2025 04:34:15 GMT"
+    },
+    "responseIsBinary": false
+  }
+]

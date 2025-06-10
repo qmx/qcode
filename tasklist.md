@@ -447,15 +447,15 @@ qcode "is my working directory clean?"
   - [x] Repository state summary with change counts
   - [x] Integration with GitBase security validation
 - [x] Tool registry integration and CLI availability
-- [ ] **Unit Tests** (`tests/unit/tools/git/status.test.ts`):
-  - [ ] Working directory status parsing accuracy
-  - [ ] File categorization and state detection
-  - [ ] Clean vs dirty repository detection
-  - [ ] Error handling for non-git directories
-- [ ] **E2E Tests** (`tests/e2e/git-status-workflow.test.ts`):
-  - [ ] Test: `qcode "what's my git status?"`
-  - [ ] Test: `qcode "show me modified files"`
-  - [ ] Test: `qcode "is my working directory clean?"`
+- [x] **Unit Tests** (`tests/unit/tools/git/status.test.ts`):
+  - [x] Working directory status parsing accuracy
+  - [x] File categorization and state detection
+  - [x] Clean vs dirty repository detection
+  - [x] Error handling for non-git directories
+- [x] **E2E Tests** (`tests/e2e/git-status-workflow.test.ts`):
+  - [x] Test: `qcode "what's my git status?"`
+  - [x] Test: `qcode "show me modified files"`
+  - [x] Test: `qcode "is my working directory clean?"`
 
 ### 1.8.2 Git Diff Tool
 

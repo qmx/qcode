@@ -1,0 +1,236 @@
+[
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "give me a complete overview of the repository status"
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0.1
+      },
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "internal:git.status",
+            "description": "Show git working directory status - what files are modified, added, deleted, or untracked",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "includeUntracked": {
+                  "type": "boolean",
+                  "description": "Include untracked files in the status (default: true)"
+                },
+                "porcelain": {
+                  "type": "boolean",
+                  "description": "Use porcelain format for machine-readable output (default: false)"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-10T04:34:25.66324Z",
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "function": {
+              "name": "internal:git.status",
+              "arguments": {
+                "includeUntracked": true,
+                "porcelain": false
+              }
+            }
+          }
+        ]
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 1186893583,
+      "load_duration": 11506833,
+      "prompt_eval_count": 349,
+      "prompt_eval_duration": 624113083,
+      "eval_count": 26,
+      "eval_duration": 550495833
+    },
+    "rawHeaders": {
+      "content-length": "409",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Tue, 10 Jun 2025 04:34:25 GMT"
+    },
+    "responseIsBinary": false
+  },
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "give me a complete overview of the repository status"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:git.status\",\"args\":{\"includeUntracked\":true,\"porcelain\":false}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:git.status\nResult: {\n  \"isClean\": false,\n  \"modifiedFiles\": [\n    \"README.md\"\n  ],\n  \"addedFiles\": [\n    \"staged.txt\"\n  ],\n  \"deletedFiles\": [],\n  \"untrackedFiles\": [\n    \"temp.txt\",\n    \"untracked.log\",\n    \"untracked.txt\"\n  ],\n  \"renamedFiles\": [],\n  \"summary\": \"Working directory has changes: 1 modified, 1 added, 3 untracked\",\n  \"rawOutput\": \"On branch master\\nChanges to be committed:\\n  (use \\\"git restore --staged <file>...\\\" to unstage)\\n\\tnew file:   staged.txt\\n\\nChanges not staged for commit:\\n  (use \\\"git ..."
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0.1
+      },
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "internal:git.status",
+            "description": "Show git working directory status - what files are modified, added, deleted, or untracked",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "includeUntracked": {
+                  "type": "boolean",
+                  "description": "Include untracked files in the status (default: true)"
+                },
+                "porcelain": {
+                  "type": "boolean",
+                  "description": "Use porcelain format for machine-readable output (default: false)"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-10T04:34:27.129756Z",
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "function": {
+              "name": "internal:project",
+              "arguments": {
+                "repoPath": "/path/to/repo"
+              }
+            }
+          }
+        ]
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 1434230583,
+      "load_duration": 13857166,
+      "prompt_eval_count": 548,
+      "prompt_eval_duration": 1027023125,
+      "eval_count": 18,
+      "eval_duration": 391348125
+    },
+    "rawHeaders": {
+      "content-length": "393",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Tue, 10 Jun 2025 04:34:27 GMT"
+    },
+    "responseIsBinary": false
+  },
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "give me a complete overview of the repository status"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:git.status\",\"args\":{\"includeUntracked\":true,\"porcelain\":false}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:git.status\nResult: {\n  \"isClean\": false,\n  \"modifiedFiles\": [\n    \"README.md\"\n  ],\n  \"addedFiles\": [\n    \"staged.txt\"\n  ],\n  \"deletedFiles\": [],\n  \"untrackedFiles\": [\n    \"temp.txt\",\n    \"untracked.log\",\n    \"untracked.txt\"\n  ],\n  \"renamedFiles\": [],\n  \"summary\": \"Working directory has changes: 1 modified, 1 added, 3 untracked\",\n  \"rawOutput\": \"On branch master\\nChanges to be committed:\\n  (use \\\"git restore --staged <file>...\\\" to unstage)\\n\\tnew file:   staged.txt\\n\\nChanges not staged for commit:\\n  (use \\\"git ..."
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:project\",\"args\":{\"repoPath\":\"/path/to/repo\"}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:project\nError: Tool internal:project failed: Tool \"internal:project\" not found"
+        },
+        {
+          "role": "user",
+          "content": "Based on the tool results above, please provide a direct and complete answer to the original question: \"give me a complete overview of the repository status\"\n\nDo not call any more tools. Just analyze the information you've gathered and give a clear, comprehensive answer."
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0.1
+      },
+      "tools": []
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-10T04:34:30.731254Z",
+      "message": {
+        "role": "assistant",
+        "content": "{ \n  \"Repository Status\": {\n    \"Clean Status\": false,\n    \"Modified Files\": [\n      \"README.md\"\n    ],\n    \"Added Files\": [\n      \"staged.txt\"\n    ],\n    \"Deleted Files\": [],\n    \"Untracked Files\": [\n      \"temp.txt\",\n      \"untracked.log\",\n      \"untracked.txt\"\n    ]\n  },\n  \"Git Summary\": \"Working directory has changes: 1 modified, 1 added, 3 untracked\"\n}"
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 3597893500,
+      "load_duration": 10970625,
+      "prompt_eval_count": 466,
+      "prompt_eval_duration": 956874500,
+      "eval_count": 102,
+      "eval_duration": 2628267292
+    },
+    "rawHeaders": {
+      "content-length": "699",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Tue, 10 Jun 2025 04:34:30 GMT"
+    },
+    "responseIsBinary": false
+  }
+]
