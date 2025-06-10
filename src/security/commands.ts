@@ -43,10 +43,10 @@ export const FORBIDDEN_COMMAND_PATTERNS = [
   'sudo *',
   'su *',
   '* > /dev/*',
-  '* | *',
-  '* && *',
-  '* || *',
-  '* ; *',
+  '* \\| *',  // Shell pipe operator (with space around it)
+  '* && *',   // Shell logical AND
+  '* \\|\\| *', // Shell logical OR
+  '* ; *',    // Shell command separator
 ];
 
 /**

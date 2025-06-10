@@ -1,0 +1,266 @@
+[
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "show me the git diff for files that don't exist"
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0.1
+      },
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "internal:git.diff",
+            "description": "Show changes in working directory - what has been modified but not yet committed",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Specific files to show diff for (empty = all files)"
+                },
+                "contextLines": {
+                  "type": "number",
+                  "description": "Number of context lines around changes (default: 3)"
+                },
+                "ignoreWhitespace": {
+                  "type": "boolean",
+                  "description": "Ignore whitespace changes in diff"
+                },
+                "statsOnly": {
+                  "type": "boolean",
+                  "description": "Show only statistics, not the actual diff content"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-10T04:09:29.605408Z",
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "function": {
+              "name": "internal:git.diff",
+              "arguments": {
+                "contextLines": 3,
+                "files": [
+                  "non-existent-file1.txt",
+                  "non-existent-file2.py"
+                ],
+                "ignoreWhitespace": false,
+                "statsOnly": false
+              }
+            }
+          }
+        ]
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 2078032458,
+      "load_duration": 11547625,
+      "prompt_eval_count": 385,
+      "prompt_eval_duration": 777281959,
+      "eval_count": 49,
+      "eval_duration": 1288329458
+    },
+    "rawHeaders": {
+      "content-length": "486",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Tue, 10 Jun 2025 04:09:29 GMT"
+    },
+    "responseIsBinary": false
+  },
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "show me the git diff for files that don't exist"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:git.diff\",\"args\":{\"contextLines\":3,\"files\":[\"non-existent-file1.txt\",\"non-existent-file2.py\"],\"ignoreWhitespace\":false,\"statsOnly\":false}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:git.diff\nResult: {\n  \"hasChanges\": false,\n  \"filesChanged\": 0,\n  \"insertions\": 0,\n  \"deletions\": 0,\n  \"changedFiles\": [],\n  \"diff\": \"\",\n  \"summary\": \"No changes in working directory\"\n}"
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0.1
+      },
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "internal:git.diff",
+            "description": "Show changes in working directory - what has been modified but not yet committed",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Specific files to show diff for (empty = all files)"
+                },
+                "contextLines": {
+                  "type": "number",
+                  "description": "Number of context lines around changes (default: 3)"
+                },
+                "ignoreWhitespace": {
+                  "type": "boolean",
+                  "description": "Ignore whitespace changes in diff"
+                },
+                "statsOnly": {
+                  "type": "boolean",
+                  "description": "Show only statistics, not the actual diff content"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-10T04:09:31.252441Z",
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "function": {
+              "name": "internal:git.diff",
+              "arguments": {
+                "contextLines": 3,
+                "files": [],
+                "ignoreWhitespace": false,
+                "statsOnly": false
+              }
+            }
+          }
+        ]
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 1621724084,
+      "load_duration": 11822209,
+      "prompt_eval_count": 504,
+      "prompt_eval_duration": 931066458,
+      "eval_count": 29,
+      "eval_duration": 677009042
+    },
+    "rawHeaders": {
+      "content-length": "437",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Tue, 10 Jun 2025 04:09:31 GMT"
+    },
+    "responseIsBinary": false
+  },
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "show me the git diff for files that don't exist"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:git.diff\",\"args\":{\"contextLines\":3,\"files\":[\"non-existent-file1.txt\",\"non-existent-file2.py\"],\"ignoreWhitespace\":false,\"statsOnly\":false}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:git.diff\nResult: {\n  \"hasChanges\": false,\n  \"filesChanged\": 0,\n  \"insertions\": 0,\n  \"deletions\": 0,\n  \"changedFiles\": [],\n  \"diff\": \"\",\n  \"summary\": \"No changes in working directory\"\n}"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:git.diff\",\"args\":{\"contextLines\":3,\"files\":[],\"ignoreWhitespace\":false,\"statsOnly\":false}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:git.diff\nResult: {\n  \"hasChanges\": false,\n  \"filesChanged\": 0,\n  \"insertions\": 0,\n  \"deletions\": 0,\n  \"changedFiles\": [],\n  \"diff\": \"\",\n  \"summary\": \"No changes in working directory\"\n}"
+        },
+        {
+          "role": "user",
+          "content": "Based on the tool results above, please provide a direct and complete answer to the original question: \"show me the git diff for files that don't exist\"\n\nDo not call any more tools. Just analyze the information you've gathered and give a clear, comprehensive answer."
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0.1
+      },
+      "tools": []
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-10T04:09:32.995783Z",
+      "message": {
+        "role": "assistant",
+        "content": "{\"diff\":\"No changes in working directory\",\"summary\":\"The Git diff for non-existent files is empty because there are no changes to show.\"}"
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 1704791041,
+      "load_duration": 12501375,
+      "prompt_eval_count": 443,
+      "prompt_eval_duration": 915952875,
+      "eval_count": 30,
+      "eval_duration": 774348833
+    },
+    "rawHeaders": {
+      "content-length": "440",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Tue, 10 Jun 2025 04:09:32 GMT"
+    },
+    "responseIsBinary": false
+  }
+]

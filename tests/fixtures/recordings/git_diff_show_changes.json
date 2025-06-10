@@ -1,0 +1,266 @@
+[
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "show me what I've changed"
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0.1
+      },
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "internal:git.diff",
+            "description": "Show changes in working directory - what has been modified but not yet committed",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Specific files to show diff for (empty = all files)"
+                },
+                "contextLines": {
+                  "type": "number",
+                  "description": "Number of context lines around changes (default: 3)"
+                },
+                "ignoreWhitespace": {
+                  "type": "boolean",
+                  "description": "Ignore whitespace changes in diff"
+                },
+                "statsOnly": {
+                  "type": "boolean",
+                  "description": "Show only statistics, not the actual diff content"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-10T04:08:47.680251Z",
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "function": {
+              "name": "internal:git.diff",
+              "arguments": {
+                "contextLines": 3,
+                "files": [],
+                "ignoreWhitespace": false,
+                "statsOnly": false
+              }
+            }
+          }
+        ]
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 4574428459,
+      "load_duration": 2984325500,
+      "prompt_eval_count": 380,
+      "prompt_eval_duration": 838615250,
+      "eval_count": 36,
+      "eval_duration": 734866667
+    },
+    "rawHeaders": {
+      "content-length": "439",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Tue, 10 Jun 2025 04:08:47 GMT"
+    },
+    "responseIsBinary": false
+  },
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "show me what I've changed"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:git.diff\",\"args\":{\"contextLines\":3,\"files\":[],\"ignoreWhitespace\":false,\"statsOnly\":false}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:git.diff\nResult: {\n  \"hasChanges\": true,\n  \"filesChanged\": 2,\n  \"insertions\": 13,\n  \"deletions\": 2,\n  \"changedFiles\": [\n    \"README.md\",\n    \"src/auth.ts\"\n  ],\n  \"diff\": \"README.md   | 6 +++++-\\n src/auth.ts | 9 ++++++++-\\n 2 files changed, 13 insertions(+), 2 deletions(-)\\n\\ndiff --git a/README.md b/README.md\\nindex a3e7254..fd0bb54 100644\\n--- a/README.md\\n+++ b/README.md\\n@@ -1,3 +1,7 @@\\n # Test Project\\n \\n-Initial content for testing git diff functionality.\\n+This is a test project for git diff functionali..."
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0.1
+      },
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "internal:git.diff",
+            "description": "Show changes in working directory - what has been modified but not yet committed",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Specific files to show diff for (empty = all files)"
+                },
+                "contextLines": {
+                  "type": "number",
+                  "description": "Number of context lines around changes (default: 3)"
+                },
+                "ignoreWhitespace": {
+                  "type": "boolean",
+                  "description": "Ignore whitespace changes in diff"
+                },
+                "statsOnly": {
+                  "type": "boolean",
+                  "description": "Show only statistics, not the actual diff content"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ]
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-10T04:08:49.646198Z",
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "function": {
+              "name": "internal:git.diff",
+              "arguments": {
+                "contextLines": 0,
+                "files": [
+                  "README.md",
+                  "src/auth.ts"
+                ],
+                "ignoreWhitespace": true,
+                "statsOnly": false
+              }
+            }
+          }
+        ]
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 1902626750,
+      "load_duration": 12682875,
+      "prompt_eval_count": 610,
+      "prompt_eval_duration": 947001500,
+      "eval_count": 44,
+      "eval_duration": 939337917
+    },
+    "rawHeaders": {
+      "content-length": "461",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Tue, 10 Jun 2025 04:08:49 GMT"
+    },
+    "responseIsBinary": false
+  },
+  {
+    "scope": "http://localhost:11434",
+    "method": "POST",
+    "path": "/api/chat",
+    "body": {
+      "model": "llama3.1:8b",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are QCode, a helpful AI coding assistant with access to tools.\n\nAvailable tools:\n- internal.files: Read files, list directories, search within files\n- internal.project: Analyze project structure, technologies, frameworks, and architecture\n\nInstructions:\n1. Use tools to gather the information needed to answer the user's question\n2. After getting tool results, provide a clear, direct answer to what was asked\n3. If you need more information, call additional tools\n4. When you have enough information, provide your final answer\n\nBe specific and focused in your answers. If asked about technologies, list them clearly. If asked about files, show the relevant content."
+        },
+        {
+          "role": "user",
+          "content": "show me what I've changed"
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:git.diff\",\"args\":{\"contextLines\":3,\"files\":[],\"ignoreWhitespace\":false,\"statsOnly\":false}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:git.diff\nResult: {\n  \"hasChanges\": true,\n  \"filesChanged\": 2,\n  \"insertions\": 13,\n  \"deletions\": 2,\n  \"changedFiles\": [\n    \"README.md\",\n    \"src/auth.ts\"\n  ],\n  \"diff\": \"README.md   | 6 +++++-\\n src/auth.ts | 9 ++++++++-\\n 2 files changed, 13 insertions(+), 2 deletions(-)\\n\\ndiff --git a/README.md b/README.md\\nindex a3e7254..fd0bb54 100644\\n--- a/README.md\\n+++ b/README.md\\n@@ -1,3 +1,7 @@\\n # Test Project\\n \\n-Initial content for testing git diff functionality.\\n+This is a test project for git diff functionali..."
+        },
+        {
+          "role": "assistant",
+          "content": "[{\"name\":\"internal:git.diff\",\"args\":{\"contextLines\":0,\"files\":[\"README.md\",\"src/auth.ts\"],\"ignoreWhitespace\":true,\"statsOnly\":false}}]"
+        },
+        {
+          "role": "user",
+          "content": "Tool results:\n\nTool: internal:git.diff\nResult: {\n  \"hasChanges\": true,\n  \"filesChanged\": 2,\n  \"insertions\": 13,\n  \"deletions\": 2,\n  \"changedFiles\": [\n    \"README.md\",\n    \"src/auth.ts\"\n  ],\n  \"diff\": \"README.md   | 6 +++++-\\n src/auth.ts | 9 ++++++++-\\n 2 files changed, 13 insertions(+), 2 deletions(-)\\n\\ndiff --git a/README.md b/README.md\\nindex a3e7254..fd0bb54 100644\\n--- a/README.md\\n+++ b/README.md\\n@@ -3 +3,5 @@\\n-Initial content for testing git diff functionality.\\n+This is a test project for git diff functionality.\\n+\\n+## Features\\n..."
+        },
+        {
+          "role": "user",
+          "content": "Based on the tool results above, please provide a direct and complete answer to the original question: \"show me what I've changed\"\n\nDo not call any more tools. Just analyze the information you've gathered and give a clear, comprehensive answer."
+        }
+      ],
+      "stream": false,
+      "format": "json",
+      "options": {
+        "temperature": 0.1
+      },
+      "tools": []
+    },
+    "status": 200,
+    "response": {
+      "model": "llama3.1:8b",
+      "created_at": "2025-06-10T04:08:55.820951Z",
+      "message": {
+        "role": "assistant",
+        "content": "{ \n  \"changedFiles\": [\n    \"README.md\",\n    \"src/auth.ts\"\n  ],\n  \"diff\": \"README.md   | 6 +++++-\\n src/auth.ts | 9 ++++++++-\\n 2 files changed, 13 insertions(+), 2 deletions(-)\\n\\ndiff --git a/README.md b/README.md\\nindex a3e7254..fd0bb54 100644\\n--- a/README.md\\n+++ b/README.md\\n@@ -1,3 +1,7 @@\\n # Test Project\\n \\n-Initial content for testing git diff functionality.\\n+This is a test project for git diff functionali...\\n@@ -3 +3,5 @@\\n-Initial content for testing git diff functionality.\\n+This is a test project for git diff functionality.\\n+\\n+## Features\\n...\"\n}"
+      },
+      "done_reason": "stop",
+      "done": true,
+      "total_duration": 6142768583,
+      "load_duration": 13104958,
+      "prompt_eval_count": 671,
+      "prompt_eval_duration": 1179372791,
+      "eval_count": 189,
+      "eval_duration": 4947324625
+    },
+    "rawHeaders": {
+      "content-length": "902",
+      "content-type": "application/json; charset=utf-8",
+      "date": "Tue, 10 Jun 2025 04:08:55 GMT"
+    },
+    "responseIsBinary": false
+  }
+]

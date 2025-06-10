@@ -18,6 +18,8 @@ import { FilesTool } from './tools/files.js';
 import { EditTool } from './tools/edit.js';
 import { ProjectIntelligenceTool } from './tools/project-intelligence.js';
 import { ShellTool } from './tools/shell.js';
+import { GitStatusTool } from './tools/git/status.js';
+import { GitDiffTool } from './tools/git/diff.js';
 import { WorkspaceSecurity } from './security/workspace.js';
 import { initializeLogger } from './utils/logger.js';
 
@@ -168,6 +170,22 @@ class QCodeCLI {
         'shell',
         shellTool.toOllamaFormat(),
         shellTool.execute.bind(shellTool)
+      );
+
+      // Register internal GitStatusTool
+      const gitStatusTool = new GitStatusTool(this.workspaceSecurity);
+      this.toolRegistry.registerInternalTool(
+        'git.status',
+        gitStatusTool.definition,
+        gitStatusTool.execute.bind(gitStatusTool)
+      );
+
+      // Register internal GitDiffTool
+      const gitDiffTool = new GitDiffTool(this.workspaceSecurity);
+      this.toolRegistry.registerInternalTool(
+        'git.diff',
+        gitDiffTool.definition,
+        gitDiffTool.execute.bind(gitDiffTool)
       );
 
       // Initialize QCode engine with progress callback
