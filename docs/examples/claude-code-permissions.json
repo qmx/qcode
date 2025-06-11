@@ -1,0 +1,72 @@
+{
+  "security": {
+    "workspace": {
+      "allowedPaths": ["."],
+      "forbiddenPatterns": ["**/node_modules/**", "**/.git/**", "**/secrets/**"],
+      "allowOutsideWorkspace": false
+    },
+    "permissions": {
+      "allow": [
+        "Shell(echo *)",
+        "Shell(ls *)",
+        "Shell(cat *)",
+        "Shell(node *)",
+        "Shell(npm run *)",
+        "Shell(yarn run *)",
+        "Shell(git status)",
+        "Shell(git diff*)",
+        "Shell(git log*)",
+        "Shell(python *)",
+        "Shell(pip install *)",
+        "Shell(cargo build)",
+        "Shell(cargo test)",
+        "Shell(make *)",
+        
+        "Read(*.ts)",
+        "Read(*.js)",
+        "Read(*.json)",
+        "Read(src/**)",
+        "Read(docs/**)",
+        
+        "Edit(src/**)",
+        "Edit(tests/**)",
+        "Edit(*.md)",
+        
+        "MCP(github, list_repos)",
+        "MCP(filesystem, read_file)",
+        "MCP(database, query)"
+      ],
+      "deny": [
+        "Shell(rm *)",
+        "Shell(del *)",
+        "Shell(sudo *)",
+        "Shell(chmod *)",
+        "Shell(chown *)",
+        "Shell(* && *)",
+        "Shell(* || *)",
+        "Shell(* ; *)",
+        "Shell(* | *)",
+        "Shell(* > *)",
+        "Shell(* < *)",
+        "Shell(curl *)",
+        "Shell(wget *)",
+        
+        "Read(secrets/**)",
+        "Read(*.key)",
+        "Read(*.pem)",
+        "Read(.env*)",
+        
+        "Edit(/etc/**)",
+        "Edit(/usr/**)",
+        "Edit(~/.ssh/**)",
+        
+        "MCP(*, dangerous_operation)"
+      ]
+    }
+  },
+  "ollama": {
+    "url": "http://localhost:11434",
+    "model": "llama3.1:8b",
+    "temperature": 0.1
+  }
+} 

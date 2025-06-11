@@ -17,7 +17,7 @@ import { QCodeEngine, createQCodeEngine, EngineOptions } from './core/engine.js'
 import { FilesTool } from './tools/files.js';
 import { EditTool } from './tools/edit.js';
 import { ProjectIntelligenceTool } from './tools/project-intelligence.js';
-import { ShellTool } from './tools/shell.js';
+import { CommandTool } from './tools/command.js';
 import { GitStatusTool } from './tools/git/status.js';
 import { GitDiffTool } from './tools/git/diff.js';
 import { WorkspaceSecurity } from './security/workspace.js';
@@ -164,12 +164,17 @@ class QCodeCLI {
         projectIntelligenceTool.execute.bind(projectIntelligenceTool)
       );
 
-      // Register internal ShellTool
-      const shellTool = new ShellTool(this.workspaceSecurity);
+      // Register internal CommandTool with parsed Shell permissions
+      const { parseShellPermissions } = await import('./security/permissions.js');
+      const shellPermissions = parseShellPermissions(
+        this.config.security.permissions.allow,
+        this.config.security.permissions.deny
+      );
+      const commandTool = new CommandTool(this.workspaceSecurity, shellPermissions);
       this.toolRegistry.registerInternalTool(
-        'shell',
-        shellTool.toOllamaFormat(),
-        shellTool.execute.bind(shellTool)
+        'command',
+        commandTool.toOllamaFormat(),
+        commandTool.execute.bind(commandTool)
       );
 
       // Register internal GitStatusTool
@@ -419,10 +424,10 @@ class QCodeCLI {
       `   Allow Outside Workspace: ${chalk.white(this.config.security.workspace.allowOutsideWorkspace ? 'yes' : 'no')}`
     );
     console.log(
-      `   Allowed Commands: ${chalk.white(this.config.security.commands.allowedCommands.length)}`
+              `   Permission Rules: ${chalk.white(this.config.security.permissions.allow.length + this.config.security.permissions.deny.length)}`
     );
     console.log(
-      `   Allow Arbitrary Commands: ${chalk.white(this.config.security.commands.allowArbitraryCommands ? 'yes' : 'no')}`
+              `   Shell Permissions: ${chalk.white(this.config.security.permissions.allow.filter(r => r.startsWith('Shell(')).length)} allow, ${chalk.white(this.config.security.permissions.deny.filter(r => r.startsWith('Shell(')).length)} deny`
     );
     console.log();
 

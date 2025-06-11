@@ -148,14 +148,12 @@ export interface SecurityConfig {
     /** Whether to allow reading outside workspace */
     allowOutsideWorkspace: boolean;
   };
-  /** Command execution restrictions */
-  commands: {
-    /** Allowed commands whitelist */
-    allowedCommands: string[];
-    /** Forbidden command patterns */
-    forbiddenPatterns: string[];
-    /** Whether to allow arbitrary command execution */
-    allowArbitraryCommands: boolean;
+  /** Claude Code-style permissions */
+  permissions: {
+    /** Allowed permission rules (Claude Code format) */
+    allow: string[];
+    /** Denied permission rules (takes precedence over allow) */
+    deny: string[];
   };
 }
 
@@ -225,11 +223,10 @@ export type PartialConfig = {
               allowOutsideWorkspace?: boolean | undefined;
             }
           | undefined;
-        commands?:
+        permissions?:
           | {
-              allowedCommands?: string[] | undefined;
-              forbiddenPatterns?: string[] | undefined;
-              allowArbitraryCommands?: boolean | undefined;
+              allow?: string[] | undefined;
+              deny?: string[] | undefined;
             }
           | undefined;
       }

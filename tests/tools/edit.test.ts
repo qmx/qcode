@@ -21,10 +21,13 @@ describe('EditTool', () => {
         forbiddenPatterns: [],
         allowOutsideWorkspace: false,
       },
-      commands: {
-        allowedCommands: [],
-        forbiddenPatterns: [],
-        allowArbitraryCommands: false,
+      permissions: {
+        allow: [
+          'Shell(echo *)',
+        ],
+        deny: [
+          'Shell(rm *)',
+        ],
       },
     };
 

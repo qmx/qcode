@@ -19,10 +19,15 @@ describe('FilesTool - Search Operation (Section 1.7.5)', () => {
         forbiddenPatterns: ['*.secret', '*.private'],
         allowOutsideWorkspace: false,
       },
-      commands: {
-        allowedCommands: ['echo', 'ls'],
-        forbiddenPatterns: ['rm', 'del'],
-        allowArbitraryCommands: false,
+      permissions: {
+        allow: [
+          'Shell(echo *)',
+          'Shell(ls *)',
+        ],
+        deny: [
+          'Shell(rm *)',
+          'Shell(del *)',
+        ],
       },
     };
 

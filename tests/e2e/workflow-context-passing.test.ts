@@ -22,10 +22,13 @@ describe('Workflow Context Passing E2E', () => {
           forbiddenPatterns: [],
           allowOutsideWorkspace: false,
         },
-        commands: {
-          allowedCommands: [],
-          forbiddenPatterns: [],
-          allowArbitraryCommands: false,
+        permissions: {
+          allow: [
+            'Shell(echo *)',
+          ],
+          deny: [
+            'Shell(rm *)',
+          ],
         },
       },
       ollama: {

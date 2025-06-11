@@ -446,17 +446,14 @@ export class ConfigManager {
             }),
           }),
         },
-        commands: {
-          ...result.security.commands,
-          ...(source.security.commands && {
-            ...(source.security.commands.allowedCommands !== undefined && {
-              allowedCommands: source.security.commands.allowedCommands,
+        permissions: {
+          ...result.security.permissions,
+          ...(source.security.permissions && {
+            ...(source.security.permissions.allow !== undefined && {
+              allow: source.security.permissions.allow,
             }),
-            ...(source.security.commands.forbiddenPatterns !== undefined && {
-              forbiddenPatterns: source.security.commands.forbiddenPatterns,
-            }),
-            ...(source.security.commands.allowArbitraryCommands !== undefined && {
-              allowArbitraryCommands: source.security.commands.allowArbitraryCommands,
+            ...(source.security.permissions.deny !== undefined && {
+              deny: source.security.permissions.deny,
             }),
           }),
         },
@@ -513,9 +510,9 @@ export class ConfigManager {
           if (!result.security.workspace) result.security.workspace = {};
           Object.assign(result.security.workspace, source.security.workspace);
         }
-        if (source.security.commands) {
-          if (!result.security.commands) result.security.commands = {};
-          Object.assign(result.security.commands, source.security.commands);
+        if (source.security.permissions) {
+          if (!result.security.permissions) result.security.permissions = {};
+          Object.assign(result.security.permissions, source.security.permissions);
         }
       }
 

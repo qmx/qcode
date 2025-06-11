@@ -1,6 +1,5 @@
 import path from 'path';
 import { Config, SecurityConfig, OllamaConfig, LoggingConfig, PartialConfig } from '../types.js';
-import { DEFAULT_ALLOWED_COMMANDS } from '../security/commands.js';
 
 /**
  * Default security configuration - paths will be resolved relative to working directory
@@ -25,21 +24,41 @@ export const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
     ],
     allowOutsideWorkspace: false,
   },
-  commands: {
-    allowedCommands: [...DEFAULT_ALLOWED_COMMANDS],
-    forbiddenPatterns: [
-      'rm *',
-      'del *',
-      'format *',
-      'sudo *',
-      'su *',
-      '* > /dev/*',
-      '* | *',
-      '* && *',
-      '* || *',
-      '* ; *',
+  permissions: {
+    allow: [
+      // Very restrictive defaults - users must explicitly configure what they need
+      'Shell(echo *)',
+      'Shell(ls *)',
+      
+      // Future permissions (placeholders - not implemented yet)
+      // 'Read(*.md)',
+      // 'Edit(docs/**)',
+      // 'MCP(server, tool)',
     ],
-    allowArbitraryCommands: false,
+    deny: [
+      // Deny everything dangerous - this is the security boundary
+      'Shell(rm *)',
+      'Shell(del *)',
+      'Shell(format *)',
+      'Shell(sudo *)',
+      'Shell(su *)',
+      'Shell(* > /dev/*)',
+      'Shell(* | *)',
+      'Shell(* && *)',
+      'Shell(* || *)',
+      'Shell(* ; *)',
+      'Shell(* > *)',
+      'Shell(* < *)',
+      'Shell(chmod *)',
+      'Shell(chown *)',
+      'Shell(kill *)',
+      'Shell(killall *)',
+      'Shell(curl *)',
+      'Shell(wget *)',
+      'Shell(ssh *)',
+      'Shell(scp *)',
+      'Shell(rsync *)',
+    ],
   },
 };
 
@@ -124,8 +143,28 @@ export const CONFIG_PRESETS: Record<string, PartialConfig> = {
       workspace: {
         allowOutsideWorkspace: true,
       },
-      commands: {
-        allowArbitraryCommands: false, // Still keep some restrictions
+      permissions: {
+        // More permissive in development for typical development workflows
+        allow: [
+          'Shell(echo *)',
+          'Shell(ls *)',
+          'Shell(cat *)',
+          'Shell(node *)',
+          'Shell(npm *)',
+          'Shell(yarn *)',
+          'Shell(pnpm *)',
+          'Shell(git status)',
+          'Shell(git diff*)',
+          'Shell(git log*)',
+          'Shell(git add*)',
+          'Shell(git commit*)',
+          'Shell(python *)',
+          'Shell(pip *)',
+          'Shell(poetry *)',
+          'Shell(cargo *)',
+          'Shell(make *)',
+          'Shell(cmake *)',
+        ],
       },
     },
     logging: {
@@ -138,8 +177,15 @@ export const CONFIG_PRESETS: Record<string, PartialConfig> = {
       workspace: {
         allowOutsideWorkspace: false,
       },
-      commands: {
-        allowArbitraryCommands: false,
+      permissions: {
+        // Very restrictive in production
+        allow: [
+          'Shell(echo *)',
+          'Shell(ls *)',
+        ],
+        deny: [
+          'Shell(*)',  // Deny everything else
+        ],
       },
     },
     logging: {

@@ -21,12 +21,11 @@ const WorkspaceSecuritySchema = z.object({
 });
 
 /**
- * Zod schema for command security configuration
+ * Zod schema for Claude Code-style permissions
  */
-const CommandSecuritySchema = z.object({
-  allowedCommands: z.array(z.string().min(1, 'Command cannot be empty')),
-  forbiddenPatterns: z.array(z.string()),
-  allowArbitraryCommands: z.boolean(),
+const PermissionsSchema = z.object({
+  allow: z.array(z.string().min(1, 'Permission rule cannot be empty')),
+  deny: z.array(z.string()),
 });
 
 /**
@@ -34,7 +33,7 @@ const CommandSecuritySchema = z.object({
  */
 const SecurityConfigSchema = z.object({
   workspace: WorkspaceSecuritySchema,
-  commands: CommandSecuritySchema,
+  permissions: PermissionsSchema,
 });
 
 /**
@@ -120,7 +119,7 @@ const PartialConfigSchema = z
     security: z
       .object({
         workspace: WorkspaceSecuritySchema.partial(),
-        commands: CommandSecuritySchema.partial(),
+        permissions: PermissionsSchema.partial(),
       })
       .partial(),
     ollama: OllamaConfigSchema.partial(),

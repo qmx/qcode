@@ -14,10 +14,15 @@ describe('ToolRegistry', () => {
         forbiddenPatterns: ['*.secret'],
         allowOutsideWorkspace: false,
       },
-      commands: {
-        allowedCommands: ['echo', 'ls'],
-        forbiddenPatterns: ['rm', 'del'],
-        allowArbitraryCommands: false,
+      permissions: {
+        allow: [
+          'Shell(echo *)',
+          'Shell(ls *)',
+        ],
+        deny: [
+          'Shell(rm *)',
+          'Shell(del *)',
+        ],
       },
     };
     registry = createToolRegistry(securityConfig, TEST_WORKSPACE);
@@ -455,10 +460,13 @@ describe('ToolRegistry', () => {
           forbiddenPatterns: ['*.new'],
           allowOutsideWorkspace: true,
         },
-        commands: {
-          allowedCommands: ['new'],
-          forbiddenPatterns: ['old'],
-          allowArbitraryCommands: true,
+        permissions: {
+          allow: [
+            'Shell(new *)',
+          ],
+          deny: [
+            'Shell(old *)',
+          ],
         },
       };
 

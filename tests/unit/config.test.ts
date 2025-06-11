@@ -33,7 +33,8 @@ describe('Configuration System', () => {
 
       // Security defaults
       expect(config.security.workspace.allowOutsideWorkspace).toBe(false);
-      expect(config.security.commands.allowArbitraryCommands).toBe(false);
+      expect(config.security.permissions.allow).toContain('Shell(echo *)');
+      expect(config.security.permissions.deny).toContain('Shell(rm *)');
       expect(config.security.workspace.forbiddenPatterns).toContain('**/.env*');
       expect(config.security.workspace.forbiddenPatterns).toContain('**/.git/**');
 
@@ -71,7 +72,7 @@ describe('Configuration System', () => {
       const preset = getConfigPreset('production');
       expect(preset).toBeDefined();
       expect(preset?.security?.workspace?.allowOutsideWorkspace).toBe(false);
-      expect(preset?.security?.commands?.allowArbitraryCommands).toBe(false);
+      expect(preset?.security?.permissions?.deny).toContain('Shell(*)');
       expect(preset?.logging?.level).toBe('warn');
       expect(preset?.logging?.colors).toBe(false);
     });
